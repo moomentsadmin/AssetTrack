@@ -5,6 +5,7 @@ import { insertAssetSchema, Asset, Department } from "@shared/schema";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -29,10 +30,6 @@ export function AssetForm({ asset, onSuccess }: { asset?: Asset; onSuccess: () =
   const { data: customFields = [] } = useQuery<any[]>({
     queryKey: ["/api/custom-fields"],
   });
-
-  const assetTypeCustomFields = customFields.filter(
-    (field) => field.assetType === (asset?.assetType || form.watch("assetType"))
-  );
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -86,6 +83,11 @@ export function AssetForm({ asset, onSuccess }: { asset?: Asset; onSuccess: () =
       });
     },
   });
+
+  const selectedAssetType = form.watch("assetType");
+  const assetTypeCustomFields = customFields.filter(
+    (field) => field.assetType === selectedAssetType
+  );
 
   return (
     <Form {...form}>

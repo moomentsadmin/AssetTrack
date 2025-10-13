@@ -1,0 +1,448 @@
+import type { Express } from "express";
+import { createServer, type Server } from "http";
+import { setupAuth } from "./auth";
+import { storage } from "./storage";
+import multer from "multer";
+import Papa from "papaparse";
+import { sendAssignmentNotification } from "./email";
+
+const upload = multer({ storage: multer.memoryStorage() });
+
+// Middleware to check authentication
+function requireAuth(req: any, res: any, next: any) {
+  if (!req.isAuthenticated()) {
+    return res.status(401).send("Unauthorized");
+  }
+  next();
+}
+
+// Middleware to check admin/manager role
+function requireAdminOrManager(req: any, res: any, next: any) {
+  if (!req.user || (req.user.role !== "admin" && req.user.role !== "manager")) {
+    return res.status(403).send("Forbidden");
+  }
+  next();
+}
+
+export function registerRoutes(app: Express): Server {
+  // Setup authentication routes
+  setupAuth(app);
+
+  // Users routes
+  app.get("/api/users", requireAuth, async (req, res) => {
+    try {
+      const users = await storage.getAllUsers();
+      res.json(users);
+    } catch (error: any) {
+      res.status(500).send(error.message);
+    }
+  });
+
+  // Assets routes
+  app.get("/api/assets", requireAuth, async (req, res) => {
+    try {
+      const assets = await storage.getAllAssets();
+      res.json(assets);
+    } catch (error: any) {
+      res.status(500).send(error.message);
+    }
+  });
+
+  app.get("/api/assets/:id", requireAuth, async (req, res) => {
+    try {
+      const asset = await storage.getAsset(req.params.id);
+      if (!asset) return res.status(404).send("Asset not found");
+      res.json(asset);
+    } catch (error: any) {
+      res.status(500).send(error.message);
+    }
+  });
+
+  app.post("/api/assets", requireAuth, async (req, res) => {
+    try {
+      const asset = await storage.createAsset(req.body);
+      
+      // Create audit entry
+      await storage.createAuditEntry({
+        assetId: asset.id,
+        userId: req.user!.id,
+        action: "Asset created",
+        details: { assetName: asset.name, assetType: asset.assetType },
+      });
+
+      res.status(201).json(asset);
+    } catch (error: any) {
+      res.status(500).send(error.message);
+    }
+  });
+
+  app.patch("/api/assets/:id", requireAuth, async (req, res) => {
+    try {
+      const asset = await storage.updateAsset(req.params.id, req.body);
+      if (!asset) return res.status(404).send("Asset not found");
+
+      // Create audit entry
+      await storage.createAuditEntry({
+        assetId: asset.id,
+        userId: req.user!.id,
+        action: "Asset updated",
+        details: { changes: req.body },
+      });
+
+      res.json(asset);
+    } catch (error: any) {
+      res.status(500).send(error.message);
+    }
+  });
+
+  app.delete("/api/assets/:id", requireAuth, requireAdminOrManager, async (req, res) => {
+    try {
+      const asset = await storage.getAsset(req.params.id);
+      if (!asset) return res.status(404).send("Asset not found");
+
+      await storage.deleteAsset(req.params.id);
+
+      // Create audit entry
+      await storage.createAuditEntry({
+        assetId: null,
+        userId: req.user!.id,
+        action: "Asset deleted",
+        details: { assetName: asset.name, assetId: req.params.id },
+      });
+
+      res.sendStatus(204);
+    } catch (error: any) {
+      res.status(500).send(error.message);
+    }
+  });
+
+  // Asset depreciation calculation
+  app.patch("/api/assets/:id/depreciation", requireAuth, async (req, res) => {
+    try {
+      const asset = await storage.getAsset(req.params.id);
+      if (!asset) return res.status(404).send("Asset not found");
+
+      const { depreciationMethod, depreciationRate, yearsOfUse } = req.body;
+      const purchaseCost = Number(asset.purchaseCost || 0);
+      const rate = Number(depreciationRate || 0);
+      const years = Number(yearsOfUse || 0);
+
+      let currentValue = purchaseCost;
+      if (purchaseCost && rate && years) {
+        if (depreciationMethod === "straight_line") {
+          currentValue = Math.max(0, purchaseCost - (purchaseCost * (rate / 100) * years));
+        } else if (depreciationMethod === "declining_balance") {
+          currentValue = purchaseCost * Math.pow(1 - rate / 100, years);
+        }
+      }
+
+      const updatedAsset = await storage.updateAsset(req.params.id, {
+        depreciationMethod,
+        depreciationRate,
+        currentValue: currentValue.toFixed(2),
+      });
+
+      res.json(updatedAsset);
+    } catch (error: any) {
+      res.status(500).send(error.message);
+    }
+  });
+
+  // Auto-calculate depreciation based on purchase date
+  app.post("/api/assets/:id/calculate-depreciation", requireAuth, async (req, res) => {
+    try {
+      const asset = await storage.getAsset(req.params.id);
+      if (!asset) return res.status(404).send("Asset not found");
+
+      if (!asset.purchaseDate || !asset.depreciationMethod || !asset.depreciationRate) {
+        return res.status(400).send("Asset must have purchase date, depreciation method, and rate");
+      }
+
+      const purchaseCost = Number(asset.purchaseCost || 0);
+      const rate = Number(asset.depreciationRate || 0);
+      const yearsSincePurchase = (Date.now() - new Date(asset.purchaseDate).getTime()) / (1000 * 60 * 60 * 24 * 365);
+
+      let currentValue = purchaseCost;
+      if (asset.depreciationMethod === "straight_line") {
+        currentValue = Math.max(0, purchaseCost - (purchaseCost * (rate / 100) * yearsSincePurchase));
+      } else if (asset.depreciationMethod === "declining_balance") {
+        currentValue = purchaseCost * Math.pow(1 - rate / 100, yearsSincePurchase);
+      }
+
+      const updatedAsset = await storage.updateAsset(req.params.id, {
+        currentValue: currentValue.toFixed(2),
+      });
+
+      res.json(updatedAsset);
+    } catch (error: any) {
+      res.status(500).send(error.message);
+    }
+  });
+
+  // Departments routes
+  app.get("/api/departments", requireAuth, async (req, res) => {
+    try {
+      const departments = await storage.getAllDepartments();
+      res.json(departments);
+    } catch (error: any) {
+      res.status(500).send(error.message);
+    }
+  });
+
+  app.post("/api/departments", requireAuth, requireAdminOrManager, async (req, res) => {
+    try {
+      const department = await storage.createDepartment(req.body);
+      res.status(201).json(department);
+    } catch (error: any) {
+      res.status(500).send(error.message);
+    }
+  });
+
+  app.patch("/api/departments/:id", requireAuth, requireAdminOrManager, async (req, res) => {
+    try {
+      const department = await storage.updateDepartment(req.params.id, req.body);
+      if (!department) return res.status(404).send("Department not found");
+      res.json(department);
+    } catch (error: any) {
+      res.status(500).send(error.message);
+    }
+  });
+
+  app.delete("/api/departments/:id", requireAuth, requireAdminOrManager, async (req, res) => {
+    try {
+      await storage.deleteDepartment(req.params.id);
+      res.sendStatus(204);
+    } catch (error: any) {
+      res.status(500).send(error.message);
+    }
+  });
+
+  // Assignments routes
+  app.get("/api/assignments", requireAuth, async (req, res) => {
+    try {
+      const assignments = await storage.getAllAssignments();
+      res.json(assignments);
+    } catch (error: any) {
+      res.status(500).send(error.message);
+    }
+  });
+
+  app.post("/api/assignments", requireAuth, async (req, res) => {
+    try {
+      const assignment = await storage.createAssignment(req.body);
+      
+      // Update asset status to assigned
+      await storage.updateAsset(req.body.assetId, { status: "assigned" });
+
+      // Create audit entry
+      const asset = await storage.getAsset(req.body.assetId);
+      const user = await storage.getUser(req.body.userId);
+      await storage.createAuditEntry({
+        assetId: req.body.assetId,
+        userId: req.user!.id,
+        action: "Asset assigned",
+        details: {
+          assignedTo: user?.fullName,
+          assetName: asset?.name,
+        },
+      });
+
+      // Send email notification
+      if (user && asset) {
+        sendAssignmentNotification(user.email, user.fullName, asset.name).catch(console.error);
+      }
+
+      res.status(201).json(assignment);
+    } catch (error: any) {
+      res.status(500).send(error.message);
+    }
+  });
+
+  app.patch("/api/assignments/:id/return", requireAuth, async (req, res) => {
+    try {
+      const assignment = await storage.getAssignment(req.params.id);
+      if (!assignment) return res.status(404).send("Assignment not found");
+
+      const updated = await storage.returnAsset(req.params.id);
+      
+      // Update asset status to available
+      await storage.updateAsset(assignment.assetId, { status: "available" });
+
+      // Create audit entry
+      await storage.createAuditEntry({
+        assetId: assignment.assetId,
+        userId: req.user!.id,
+        action: "Asset returned",
+        details: { assignmentId: req.params.id },
+      });
+
+      res.json(updated);
+    } catch (error: any) {
+      res.status(500).send(error.message);
+    }
+  });
+
+  // Asset notes routes
+  app.get("/api/assets/:id/notes", requireAuth, async (req, res) => {
+    try {
+      const notes = await storage.getAssetNotes(req.params.id);
+      res.json(notes);
+    } catch (error: any) {
+      res.status(500).send(error.message);
+    }
+  });
+
+  app.post("/api/assets/:id/notes", requireAuth, async (req, res) => {
+    try {
+      const note = await storage.createAssetNote({
+        ...req.body,
+        assetId: req.params.id,
+      });
+
+      // Create audit entry
+      await storage.createAuditEntry({
+        assetId: req.params.id,
+        userId: req.user!.id,
+        action: "Note added",
+        details: { notePreview: req.body.note.substring(0, 50) },
+      });
+
+      res.status(201).json(note);
+    } catch (error: any) {
+      res.status(500).send(error.message);
+    }
+  });
+
+  // Audit trail routes
+  app.get("/api/audit", requireAuth, async (req, res) => {
+    try {
+      const trail = await storage.getAllAuditTrail();
+      res.json(trail);
+    } catch (error: any) {
+      res.status(500).send(error.message);
+    }
+  });
+
+  // Custom fields routes
+  app.get("/api/custom-fields", requireAuth, async (req, res) => {
+    try {
+      const fields = await storage.getAllCustomFields();
+      res.json(fields);
+    } catch (error: any) {
+      res.status(500).send(error.message);
+    }
+  });
+
+  app.post("/api/custom-fields", requireAuth, requireAdminOrManager, async (req, res) => {
+    try {
+      const field = await storage.createCustomField(req.body);
+      res.status(201).json(field);
+    } catch (error: any) {
+      res.status(500).send(error.message);
+    }
+  });
+
+  app.delete("/api/custom-fields/:id", requireAuth, requireAdminOrManager, async (req, res) => {
+    try {
+      await storage.deleteCustomField(req.params.id);
+      res.sendStatus(204);
+    } catch (error: any) {
+      res.status(500).send(error.message);
+    }
+  });
+
+  // Email settings routes
+  app.get("/api/settings/email", requireAuth, async (req, res) => {
+    try {
+      const settings = await storage.getEmailSettings();
+      res.json(settings || {
+        provider: "smtp",
+        fromEmail: "",
+        fromName: "",
+        warrantyExpiryEnabled: true,
+        assignmentEnabled: true,
+        returnReminderEnabled: true,
+      });
+    } catch (error: any) {
+      res.status(500).send(error.message);
+    }
+  });
+
+  app.post("/api/settings/email", requireAuth, requireAdminOrManager, async (req, res) => {
+    try {
+      const settings = await storage.saveEmailSettings(req.body);
+      res.json(settings);
+    } catch (error: any) {
+      res.status(500).send(error.message);
+    }
+  });
+
+  // CSV Import route
+  app.post("/api/import/assets", requireAuth, requireAdminOrManager, upload.single("file"), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).send("No file uploaded");
+      }
+
+      const fileContent = req.file.buffer.toString("utf-8");
+      const parsed = Papa.parse(fileContent, { header: true, skipEmptyLines: true });
+
+      let success = 0;
+      let failed = 0;
+      const errors: string[] = [];
+
+      for (const row of parsed.data) {
+        try {
+          const data: any = row;
+          
+          // Validate required fields
+          if (!data.name || !data.assetType) {
+            errors.push(`Row missing required fields: ${JSON.stringify(data)}`);
+            failed++;
+            continue;
+          }
+
+          // Create asset
+          await storage.createAsset({
+            name: data.name,
+            assetType: data.assetType,
+            status: data.status || "available",
+            serialNumber: data.serialNumber || null,
+            model: data.model || null,
+            manufacturer: data.manufacturer || null,
+            purchaseDate: data.purchaseDate ? new Date(data.purchaseDate) : null,
+            purchaseCost: data.purchaseCost || null,
+            warrantyExpiry: data.warrantyExpiry ? new Date(data.warrantyExpiry) : null,
+            condition: data.condition || null,
+            location: data.location || null,
+            departmentId: data.departmentId || null,
+            customFields: null,
+            depreciationMethod: data.depreciationMethod || null,
+            depreciationRate: data.depreciationRate || null,
+          });
+
+          success++;
+        } catch (error: any) {
+          errors.push(`Error importing row: ${error.message}`);
+          failed++;
+        }
+      }
+
+      // Create audit entry
+      await storage.createAuditEntry({
+        assetId: null,
+        userId: req.user!.id,
+        action: "Bulk import completed",
+        details: { success, failed, fileName: req.file.originalname },
+      });
+
+      res.json({ success, failed, errors });
+    } catch (error: any) {
+      res.status(500).send(error.message);
+    }
+  });
+
+  const httpServer = createServer(app);
+
+  return httpServer;
+}

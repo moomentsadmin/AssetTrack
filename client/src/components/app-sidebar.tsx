@@ -33,6 +33,7 @@ import {
   ChevronDown,
   LogOut,
   Wrench,
+  UserCog,
 } from "lucide-react";
 
 export function AppSidebar() {
@@ -73,6 +74,13 @@ export function AppSidebar() {
   ];
 
   const adminItems = [
+    {
+      title: "User Management",
+      icon: UserCog,
+      url: "/users",
+      testId: "nav-users",
+      adminOnly: true,
+    },
     {
       title: "Custom Fields",
       icon: Wrench,
@@ -135,18 +143,20 @@ export function AppSidebar() {
             <SidebarGroupLabel>Administration</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                {adminItems.map((item) => (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton
-                      onClick={() => setLocation(item.url)}
-                      isActive={location === item.url}
-                      data-testid={item.testId}
-                    >
-                      <item.icon className="h-4 w-4" />
-                      <span>{item.title}</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
+                {adminItems
+                  .filter((item) => !item.adminOnly || user?.role === "admin")
+                  .map((item) => (
+                    <SidebarMenuItem key={item.title}>
+                      <SidebarMenuButton
+                        onClick={() => setLocation(item.url)}
+                        isActive={location === item.url}
+                        data-testid={item.testId}
+                      >
+                        <item.icon className="h-4 w-4" />
+                        <span>{item.title}</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>

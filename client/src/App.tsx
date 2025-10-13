@@ -19,6 +19,7 @@ import AuditPage from "@/pages/audit-page";
 import CustomFieldsPage from "@/pages/custom-fields-page";
 import ImportPage from "@/pages/import-page";
 import SettingsPage from "@/pages/settings-page";
+import UserManagementPage from "@/pages/user-management-page";
 
 function Router() {
   return (
@@ -31,6 +32,7 @@ function Router() {
       <ProtectedRoute path="/custom-fields" component={CustomFieldsPage} />
       <ProtectedRoute path="/import" component={ImportPage} />
       <ProtectedRoute path="/settings" component={SettingsPage} />
+      <ProtectedRoute path="/users" component={UserManagementPage} />
       <Route path="/auth" component={AuthPage} />
       <Route component={NotFound} />
     </Switch>

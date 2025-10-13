@@ -4,7 +4,9 @@ import { setupAuth } from "./auth";
 import { storage } from "./storage";
 import multer from "multer";
 import Papa from "papaparse";
+import bcrypt from "bcrypt";
 import { sendAssignmentNotification } from "./email";
+import { insertUserSchema } from "@shared/schema";
 
 const upload = multer({ storage: multer.memoryStorage() });
 
@@ -24,6 +26,14 @@ function requireAdminOrManager(req: any, res: any, next: any) {
   next();
 }
 
+// Middleware to check admin role only
+function requireAdmin(req: any, res: any, next: any) {
+  if (!req.user || req.user.role !== "admin") {
+    return res.status(403).send("Forbidden - Admin access required");
+  }
+  next();
+}
+
 export function registerRoutes(app: Express): Server {
   // Setup authentication routes
   setupAuth(app);
@@ -32,7 +42,76 @@ export function registerRoutes(app: Express): Server {
   app.get("/api/users", requireAuth, async (req, res) => {
     try {
       const users = await storage.getAllUsers();
-      res.json(users);
+      // Remove passwords from response
+      const sanitizedUsers = users.map(({ password, ...user }) => user);
+      res.json(sanitizedUsers);
+    } catch (error: any) {
+      res.status(500).send(error.message);
+    }
+  });
+
+  app.post("/api/users", requireAuth, requireAdmin, async (req, res) => {
+    try {
+      // Validate request body
+      const validatedData = insertUserSchema.parse(req.body);
+      const { password, ...userData } = validatedData;
+      
+      // Hash password before storing
+      const hashedPassword = await bcrypt.hash(password, 10);
+      const user = await storage.createUser({ ...userData, password: hashedPassword });
+      
+      // Don't send password back
+      const { password: _, ...userWithoutPassword } = user;
+      res.status(201).json(userWithoutPassword);
+    } catch (error: any) {
+      if (error.name === "ZodError") {
+        return res.status(400).send(error.errors[0].message);
+      }
+      res.status(500).send(error.message);
+    }
+  });
+
+  app.patch("/api/users/:id", requireAuth, requireAdmin, async (req, res) => {
+    try {
+      // Validate request body (password is optional for updates)
+      const updateSchema = insertUserSchema.partial();
+      const validatedData = updateSchema.parse(req.body) as any;
+      const { password, ...updateData } = validatedData;
+      
+      // If password is being updated, hash it and add to update data
+      if (password) {
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const finalUpdateData = { ...updateData, password: hashedPassword };
+        const user = await storage.updateUser(req.params.id, finalUpdateData);
+        if (!user) return res.status(404).send("User not found");
+        
+        // Don't send password back
+        const { password: _, ...userWithoutPassword } = user;
+        res.json(userWithoutPassword);
+      } else {
+        const user = await storage.updateUser(req.params.id, updateData);
+        if (!user) return res.status(404).send("User not found");
+        
+        // Don't send password back
+        const { password: _, ...userWithoutPassword } = user;
+        res.json(userWithoutPassword);
+      }
+    } catch (error: any) {
+      if (error.name === "ZodError") {
+        return res.status(400).send(error.errors[0].message);
+      }
+      res.status(500).send(error.message);
+    }
+  });
+
+  app.delete("/api/users/:id", requireAuth, requireAdmin, async (req, res) => {
+    try {
+      // Prevent deleting yourself
+      if (req.params.id === req.user?.id) {
+        return res.status(400).send("Cannot delete your own account");
+      }
+      await storage.deleteUser(req.params.id);
+      res.status(204).send();
     } catch (error: any) {
       res.status(500).send(error.message);
     }

@@ -1,12 +1,13 @@
 // Storage implementation with database from blueprint:javascript_auth_all_persistance and javascript_database
 import { 
   users, assets, departments, assetAssignments, assetNotes, auditTrail, 
-  customFieldDefinitions, emailSettings,
+  customFieldDefinitions, emailSettings, systemSettings,
   type User, type InsertUser, type Asset, type InsertAsset,
   type Department, type InsertDepartment, type AssetAssignment, type InsertAssetAssignment,
   type AssetNote, type InsertAssetNote, type AuditTrail, type InsertAuditTrail,
   type CustomFieldDefinition, type InsertCustomFieldDefinition,
-  type EmailSettings, type InsertEmailSettings
+  type EmailSettings, type InsertEmailSettings,
+  type SystemSettings, type InsertSystemSettings
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc } from "drizzle-orm";
@@ -59,6 +60,10 @@ export interface IStorage {
   // Email settings methods
   getEmailSettings(): Promise<EmailSettings | undefined>;
   saveEmailSettings(settings: InsertEmailSettings): Promise<EmailSettings>;
+
+  // System settings methods
+  getSystemSettings(): Promise<SystemSettings | undefined>;
+  saveSystemSettings(settings: InsertSystemSettings): Promise<SystemSettings>;
 
   sessionStore: session.SessionStore;
 }
@@ -224,6 +229,27 @@ export class DatabaseStorage implements IStorage {
       return settings;
     } else {
       const [settings] = await db.insert(emailSettings).values(insertSettings).returning();
+      return settings;
+    }
+  }
+
+  // System settings methods
+  async getSystemSettings(): Promise<SystemSettings | undefined> {
+    const [settings] = await db.select().from(systemSettings).limit(1);
+    return settings || undefined;
+  }
+
+  async saveSystemSettings(insertSettings: InsertSystemSettings): Promise<SystemSettings> {
+    const existing = await this.getSystemSettings();
+    if (existing) {
+      const [settings] = await db
+        .update(systemSettings)
+        .set({ ...insertSettings, updatedAt: new Date() })
+        .where(eq(systemSettings.id, existing.id))
+        .returning();
+      return settings;
+    } else {
+      const [settings] = await db.insert(systemSettings).values(insertSettings).returning();
       return settings;
     }
   }

@@ -70,21 +70,71 @@ export function setupAuth(app: Express) {
     done(null, user);
   });
 
-  app.post("/api/register", async (req, res, next) => {
-    const existingUser = await storage.getUserByUsername(req.body.username);
-    if (existingUser) {
-      return res.status(400).send("Username already exists");
+  // Check if setup is required
+  app.get("/api/setup/status", async (req, res) => {
+    try {
+      const settings = await storage.getSystemSettings();
+      const setupCompleted = settings?.setupCompleted || false;
+      res.json({ setupCompleted });
+    } catch (error: any) {
+      res.status(500).send(error.message);
     }
+  });
 
-    const user = await storage.createUser({
-      ...req.body,
-      password: await hashPassword(req.body.password),
-    });
+  // Initial setup - creates admin user with custom credentials
+  app.post("/api/setup", async (req, res, next) => {
+    try {
+      const settings = await storage.getSystemSettings();
+      if (settings?.setupCompleted) {
+        return res.status(400).send("Setup already completed");
+      }
 
-    req.login(user, (err) => {
-      if (err) return next(err);
-      res.status(201).json(user);
-    });
+      // Require custom admin credentials
+      const { username, password, email, fullName } = req.body;
+      
+      if (!username || !password || !email || !fullName) {
+        return res.status(400).send("All fields are required: username, password, email, fullName");
+      }
+
+      if (password.length < 8) {
+        return res.status(400).send("Password must be at least 8 characters long");
+      }
+
+      // Check if username already exists
+      const existingUser = await storage.getUserByUsername(username);
+      if (existingUser) {
+        return res.status(400).send("Username already exists");
+      }
+
+      // Create admin user with provided credentials
+      const adminUser = await storage.createUser({
+        username,
+        password: await hashPassword(password),
+        email,
+        fullName,
+        role: "admin",
+        department: null,
+        isContractor: false,
+      });
+
+      // Mark setup as completed
+      await storage.saveSystemSettings({ setupCompleted: true });
+
+      // Log the admin in
+      req.login(adminUser, (err) => {
+        if (err) return next(err);
+        console.log(`✅ First-time setup completed. Admin user created: ${username}`);
+        res.status(201).json(adminUser);
+      });
+    } catch (error: any) {
+      console.error("❌ Setup failed:", error);
+      res.status(500).send(error.message);
+    }
+  });
+
+  // Register route (disabled - for admin use only)
+  app.post("/api/register", async (req, res, next) => {
+    return res.status(403).send("Registration is disabled. Please contact an administrator.");
   });
 
   app.post("/api/login", (req, res, next) => {

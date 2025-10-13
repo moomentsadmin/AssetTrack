@@ -10,6 +10,7 @@ This full-stack application provides complete asset lifecycle management with ro
 
 ### Core Functionality
 - **Authentication**: Username/password authentication with role-based access (Admin, Manager, Employee)
+- **First-Time Setup**: Automated admin account creation on first deployment
 - **Asset Management**: Full CRUD for multiple asset types with status tracking
 - **Employee Management**: Track team members and contractors
 - **Department Organization**: Organize assets and employees by department
@@ -24,6 +25,7 @@ This full-stack application provides complete asset lifecycle management with ro
 - **Email Notifications**: Configurable notifications via SendGrid, Gmail (SMTP), or Office 365
 - **Search & Filters**: Asset search and filtering by status, type, and department
 - **Dark Mode**: Full dark mode support with modern, clean UI
+- **User Management**: Admins can add, edit, and delete user accounts (registration disabled for security)
 
 ## Tech Stack
 
@@ -52,25 +54,35 @@ This full-stack application provides complete asset lifecycle management with ro
 - **audit_trail**: Complete activity history
 - **custom_field_definitions**: Dynamic custom fields per asset type
 - **email_settings**: SMTP/SendGrid configuration
+- **system_settings**: Application configuration including first-time setup status, company branding
 
-## Default Credentials
+## First-Time Setup
 
-**Admin Account:**
-- Username: `admin`
-- Password: `admin123`
-- Email: admin@company.com
+On first deployment or when the database is empty:
+1. Navigate to the application URL
+2. The setup page will automatically appear
+3. Fill in the admin account details:
+   - **Full Name**: Your full name
+   - **Email**: Your email address
+   - **Username**: Choose a username (min. 3 characters)
+   - **Password**: Choose a secure password (min. 8 characters)
+4. Click "Create Admin Account"
+5. You'll be automatically logged in as the admin
 
-**Test Employees:**
-- Username: `john.doe` / Password: `admin123` (Employee role)
-- Username: `jane.smith` / Password: `admin123` (Manager role)
+**Security Notes**: 
+- The setup process requires custom credentials - no hard-coded defaults
+- Setup can only be run once per deployment
+- Public registration is disabled - only admins can create new user accounts through the admin panel
 
 ## API Endpoints
 
-### Authentication
-- POST `/api/register` - Register new user
+### Authentication & Setup
+- GET `/api/setup/status` - Check if first-time setup is required
+- POST `/api/setup` - Create default admin account (first-time only)
 - POST `/api/login` - Login
 - POST `/api/logout` - Logout
 - GET `/api/user` - Get current user
+- POST `/api/register` - Disabled (returns 403)
 
 ### Assets
 - GET `/api/assets` - List all assets

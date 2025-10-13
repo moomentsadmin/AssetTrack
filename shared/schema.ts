@@ -112,6 +112,19 @@ export const emailSettings = pgTable("email_settings", {
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
+// System Settings table
+export const systemSettings = pgTable("system_settings", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  setupCompleted: boolean("setup_completed").notNull().default(false),
+  companyName: text("company_name"),
+  companyWebsite: text("company_website"),
+  companyLogo: text("company_logo"),
+  headerLinks: jsonb("header_links"),
+  footerLinks: jsonb("footer_links"),
+  defaultCurrency: text("default_currency").notNull().default("USD"),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   assignedAssets: many(assetAssignments),
@@ -218,6 +231,11 @@ export const insertEmailSettingsSchema = createInsertSchema(emailSettings).omit(
   updatedAt: true,
 });
 
+export const insertSystemSettingsSchema = createInsertSchema(systemSettings).omit({
+  id: true,
+  updatedAt: true,
+});
+
 // Types
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
@@ -242,3 +260,6 @@ export type CustomFieldDefinition = typeof customFieldDefinitions.$inferSelect;
 
 export type InsertEmailSettings = z.infer<typeof insertEmailSettingsSchema>;
 export type EmailSettings = typeof emailSettings.$inferSelect;
+
+export type InsertSystemSettings = z.infer<typeof insertSystemSettingsSchema>;
+export type SystemSettings = typeof systemSettings.$inferSelect;

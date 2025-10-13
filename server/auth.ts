@@ -83,12 +83,23 @@ export function setupAuth(app: Express) {
   });
 
   app.post("/api/login", (req, res, next) => {
+    console.log("🔐 Login attempt:", { username: req.body.username, hasPassword: !!req.body.password });
+    
     passport.authenticate("local", (err: any, user: any, info: any) => {
+      console.log("🔑 Auth result:", { err, hasUser: !!user, info });
+      
       if (err) return next(err);
-      if (!user) return res.status(401).send("Invalid credentials");
+      if (!user) {
+        console.log("❌ Authentication failed - Invalid credentials");
+        return res.status(401).send("Invalid credentials");
+      }
       
       req.login(user, (err) => {
-        if (err) return next(err);
+        if (err) {
+          console.log("❌ Session login failed:", err);
+          return next(err);
+        }
+        console.log("✅ Login successful:", user.username);
         res.status(200).json(user);
       });
     })(req, res, next);

@@ -25,7 +25,12 @@ This full-stack application provides complete asset lifecycle management with ro
 - **Email Notifications**: Configurable notifications via SendGrid, Gmail (SMTP), or Office 365
 - **Search & Filters**: Asset search and filtering by status, type, and department
 - **Dark Mode**: Full dark mode support with modern, clean UI
-- **User Management**: Admins can add, edit, and delete user accounts (registration disabled for security)
+- **User Management**: Complete admin user management with secure CRUD operations
+  - Create, edit, and delete user accounts (admin-only)
+  - Role assignment (Admin, Manager, Employee)
+  - Password management with bcrypt hashing
+  - Protection against self-deletion
+  - Password sanitization (never sent to client)
 
 ## Tech Stack
 
@@ -80,11 +85,17 @@ On first deployment or when the database is empty:
 
 ### Authentication & Setup
 - GET `/api/setup/status` - Check if first-time setup is required
-- POST `/api/setup` - Create default admin account (first-time only)
+- POST `/api/setup` - Create admin account with custom credentials (first-time only)
 - POST `/api/login` - Login
 - POST `/api/logout` - Logout
 - GET `/api/user` - Get current user
 - POST `/api/register` - Disabled (returns 403)
+
+### User Management (Admin Only)
+- GET `/api/users` - List all users (passwords sanitized)
+- POST `/api/users` - Create new user account
+- PATCH `/api/users/:id` - Update user account
+- DELETE `/api/users/:id` - Delete user account (cannot delete self)
 
 ### Assets
 - GET `/api/assets` - List all assets
@@ -129,6 +140,11 @@ Navigate to Settings page to configure:
 ## Recent Development
 
 ### Latest Updates (October 2025)
+- **Security Hardening**: First-time setup now requires custom admin credentials (no hard-coded defaults)
+- **User Management**: Complete admin CRUD interface for managing user accounts
+  - Password security: bcrypt hashing, sanitization in API responses, validation
+  - Role-based access control with admin-only restrictions
+  - Self-deletion protection
 - **Production Ready**: Application fully tested and prepared for deployment
 - **Fixed Critical Bug**: Asset creation with date fields now works correctly - dates are properly converted from ISO strings to Date objects
 - **Authentication**: Passport.js configured with proper error handling and session management
@@ -137,7 +153,6 @@ Navigate to Settings page to configure:
 - Added email notification integration with nodemailer
 - Implemented depreciation auto-calculation based on purchase date
 - Added comprehensive audit logging for all asset actions including depreciation
-- Seeded default admin user and test data
 
 ### Architecture Decisions
 - Modern SaaS dashboard design with professional blue accent (hsl(217 91% 60%))

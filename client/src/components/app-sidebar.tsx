@@ -34,6 +34,7 @@ import {
   LogOut,
   Wrench,
   UserCog,
+  User as UserIcon,
 } from "lucide-react";
 
 export function AppSidebar() {
@@ -204,6 +205,13 @@ export function AppSidebar() {
               </DropdownMenuLabel>
             )}
             <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={() => setLocation("/profile")}
+              data-testid="button-profile"
+            >
+              <UserIcon className="mr-2 h-4 w-4" />
+              <span>My Profile</span>
+            </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => logoutMutation.mutate()}
               className="text-destructive"

@@ -71,12 +71,36 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.patch("/api/users/:id", requireAuth, requireAdmin, async (req, res) => {
+  app.patch("/api/users/:id", requireAuth, async (req, res) => {
     try {
+      // Check if user is updating their own profile or is an admin
+      const isOwnProfile = req.user?.id === req.params.id;
+      const isAdmin = req.user?.role === "admin";
+      
+      if (!isOwnProfile && !isAdmin) {
+        return res.status(403).send("Forbidden - You can only update your own profile");
+      }
+      
       // Validate request body (password is optional for updates)
       const updateSchema = insertUserSchema.partial();
       const validatedData = updateSchema.parse(req.body) as any;
-      const { password, ...updateData } = validatedData;
+      const { password, ...rawUpdateData } = validatedData;
+      
+      let updateData: any = {};
+      
+      // Non-admin users can only update specific fields
+      if (isOwnProfile && !isAdmin) {
+        // Allow only: fullName, email, department
+        const allowedFields = ['fullName', 'email', 'department'];
+        for (const field of allowedFields) {
+          if (rawUpdateData[field] !== undefined) {
+            updateData[field] = rawUpdateData[field];
+          }
+        }
+      } else if (isAdmin) {
+        // Admin can update all fields
+        updateData = rawUpdateData;
+      }
       
       // If password is being updated, hash it and add to update data
       if (password) {

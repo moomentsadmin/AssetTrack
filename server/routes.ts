@@ -366,6 +366,44 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // Locations routes
+  app.get("/api/locations", requireAuth, async (req, res) => {
+    try {
+      const locations = await storage.getAllLocations();
+      res.json(locations);
+    } catch (error: any) {
+      res.status(500).send(error.message);
+    }
+  });
+
+  app.post("/api/locations", requireAuth, requireAdminOrManager, async (req, res) => {
+    try {
+      const location = await storage.createLocation(req.body);
+      res.status(201).json(location);
+    } catch (error: any) {
+      res.status(500).send(error.message);
+    }
+  });
+
+  app.patch("/api/locations/:id", requireAuth, requireAdminOrManager, async (req, res) => {
+    try {
+      const location = await storage.updateLocation(req.params.id, req.body);
+      if (!location) return res.status(404).send("Location not found");
+      res.json(location);
+    } catch (error: any) {
+      res.status(500).send(error.message);
+    }
+  });
+
+  app.delete("/api/locations/:id", requireAuth, requireAdminOrManager, async (req, res) => {
+    try {
+      await storage.deleteLocation(req.params.id);
+      res.sendStatus(204);
+    } catch (error: any) {
+      res.status(500).send(error.message);
+    }
+  });
+
   // Assignments routes
   app.get("/api/assignments", requireAuth, async (req, res) => {
     try {
@@ -520,6 +558,31 @@ export function registerRoutes(app: Express): Server {
   app.post("/api/settings/email", requireAuth, requireAdminOrManager, async (req, res) => {
     try {
       const settings = await storage.saveEmailSettings(req.body);
+      res.json(settings);
+    } catch (error: any) {
+      res.status(500).send(error.message);
+    }
+  });
+
+  // System settings routes
+  app.get("/api/settings/system", requireAuth, async (req, res) => {
+    try {
+      const settings = await storage.getSystemSettings();
+      res.json(settings || {
+        setupCompleted: false,
+        companyName: "",
+        companyWebsite: "",
+        companyLogo: "",
+        defaultCurrency: "USD",
+      });
+    } catch (error: any) {
+      res.status(500).send(error.message);
+    }
+  });
+
+  app.post("/api/settings/system", requireAuth, requireAdminOrManager, async (req, res) => {
+    try {
+      const settings = await storage.saveSystemSettings(req.body);
       res.json(settings);
     } catch (error: any) {
       res.status(500).send(error.message);

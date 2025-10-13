@@ -11,12 +11,17 @@ This full-stack application provides complete asset lifecycle management with ro
 ### Core Functionality
 - **Authentication**: Username/password authentication with role-based access (Admin, Manager, Employee)
 - **First-Time Setup**: Automated admin account creation on first deployment
-- **Asset Management**: Full CRUD for multiple asset types with status tracking
+- **User Management**: Complete admin CRUD interface for managing user accounts
+- **Personal Profile**: All users can update their own information (fullName, email, department) and change passwords
+- **Asset Management**: Full CRUD for multiple asset types with status tracking and photo URLs
+- **Location Management**: Physical location tracking with dropdown selection for assets
 - **Employee Management**: Track team members and contractors
 - **Department Organization**: Organize assets and employees by department
 - **Assignment Workflow**: Check-in/check-out assets with assignment history
 - **Asset Notes**: Maintenance logs and observations
 - **Audit Trail**: Complete history of all asset-related activities
+- **System Health**: Admin dashboard for monitoring system status, statistics, and activity
+- **Company Branding**: Configure company name, logo, website, and currency preferences
 
 ### Advanced Features
 - **Depreciation Calculator**: Automatic asset value tracking using straight-line and declining balance methods
@@ -94,8 +99,14 @@ On first deployment or when the database is empty:
 ### User Management (Admin Only)
 - GET `/api/users` - List all users (passwords sanitized)
 - POST `/api/users` - Create new user account
-- PATCH `/api/users/:id` - Update user account
+- PATCH `/api/users/:id` - Update user account (self-update or admin)
 - DELETE `/api/users/:id` - Delete user account (cannot delete self)
+
+### Profile Management (All Users)
+- Users can update their own profile: fullName, email, department
+- Users can change their own password (with current password verification)
+- Non-admin users cannot change: role, isContractor, username
+- Whitelist approach for field filtering (security hardened)
 
 ### Assets
 - GET `/api/assets` - List all assets
@@ -145,6 +156,29 @@ Navigate to Settings page to configure:
   - Password security: bcrypt hashing, sanitization in API responses, validation
   - Role-based access control with admin-only restrictions
   - Self-deletion protection
+- **Personal Profile Page**: All users can manage their own profiles
+  - Update personal information: fullName, email, department
+  - Change password with current password verification
+  - Whitelist approach: non-admin users cannot modify role, contractor status, or username
+  - Secure field filtering prevents privilege escalation
+- **Location Management**: Physical location tracking system
+  - CRUD operations for location management (admin/manager access)
+  - Assets can be assigned to specific locations via dropdown
+  - Location statistics showing asset count and total value
+- **System Health Monitoring**: Admin dashboard for system oversight
+  - Real-time database and server status
+  - User and asset statistics
+  - Asset distribution charts by status
+  - Recent activity from audit trail
+  - System resource overview (departments, locations, audit entries)
+- **Company Branding**: Customizable company settings
+  - Company name, website, and logo URL configuration
+  - Logo preview functionality
+  - Currency selection (USD, EUR, GBP, JPY, CAD, AUD, INR)
+  - Admin/manager access to branding settings
+- **Asset Photos**: Photo URL field for asset images
+  - Optional photo URL input in asset form
+  - Supports external image URLs for asset documentation
 - **Production Ready**: Application fully tested and prepared for deployment
 - **Fixed Critical Bug**: Asset creation with date fields now works correctly - dates are properly converted from ISO strings to Date objects
 - **Authentication**: Passport.js configured with proper error handling and session management
@@ -159,8 +193,33 @@ Navigate to Settings page to configure:
 - Dark mode as primary theme with light mode support
 - PostgreSQL for reliable data persistence
 - Session-based authentication for security
+- Role-based access control with ProtectedRoute component supporting allowedRoles
 - Custom fields stored as JSONB for flexibility
 - Comprehensive audit trail for compliance
+
+### Role-Based Access Control
+The application implements strict role-based authorization at both frontend and backend:
+
+**Employee Access** (Most Restrictive):
+- Main Menu: Dashboard, Assets, Employees, Departments, Audit Trail, Profile
+- Cannot access: Administration section, Locations, Branding, System Health, User Management
+
+**Manager Access**:
+- All Employee features plus:
+- Administration Section: Locations, Custom Fields, Import Data, Branding, Settings
+- Cannot access: System Health (admin only), User Management (admin only)
+
+**Admin Access** (Full Control):
+- All Manager features plus:
+- System Health monitoring dashboard
+- User Management (create, edit, delete users)
+- Full system configuration
+
+**Implementation**:
+- Frontend: `ProtectedRoute` component with `allowedRoles` parameter
+- Sidebar: Dynamic menu filtering based on user role and `adminOnly` flags
+- Backend: `requireAdmin` and `requireAdminOrManager` middleware on API routes
+- Access denied page shown when unauthorized users attempt restricted routes
 
 ## Running the Application
 

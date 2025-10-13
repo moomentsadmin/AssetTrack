@@ -1,7 +1,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { insertAssetSchema, Asset, Department } from "@shared/schema";
+import { insertAssetSchema, Asset, Department, Location } from "@shared/schema";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,6 +27,10 @@ export function AssetForm({ asset, onSuccess }: { asset?: Asset; onSuccess: () =
     queryKey: ["/api/departments"],
   });
 
+  const { data: locations = [] } = useQuery<Location[]>({
+    queryKey: ["/api/locations"],
+  });
+
   const { data: customFields = [] } = useQuery<any[]>({
     queryKey: ["/api/custom-fields"],
   });
@@ -44,7 +48,8 @@ export function AssetForm({ asset, onSuccess }: { asset?: Asset; onSuccess: () =
       purchaseCost: asset?.purchaseCost || "",
       warrantyExpiry: asset?.warrantyExpiry ? new Date(asset.warrantyExpiry).toISOString().split('T')[0] : "",
       condition: asset?.condition || "",
-      location: asset?.location || "",
+      photoUrl: asset?.photoUrl || "",
+      locationId: asset?.locationId || "",
       departmentId: asset?.departmentId || "",
       depreciationMethod: asset?.depreciationMethod || null,
       depreciationRate: asset?.depreciationRate || "",
@@ -57,6 +62,7 @@ export function AssetForm({ asset, onSuccess }: { asset?: Asset; onSuccess: () =
         ...data,
         purchaseDate: data.purchaseDate ? new Date(data.purchaseDate).toISOString() : null,
         warrantyExpiry: data.warrantyExpiry ? new Date(data.warrantyExpiry).toISOString() : null,
+        locationId: data.locationId || null,
         departmentId: data.departmentId || null,
         depreciationMethod: data.depreciationMethod || null,
         depreciationRate: data.depreciationRate || null,
@@ -280,13 +286,24 @@ export function AssetForm({ asset, onSuccess }: { asset?: Asset; onSuccess: () =
         <div className="grid grid-cols-2 gap-4">
           <FormField
             control={form.control}
-            name="location"
+            name="locationId"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Location</FormLabel>
-                <FormControl>
-                  <Input {...field} value={field.value || ""} data-testid="input-location" />
-                </FormControl>
+                <Select onValueChange={field.onChange} value={field.value || ""}>
+                  <FormControl>
+                    <SelectTrigger data-testid="select-location">
+                      <SelectValue placeholder="Select location" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {locations.map((location) => (
+                      <SelectItem key={location.id} value={location.id}>
+                        {location.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <FormMessage />
               </FormItem>
             )}
@@ -306,6 +323,20 @@ export function AssetForm({ asset, onSuccess }: { asset?: Asset; onSuccess: () =
             )}
           />
         </div>
+
+        <FormField
+          control={form.control}
+          name="photoUrl"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Photo URL (Optional)</FormLabel>
+              <FormControl>
+                <Input {...field} value={field.value || ""} type="url" placeholder="https://example.com/asset-photo.jpg" data-testid="input-photo-url" />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
         {assetTypeCustomFields.length > 0 && (
           <div className="pt-4 border-t">

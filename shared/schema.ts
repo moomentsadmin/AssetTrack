@@ -30,6 +30,14 @@ export const departments = pgTable("departments", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+// Locations table
+export const locations = pgTable("locations", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull().unique(),
+  description: text("description"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 // Assets table
 export const assets = pgTable("assets", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -43,7 +51,8 @@ export const assets = pgTable("assets", {
   purchaseCost: decimal("purchase_cost", { precision: 10, scale: 2 }),
   warrantyExpiry: timestamp("warranty_expiry"),
   condition: text("condition"),
-  location: text("location"),
+  photoUrl: text("photo_url"),
+  locationId: varchar("location_id").references(() => locations.id),
   departmentId: varchar("department_id").references(() => departments.id),
   customFields: jsonb("custom_fields"),
   depreciationMethod: depreciationMethodEnum("depreciation_method"),
@@ -136,10 +145,18 @@ export const departmentsRelations = relations(departments, ({ many }) => ({
   assets: many(assets),
 }));
 
+export const locationsRelations = relations(locations, ({ many }) => ({
+  assets: many(assets),
+}));
+
 export const assetsRelations = relations(assets, ({ one, many }) => ({
   department: one(departments, {
     fields: [assets.departmentId],
     references: [departments.id],
+  }),
+  location: one(locations, {
+    fields: [assets.locationId],
+    references: [locations.id],
   }),
   assignments: many(assetAssignments),
   notes: many(assetNotes),
@@ -199,6 +216,11 @@ export const insertDepartmentSchema = createInsertSchema(departments).omit({
   createdAt: true,
 });
 
+export const insertLocationSchema = createInsertSchema(locations).omit({
+  id: true,
+  createdAt: true,
+});
+
 export const insertAssetSchema = createInsertSchema(assets).omit({
   id: true,
   createdAt: true,
@@ -242,6 +264,9 @@ export type User = typeof users.$inferSelect;
 
 export type InsertDepartment = z.infer<typeof insertDepartmentSchema>;
 export type Department = typeof departments.$inferSelect;
+
+export type InsertLocation = z.infer<typeof insertLocationSchema>;
+export type Location = typeof locations.$inferSelect;
 
 export type InsertAsset = z.infer<typeof insertAssetSchema>;
 export type Asset = typeof assets.$inferSelect;

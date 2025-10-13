@@ -1,9 +1,10 @@
 // Storage implementation with database from blueprint:javascript_auth_all_persistance and javascript_database
 import { 
-  users, assets, departments, assetAssignments, assetNotes, auditTrail, 
+  users, assets, departments, locations, assetAssignments, assetNotes, auditTrail, 
   customFieldDefinitions, emailSettings, systemSettings,
   type User, type InsertUser, type Asset, type InsertAsset,
-  type Department, type InsertDepartment, type AssetAssignment, type InsertAssetAssignment,
+  type Department, type InsertDepartment, type Location, type InsertLocation,
+  type AssetAssignment, type InsertAssetAssignment,
   type AssetNote, type InsertAssetNote, type AuditTrail, type InsertAuditTrail,
   type CustomFieldDefinition, type InsertCustomFieldDefinition,
   type EmailSettings, type InsertEmailSettings,
@@ -39,6 +40,13 @@ export interface IStorage {
   createDepartment(dept: InsertDepartment): Promise<Department>;
   updateDepartment(id: string, dept: Partial<InsertDepartment>): Promise<Department | undefined>;
   deleteDepartment(id: string): Promise<void>;
+
+  // Location methods
+  getAllLocations(): Promise<Location[]>;
+  getLocation(id: string): Promise<Location | undefined>;
+  createLocation(location: InsertLocation): Promise<Location>;
+  updateLocation(id: string, location: Partial<InsertLocation>): Promise<Location | undefined>;
+  deleteLocation(id: string): Promise<void>;
 
   // Assignment methods
   getAllAssignments(): Promise<AssetAssignment[]>;
@@ -167,6 +175,34 @@ export class DatabaseStorage implements IStorage {
 
   async deleteDepartment(id: string): Promise<void> {
     await db.delete(departments).where(eq(departments.id, id));
+  }
+
+  // Location methods
+  async getAllLocations(): Promise<Location[]> {
+    return await db.select().from(locations);
+  }
+
+  async getLocation(id: string): Promise<Location | undefined> {
+    const [location] = await db.select().from(locations).where(eq(locations.id, id));
+    return location || undefined;
+  }
+
+  async createLocation(insertLocation: InsertLocation): Promise<Location> {
+    const [location] = await db.insert(locations).values(insertLocation).returning();
+    return location;
+  }
+
+  async updateLocation(id: string, updateData: Partial<InsertLocation>): Promise<Location | undefined> {
+    const [location] = await db
+      .update(locations)
+      .set(updateData)
+      .where(eq(locations.id, id))
+      .returning();
+    return location || undefined;
+  }
+
+  async deleteLocation(id: string): Promise<void> {
+    await db.delete(locations).where(eq(locations.id, id));
   }
 
   // Assignment methods

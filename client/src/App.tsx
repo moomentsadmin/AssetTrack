@@ -21,6 +21,9 @@ import ImportPage from "@/pages/import-page";
 import SettingsPage from "@/pages/settings-page";
 import UserManagementPage from "@/pages/user-management-page";
 import ProfilePage from "@/pages/profile-page";
+import LocationsPage from "@/pages/locations-page";
+import SystemHealthPage from "@/pages/system-health-page";
+import BrandingPage from "@/pages/branding-page";
 
 function Router() {
   return (
@@ -29,12 +32,15 @@ function Router() {
       <ProtectedRoute path="/assets" component={AssetsPage} />
       <ProtectedRoute path="/employees" component={EmployeesPage} />
       <ProtectedRoute path="/departments" component={DepartmentsPage} />
+      <ProtectedRoute path="/locations" component={LocationsPage} allowedRoles={["admin", "manager"]} />
       <ProtectedRoute path="/audit" component={AuditPage} />
       <ProtectedRoute path="/custom-fields" component={CustomFieldsPage} />
       <ProtectedRoute path="/import" component={ImportPage} />
       <ProtectedRoute path="/settings" component={SettingsPage} />
-      <ProtectedRoute path="/users" component={UserManagementPage} />
+      <ProtectedRoute path="/users" component={UserManagementPage} allowedRoles={["admin"]} />
       <ProtectedRoute path="/profile" component={ProfilePage} />
+      <ProtectedRoute path="/system-health" component={SystemHealthPage} allowedRoles={["admin"]} />
+      <ProtectedRoute path="/branding" component={BrandingPage} allowedRoles={["admin", "manager"]} />
       <Route path="/auth" component={AuthPage} />
       <Route component={NotFound} />
     </Switch>

@@ -29,12 +29,14 @@ import {
   History,
   Settings,
   Building2,
+  MapPin,
   FileUp,
   ChevronDown,
   LogOut,
   Wrench,
   UserCog,
   User as UserIcon,
+  Activity,
 } from "lucide-react";
 
 export function AppSidebar() {
@@ -76,6 +78,12 @@ export function AppSidebar() {
 
   const adminItems = [
     {
+      title: "Locations",
+      icon: MapPin,
+      url: "/locations",
+      testId: "nav-locations",
+    },
+    {
       title: "User Management",
       icon: UserCog,
       url: "/users",
@@ -93,6 +101,19 @@ export function AppSidebar() {
       icon: FileUp,
       url: "/import",
       testId: "nav-import",
+    },
+    {
+      title: "System Health",
+      icon: Activity,
+      url: "/system-health",
+      testId: "nav-system-health",
+      adminOnly: true,
+    },
+    {
+      title: "Branding",
+      icon: Building2,
+      url: "/branding",
+      testId: "nav-branding",
     },
     {
       title: "Settings",

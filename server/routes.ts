@@ -60,7 +60,15 @@ export function registerRoutes(app: Express): Server {
 
   app.post("/api/assets", requireAuth, async (req, res) => {
     try {
-      const asset = await storage.createAsset(req.body);
+      // Convert date strings to Date objects, excluding them from the spread
+      const { purchaseDate, warrantyExpiry, ...rest } = req.body;
+      const assetData = {
+        ...rest,
+        purchaseDate: purchaseDate ? new Date(purchaseDate) : null,
+        warrantyExpiry: warrantyExpiry ? new Date(warrantyExpiry) : null,
+      };
+
+      const asset = await storage.createAsset(assetData);
       
       // Create audit entry
       await storage.createAuditEntry({
@@ -78,7 +86,18 @@ export function registerRoutes(app: Express): Server {
 
   app.patch("/api/assets/:id", requireAuth, async (req, res) => {
     try {
-      const asset = await storage.updateAsset(req.params.id, req.body);
+      // Convert date strings to Date objects, excluding them from the spread
+      const { purchaseDate, warrantyExpiry, ...rest } = req.body;
+      const updateData: any = { ...rest };
+      
+      if (purchaseDate !== undefined) {
+        updateData.purchaseDate = purchaseDate ? new Date(purchaseDate) : null;
+      }
+      if (warrantyExpiry !== undefined) {
+        updateData.warrantyExpiry = warrantyExpiry ? new Date(warrantyExpiry) : null;
+      }
+
+      const asset = await storage.updateAsset(req.params.id, updateData);
       if (!asset) return res.status(404).send("Asset not found");
 
       // Create audit entry
@@ -140,7 +159,7 @@ export function registerRoutes(app: Express): Server {
         depreciationMethod,
         depreciationRate,
         currentValue: currentValue.toFixed(2),
-      });
+      } as any);
 
       // Create audit entry
       await storage.createAuditEntry({
@@ -185,7 +204,7 @@ export function registerRoutes(app: Express): Server {
 
       const updatedAsset = await storage.updateAsset(req.params.id, {
         currentValue: currentValue.toFixed(2),
-      });
+      } as any);
 
       // Create audit entry
       await storage.createAuditEntry({

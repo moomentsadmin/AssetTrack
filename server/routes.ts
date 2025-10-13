@@ -142,6 +142,20 @@ export function registerRoutes(app: Express): Server {
         currentValue: currentValue.toFixed(2),
       });
 
+      // Create audit entry
+      await storage.createAuditEntry({
+        assetId: req.params.id,
+        userId: req.user!.id,
+        action: "Depreciation updated",
+        details: {
+          assetName: asset.name,
+          method: depreciationMethod,
+          rate: depreciationRate,
+          yearsOfUse: yearsOfUse,
+          currentValue: currentValue.toFixed(2),
+        },
+      });
+
       res.json(updatedAsset);
     } catch (error: any) {
       res.status(500).send(error.message);
@@ -171,6 +185,19 @@ export function registerRoutes(app: Express): Server {
 
       const updatedAsset = await storage.updateAsset(req.params.id, {
         currentValue: currentValue.toFixed(2),
+      });
+
+      // Create audit entry
+      await storage.createAuditEntry({
+        assetId: req.params.id,
+        userId: req.user!.id,
+        action: "Depreciation auto-calculated",
+        details: {
+          assetName: asset.name,
+          method: asset.depreciationMethod,
+          yearsSincePurchase: yearsSincePurchase.toFixed(2),
+          currentValue: currentValue.toFixed(2),
+        },
       });
 
       res.json(updatedAsset);

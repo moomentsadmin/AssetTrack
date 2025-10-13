@@ -72,6 +72,8 @@ On first deployment or when the database is empty:
 **Security Notes**: 
 - The setup process requires custom credentials - no hard-coded defaults
 - Setup can only be run once per deployment
+- The first person to access the setup URL controls the admin account (suitable for private deployments)
+- All setup attempts are logged with IP addresses for monitoring
 - Public registration is disabled - only admins can create new user accounts through the admin panel
 
 ## API Endpoints

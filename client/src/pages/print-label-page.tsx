@@ -15,6 +15,15 @@ export default function PrintLabelPage() {
   const { data: asset, isLoading } = useQuery<Asset>({
     queryKey: ["/api/assets", assetId],
     enabled: !!assetId,
+    queryFn: async () => {
+      const res = await fetch(`/api/assets/${assetId}`, {
+        credentials: "include",
+      });
+      if (!res.ok) {
+        throw new Error(`Failed to fetch asset: ${res.statusText}`);
+      }
+      return res.json();
+    },
   });
 
   const { data: locations = [] } = useQuery<Location[]>({

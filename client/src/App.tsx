@@ -24,12 +24,14 @@ import ProfilePage from "@/pages/profile-page";
 import LocationsPage from "@/pages/locations-page";
 import SystemHealthPage from "@/pages/system-health-page";
 import BrandingPage from "@/pages/branding-page";
+import PrintLabelPage from "@/pages/print-label-page";
 
 function Router() {
   return (
     <Switch>
       <ProtectedRoute path="/" component={DashboardPage} />
       <ProtectedRoute path="/assets" component={AssetsPage} />
+      <ProtectedRoute path="/assets/:id/print-label" component={PrintLabelPage} />
       <ProtectedRoute path="/employees" component={EmployeesPage} />
       <ProtectedRoute path="/departments" component={DepartmentsPage} />
       <ProtectedRoute path="/locations" component={LocationsPage} allowedRoles={["admin", "manager"]} />

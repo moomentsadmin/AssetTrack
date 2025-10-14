@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Plus, Search, Filter, Loader2, MoreVertical, Edit, Trash2, UserPlus, FileText, DollarSign } from "lucide-react";
+import { Plus, Search, Filter, Loader2, MoreVertical, Edit, Trash2, UserPlus, FileText, DollarSign, QrCode } from "lucide-react";
+import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -52,6 +53,7 @@ const statusColors = {
 
 export default function AssetsPage() {
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [typeFilter, setTypeFilter] = useState<string>("all");
@@ -223,6 +225,10 @@ export default function AssetsPage() {
                             <DropdownMenuItem onClick={() => setDialogState({ type: "depreciation", asset })}>
                               <DollarSign className="mr-2 h-4 w-4" />
                               Depreciation
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setLocation(`/assets/${asset.id}/print-label`)}>
+                              <QrCode className="mr-2 h-4 w-4" />
+                              Print Label
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               onClick={() => deleteMutation.mutate(asset.id)}

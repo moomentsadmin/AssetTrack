@@ -12,7 +12,7 @@ export default function PrintLabelPage() {
   const [, params] = useRoute("/assets/:id/print-label");
   const assetId = params?.id;
 
-  const { data: asset, isLoading } = useQuery<Asset>({
+  const { data: asset, isLoading: assetLoading } = useQuery<Asset>({
     queryKey: ["/api/assets", assetId],
     enabled: !!assetId,
     queryFn: async () => {
@@ -26,11 +26,13 @@ export default function PrintLabelPage() {
     },
   });
 
-  const { data: locations = [] } = useQuery<Location[]>({
+  const { data: locations = [], isLoading: locationsLoading } = useQuery<Location[]>({
     queryKey: ["/api/locations"],
   });
 
-  const { companyName, companyLogo } = useBranding();
+  const { companyName, companyLogo, isLoading: brandingLoading } = useBranding();
+  
+  const isLoading = assetLoading || locationsLoading || brandingLoading;
   
   const locationName = asset?.locationId 
     ? locations.find(loc => loc.id === asset.locationId)?.name 

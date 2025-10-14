@@ -100,6 +100,28 @@ A comprehensive IT asset management system for tracking hardware, software, lice
 
 ## 🚀 Quick Start
 
+### Option 1: Docker (Recommended - 5 Minutes)
+
+```bash
+# Clone repository
+git clone https://github.com/moomentsadmin/AssetTrackr.git
+cd AssetTrackr
+
+# Create environment file
+cp .env.example .env
+nano .env  # Update PGPASSWORD and SESSION_SECRET
+
+# Start with Docker Compose
+docker-compose up -d
+
+# Access application
+# http://localhost:5000
+```
+
+See [DOCKER_QUICKSTART.md](DOCKER_QUICKSTART.md) for detailed Docker deployment guide.
+
+### Option 2: Manual Setup
+
 ### 1. Clone the Repository
 
 ```bash

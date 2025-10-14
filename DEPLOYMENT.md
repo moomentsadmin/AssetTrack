@@ -54,8 +54,8 @@ GRANT ALL PRIVILEGES ON DATABASE asset_management_prod TO asset_user;
 
 ```bash
 # Clone repository
-git clone <your-repo-url>
-cd asset-management
+git clone https://github.com/yourusername/AssetTrackr.git
+cd AssetTrackr
 
 # Install all dependencies (needed for build)
 npm ci
@@ -258,43 +258,59 @@ sudo crontab -e
 
 ## Docker Deployment
 
-### Option 1: Docker with Internal Database
+### Quick Start with Docker Compose
 
-**`Dockerfile`:**
+The repository includes ready-to-use Docker configuration files:
+- `Dockerfile` - Multi-stage build for production
+- `docker-compose.yml` - Complete stack with PostgreSQL
+- `.env.example` - Environment template
+
+**Steps:**
+
+```bash
+# 1. Clone repository
+git clone https://github.com/yourusername/AssetTrackr.git
+cd AssetTrackr
+
+# 2. Create environment file
+cp .env.example .env
+
+# 3. Edit .env with your settings (required)
+nano .env
+# Update: PGPASSWORD, SESSION_SECRET (generate with: openssl rand -base64 32)
+
+# 4. Start with Docker Compose
+docker-compose up -d
+
+# 5. Check logs
+docker-compose logs -f app
+
+# 6. Access application
+# http://localhost:5000
+```
+
+**Managing the Stack:**
+
+```bash
+# Stop services
+docker-compose down
+
+# Restart services
+docker-compose restart
+
+# View logs
+docker-compose logs -f
+
+# Rebuild after code changes
+docker-compose up -d --build
+```
+
+### Option 1: Docker with Internal Database (Manual)
+
+**`Dockerfile`:** (already included in repository)
 
 ```dockerfile
-# Multi-stage build
-FROM node:20-alpine AS base
-WORKDIR /app
-
-# Build stage
-FROM base AS build
-COPY package*.json ./
-RUN npm ci
-COPY . .
-RUN npm run build
-
-# Production stage
-FROM node:20-alpine AS production
-WORKDIR /app
-
-ENV NODE_ENV=production
-
-# Copy everything from build (includes all deps needed for migrations)
-COPY --from=build /app/node_modules ./node_modules
-COPY --from=build /app/dist ./dist
-COPY --from=build /app/package*.json ./
-COPY --from=build /app/drizzle.config.ts ./drizzle.config.ts
-COPY --from=build /app/shared ./shared
-
-# Non-root user for security
-RUN addgroup -g 1001 -S nodejs && \
-    adduser -S nodejs -u 1001
-USER nodejs
-
-EXPOSE 5000
-
-CMD ["npm", "start"]
+# See Dockerfile in repository root
 ```
 
 **`docker-compose.yml` (with internal database):**

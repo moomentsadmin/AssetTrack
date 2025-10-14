@@ -242,15 +242,27 @@ Database migrations are handled via:
 npm run db:push
 ```
 
+## Production Deployment
+
+A comprehensive deployment guide is available in `DEPLOYMENT.md` covering:
+- **Ubuntu Server**: PM2, Nginx, PostgreSQL setup with SSL
+- **Docker**: Internal DB and external DB configurations
+- **AWS**: EC2 + RDS, Elastic Beanstalk deployments
+- **Digital Ocean**: App Platform and Droplet + Managed Database
+- **Azure**: App Service + Azure Database for PostgreSQL
+- **Security**: Best practices, firewall, SSL/TLS configuration
+- **Monitoring**: Health checks, logging, and backup strategies
+
 ## Next Steps for Production
 
-1. **Email Configuration**: Set up SendGrid API key or SMTP credentials in Settings
-2. **User Management**: Register additional users as needed
-3. **Department Setup**: Create your organization's departments
-4. **Custom Fields**: Define custom fields for your specific asset types
-5. **Import Data**: Use CSV import for bulk asset upload
-6. **Backup Strategy**: Configure PostgreSQL backups
-7. **Environment Variables**: Ensure SESSION_SECRET is secure in production
+1. **Deployment**: Follow the `DEPLOYMENT.md` guide for your chosen platform
+2. **Email Configuration**: Set up SendGrid API key or SMTP credentials in Settings
+3. **User Management**: Create additional admin/manager/employee accounts
+4. **Department Setup**: Create your organization's departments
+5. **Custom Fields**: Define custom fields for your specific asset types
+6. **Import Data**: Use CSV import for bulk asset and employee upload
+7. **Backup Strategy**: Configure automated database backups
+8. **Security**: Ensure SESSION_SECRET is secure, enable SSL/HTTPS
 
 ## Notes
 

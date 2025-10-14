@@ -15,6 +15,12 @@ This full-stack application provides complete asset lifecycle management with ro
 - **Personal Profile**: All users can update their own information (fullName, email, department) and change passwords
 - **Asset Management**: Full CRUD for multiple asset types with status tracking and photo URLs
 - **Location Management**: Physical location tracking with dropdown selection for assets
+- **QR Code Labels**: Print professional asset labels with QR codes
+  - Printable labels (85mm x 54mm) with QR codes linking to asset details
+  - Includes company logo, location, date, and asset information
+  - Two identical labels per page for cutting and backup
+  - Auto-trigger print dialog for quick printing
+  - Scan QR code to instantly view asset details
 - **Employee Management**: Comprehensive employee and contractor management
   - Add employees manually with role assignment
   - Bulk employee upload via CSV
@@ -26,7 +32,7 @@ This full-stack application provides complete asset lifecycle management with ro
 - **Audit Trail**: Complete history of all asset-related activities
 - **System Health**: Admin dashboard for monitoring system status, statistics, and activity
 - **Company Branding**: Configure company name, logo, website, currency, and header/footer text
-  - Company logo displayed on login and dashboard pages
+  - Company logo displayed on login, dashboard, and QR labels
   - Custom header and footer text shown throughout the application
 
 ### Advanced Features
@@ -156,7 +162,17 @@ Navigate to Settings page to configure:
 
 ## Recent Development
 
-### Latest Updates (October 2025)
+### Latest Updates (October 14, 2025)
+- **QR Code Labels**: Print professional asset tags with QR codes
+  - Printable labels (85mm x 54mm - standard ID card size)
+  - QR codes link to asset details page for instant access
+  - Includes company branding (logo and name)
+  - Shows location, purchase date, and asset description
+  - Two labels per page for cutting and backup
+  - Accessible from asset actions dropdown menu
+  - Print-optimized CSS for clean professional output
+
+### Previous Updates (October 2025)
 - **Security Hardening**: First-time setup now requires custom admin credentials (no hard-coded defaults)
 - **User Management**: Complete admin CRUD interface for managing user accounts
   - Password security: bcrypt hashing, sanitization in API responses, validation

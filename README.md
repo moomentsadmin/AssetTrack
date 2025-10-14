@@ -13,6 +13,11 @@ A comprehensive IT asset management system for tracking hardware, software, lice
 - **Asset Lifecycle Management**: Track assets from procurement to disposal
 - **Status Tracking**: Available, assigned, in maintenance, retired, and lost status monitoring
 - **Asset Photos**: Store photo URLs for visual asset documentation
+- **QR Code Labels**: Print professional asset labels with QR codes for physical tracking
+  - Printable 85mm x 54mm labels (standard ID card size)
+  - QR code links to asset details page for quick scanning
+  - Includes company logo, location, date, and asset information
+  - Two labels per page for cutting and backup
 - **Depreciation Calculator**: Automatic asset value tracking using straight-line and declining balance methods
 - **Custom Fields**: Dynamic field definitions for different asset types
 - **Location Management**: Physical location tracking with dropdown selection
@@ -369,13 +374,15 @@ For issues, questions, or contributions:
 
 ## 🗺️ Roadmap
 
+- [x] Asset QR code label generation
 - [ ] Mobile responsive enhancements
 - [ ] Advanced reporting and analytics
 - [ ] Multi-language support
 - [ ] API documentation with Swagger
-- [ ] Asset QR code generation
 - [ ] Maintenance scheduling
 - [ ] Asset reservation system
+- [ ] Barcode scanner integration
+- [ ] Mobile app for asset scanning
 
 ---
 

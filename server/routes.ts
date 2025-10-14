@@ -564,8 +564,8 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // System settings routes
-  app.get("/api/settings/system", requireAuth, async (req, res) => {
+  // System settings routes (public for branding on login page)
+  app.get("/api/settings/system", async (req, res) => {
     try {
       const settings = await storage.getSystemSettings();
       res.json(settings || {
@@ -574,6 +574,8 @@ export function registerRoutes(app: Express): Server {
         companyWebsite: "",
         companyLogo: "",
         defaultCurrency: "USD",
+        headerText: "",
+        footerText: "",
       });
     } catch (error: any) {
       res.status(500).send(error.message);

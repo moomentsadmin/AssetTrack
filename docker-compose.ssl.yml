@@ -1,0 +1,143 @@
+version: '3.8'
+
+services:
+  # Traefik Reverse Proxy with Let's Encrypt
+  traefik:
+    image: traefik:v3.0
+    container_name: asset-traefik
+    restart: unless-stopped
+    command:
+      # API and Dashboard
+      - "--api.dashboard=true"
+      - "--api.insecure=false"
+      
+      # Docker Provider
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--providers.docker.network=asset-network"
+      
+      # Entrypoints (Ports)
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      
+      # Let's Encrypt Certificate Resolver
+      - "--certificatesresolvers.letsencrypt.acme.tlschallenge=true"
+      - "--certificatesresolvers.letsencrypt.acme.email=${LETSENCRYPT_EMAIL}"
+      - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
+      
+      # Uncomment for testing (staging server - no rate limits)
+      # - "--certificatesresolvers.letsencrypt.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory"
+      
+      # Global HTTP to HTTPS Redirect
+      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
+      
+      # Logging (optional)
+      - "--log.level=INFO"
+      - "--accesslog=true"
+    
+    ports:
+      - "80:80"
+      - "443:443"
+      # Dashboard port (optional - can be secured via domain)
+      # - "8080:8080"
+    
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "./letsencrypt:/letsencrypt"
+      - "./traefik-logs:/logs"
+    
+    networks:
+      - asset-network
+    
+    labels:
+      # Enable Traefik for itself (Dashboard)
+      - "traefik.enable=true"
+      
+      # Dashboard Router (replace traefik.yourdomain.com with your domain)
+      - "traefik.http.routers.dashboard.rule=Host(`traefik.${DOMAIN}`)"
+      - "traefik.http.routers.dashboard.entrypoints=websecure"
+      - "traefik.http.routers.dashboard.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.dashboard.service=api@internal"
+      
+      # Dashboard Basic Auth (optional - secure dashboard)
+      - "traefik.http.routers.dashboard.middlewares=dashboard-auth"
+      - "traefik.http.middlewares.dashboard-auth.basicauth.users=${TRAEFIK_DASHBOARD_AUTH}"
+      # Generate with: htpasswd -nB admin (or use provided default)
+
+  # PostgreSQL Database
+  db:
+    image: postgres:15-alpine
+    container_name: asset-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${PGUSER:-asset_user}
+      POSTGRES_PASSWORD: ${PGPASSWORD:-your_secure_password}
+      POSTGRES_DB: ${PGDATABASE:-asset_management}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${PGUSER:-asset_user} -d ${PGDATABASE:-asset_management}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - asset-network
+    # No exposed ports - internal only
+
+  # Application Server
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: asset-app
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 5000
+      DATABASE_URL: postgresql://${PGUSER:-asset_user}:${PGPASSWORD:-your_secure_password}@db:5432/${PGDATABASE:-asset_management}
+      PGHOST: db
+      PGPORT: 5432
+      PGDATABASE: ${PGDATABASE:-asset_management}
+      PGUSER: ${PGUSER:-asset_user}
+      PGPASSWORD: ${PGPASSWORD:-your_secure_password}
+      SESSION_SECRET: ${SESSION_SECRET:-your_secure_random_session_secret_min_32_characters}
+    volumes:
+      - ./logs:/app/logs
+    networks:
+      - asset-network
+    command: >
+      sh -c "npx drizzle-kit push && npm start"
+    
+    # No exposed ports - Traefik handles routing
+    labels:
+      # Enable Traefik
+      - "traefik.enable=true"
+      
+      # Main Application Router
+      - "traefik.http.routers.asset-app.rule=Host(`${DOMAIN}`) || Host(`www.${DOMAIN}`)"
+      - "traefik.http.routers.asset-app.entrypoints=websecure"
+      - "traefik.http.routers.asset-app.tls.certresolver=letsencrypt"
+      - "traefik.http.services.asset-app.loadbalancer.server.port=5000"
+      
+      # Security Headers Middleware
+      - "traefik.http.routers.asset-app.middlewares=security-headers"
+      - "traefik.http.middlewares.security-headers.headers.stsSeconds=63072000"
+      - "traefik.http.middlewares.security-headers.headers.stsIncludeSubdomains=true"
+      - "traefik.http.middlewares.security-headers.headers.stsPreload=true"
+      - "traefik.http.middlewares.security-headers.headers.forceSTSHeader=true"
+      - "traefik.http.middlewares.security-headers.headers.frameDeny=true"
+      - "traefik.http.middlewares.security-headers.headers.contentTypeNosniff=true"
+      - "traefik.http.middlewares.security-headers.headers.browserXssFilter=true"
+      - "traefik.http.middlewares.security-headers.headers.customFrameOptionsValue=SAMEORIGIN"
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  asset-network:
+    driver: bridge

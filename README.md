@@ -97,8 +97,35 @@ A comprehensive IT asset management system for tracking hardware, software, lice
 - **Node.js** 20.x or higher
 - **PostgreSQL** 15 or higher
 - **npm** or **yarn** package manager
+- **Domain Name** (for SSL/HTTPS deployment)
 
-## 🚀 Quick Start
+## 🔒 Production Deployment with SSL (Port 443)
+
+**Deploy with automatic HTTPS and Let's Encrypt SSL certificates:**
+
+```bash
+# 1. Run automated SSL setup script
+./setup-ssl.sh
+
+# 2. Access your app securely at:
+# https://yourdomain.com
+```
+
+**What you get:**
+- ✅ Automatic SSL certificate generation
+- ✅ Auto-renewal every 60 days
+- ✅ HTTP → HTTPS redirect
+- ✅ A+ SSL security rating
+- ✅ Traefik reverse proxy
+- ✅ Security headers (HSTS, XSS protection)
+
+**Quick SSL deployment guides:**
+- 📖 **[SSL_QUICK_START.md](SSL_QUICK_START.md)** - 5-minute SSL setup
+- 📚 **[SSL_DEPLOYMENT.md](SSL_DEPLOYMENT.md)** - Complete SSL documentation
+
+---
+
+## 🚀 Development Deployment (Port 5000)
 
 ### Option 1: Docker (Recommended - 5 Minutes)
 

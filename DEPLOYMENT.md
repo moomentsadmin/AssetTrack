@@ -57,8 +57,8 @@ GRANT ALL PRIVILEGES ON DATABASE asset_management_prod TO asset_user;
 git clone <your-repo-url>
 cd asset-management
 
-# Install dependencies
-npm ci --production
+# Install all dependencies (needed for build)
+npm ci
 
 # Create environment file
 nano .env.production
@@ -81,10 +81,17 @@ PGPASSWORD=your_secure_password
 SESSION_SECRET=your_secure_session_secret_min_32_chars
 ```
 
-### Run Database Migrations
+### Build Application
 
 ```bash
+# Run database migrations
 npm run db:push
+
+# Build the application (compiles TypeScript)
+npm run build
+
+# Optional: Remove dev dependencies to save space
+npm prune --production
 ```
 
 ### PM2 Process Management
@@ -95,9 +102,8 @@ Create `ecosystem.config.js`:
 module.exports = {
   apps: [{
     name: 'asset-management',
-    script: 'server/index.ts',
-    interpreter: 'node',
-    interpreter_args: '--loader tsx',
+    script: 'npm',
+    args: 'start',
     instances: 'max',
     exec_mode: 'cluster',
     env_production: {
@@ -112,6 +118,8 @@ module.exports = {
   }]
 };
 ```
+
+> **Note**: The `npm start` command runs `node dist/index.js` which is the compiled production code.
 
 Start the application:
 
@@ -259,34 +267,34 @@ sudo crontab -e
 FROM node:20-alpine AS base
 WORKDIR /app
 
-# Dependencies
-FROM base AS dependencies
-COPY package*.json ./
-RUN npm ci --omit=dev && npm cache clean --force
-
-# Build
+# Build stage
 FROM base AS build
 COPY package*.json ./
 RUN npm ci
 COPY . .
-RUN npm run db:push || true
+RUN npm run build
 
-# Production
+# Production stage
 FROM node:20-alpine AS production
 WORKDIR /app
 
 ENV NODE_ENV=production
 
-COPY --from=dependencies /app/node_modules ./node_modules
-COPY --from=build /app .
+# Copy everything from build (includes all deps needed for migrations)
+COPY --from=build /app/node_modules ./node_modules
+COPY --from=build /app/dist ./dist
+COPY --from=build /app/package*.json ./
+COPY --from=build /app/drizzle.config.ts ./drizzle.config.ts
+COPY --from=build /app/shared ./shared
 
+# Non-root user for security
 RUN addgroup -g 1001 -S nodejs && \
     adduser -S nodejs -u 1001
 USER nodejs
 
 EXPOSE 5000
 
-CMD ["npm", "run", "dev"]
+CMD ["npm", "start"]
 ```
 
 **`docker-compose.yml` (with internal database):**
@@ -355,6 +363,9 @@ SESSION_SECRET=your_session_secret_min_32_chars
 # Build and run
 docker-compose up -d
 
+# Wait for database to be ready, then run migrations
+docker-compose exec app npm run db:push
+
 # View logs
 docker-compose logs -f
 
@@ -364,6 +375,8 @@ docker-compose down
 # Stop and remove volumes
 docker-compose down -v
 ```
+
+> **Important**: Always run `docker-compose exec app npm run db:push` after starting the containers to initialize the database schema.
 
 ### Option 2: Docker with External Database
 
@@ -411,6 +424,9 @@ SESSION_SECRET=your_session_secret
 ```bash
 # Run with external DB
 docker-compose -f docker-compose.external-db.yml up -d
+
+# Run migrations
+docker-compose -f docker-compose.external-db.yml exec app npm run db:push
 ```
 
 ---
@@ -535,8 +551,8 @@ services:
     git:
       repo_clone_url: https://github.com/yourusername/asset-management.git
       branch: main
-    build_command: npm run db:push
-    run_command: npm run dev
+    build_command: npm run build
+    run_command: npm start
     envs:
       - key: NODE_ENV
         value: production

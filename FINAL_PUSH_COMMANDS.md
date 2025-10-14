@@ -13,23 +13,24 @@
 
 ---
 
-## 📦 Ready to Push - 15 Files
+## 📦 Ready to Push - 16 Files
 
 **Critical Docker Files:**
 1. ✅ `.dockerignore` - **FIXED! No longer excludes package-lock.json**
 2. ✅ `package-lock.json` - **Now included in Docker build**
 3. ✅ `.env.example` - Environment template (no secrets)
 4. ✅ `Dockerfile` - Multi-stage build (fixed npm ci)
-5. ✅ `docker-compose.yml` - Complete stack
+5. ✅ `docker-compose.yml` - **FIXED! Uses npx drizzle-kit push**
 6. ✅ `.gitignore` - Excludes .env (security)
 
-**Documentation (5 new files):**
-7. ✅ `DOCKERIGNORE_FIX.md` - Critical fix explanation
-8. ✅ `DOCKER_BUILD_FIX.md` - npm ci error fix
-9. ✅ `DOCKER_QUICKSTART.md` - Deployment guide
-10. ✅ `DEPLOYMENT_FIX.md` - Original fixes
-11. ✅ `GIT_PUSH_INSTRUCTIONS.md` - Complete instructions
-12. ✅ `FINAL_PUSH_COMMANDS.md` - This file
+**Documentation (6 new files):**
+7. ✅ `DRIZZLE_KIT_FIX.md` - **drizzle-kit PATH fix**
+8. ✅ `DOCKERIGNORE_FIX.md` - .dockerignore fix
+9. ✅ `DOCKER_BUILD_FIX.md` - npm ci error fix
+10. ✅ `DOCKER_QUICKSTART.md` - Deployment guide
+11. ✅ `DEPLOYMENT_FIX.md` - Original fixes
+12. ✅ `GIT_PUSH_INSTRUCTIONS.md` - Complete instructions
+13. ✅ `FINAL_PUSH_COMMANDS.md` - This file
 
 **Updated:**
 13. ✅ `README.md` - Docker quick start
@@ -42,10 +43,10 @@
 
 ```bash
 # 1. Add all Docker files
-git add .dockerignore package-lock.json .env.example Dockerfile docker-compose.yml .gitignore
+git add docker-compose.yml .dockerignore package-lock.json .env.example Dockerfile .gitignore
 
 # 2. Add documentation
-git add DOCKERIGNORE_FIX.md DOCKER_BUILD_FIX.md DOCKER_QUICKSTART.md DEPLOYMENT_FIX.md GIT_PUSH_INSTRUCTIONS.md FINAL_PUSH_COMMANDS.md
+git add DRIZZLE_KIT_FIX.md DOCKERIGNORE_FIX.md DOCKER_BUILD_FIX.md DOCKER_QUICKSTART.md DEPLOYMENT_FIX.md GIT_PUSH_INSTRUCTIONS.md FINAL_PUSH_COMMANDS.md
 
 # 3. Add updated files
 git add README.md DEPLOYMENT.md GITHUB_PUSH_GUIDE.md client/src/pages/print-label-page.tsx
@@ -57,18 +58,22 @@ git status | grep "\.env$"
 git status | grep package-lock.json
 
 # 6. Commit all changes
-git commit -m "Fix Docker build: package-lock.json was excluded by .dockerignore
+git commit -m "Fix Docker deployment: drizzle-kit PATH and package-lock.json issues
 
-CRITICAL FIX:
-- Remove package-lock.json from .dockerignore (was blocking Docker build)
+CRITICAL FIXES:
+- Fix drizzle-kit not found: use npx in docker-compose.yml
+- Fix .dockerignore excluding package-lock.json (was blocking build)
   
-Docker Build Fixes:
-- Fix .dockerignore to include package-lock.json (was on line 4)
-- Fix Dockerfile npm ci error (remove deprecated --only=production)
-- Add package-lock.json to git repository (required for npm ci)
-- Fix multi-stage build logic (don't overwrite node_modules)
+Docker Runtime Fixes:
+- Change docker-compose.yml command to use 'npx drizzle-kit push'
+- Previously 'npm run db:push' couldn't find drizzle-kit in PATH
 
-Docker Deployment Stack:
+Docker Build Fixes:
+- Remove package-lock.json from .dockerignore
+- Fix Dockerfile npm ci error (remove deprecated --only=production)
+- Add package-lock.json to repository (required for npm ci)
+
+Docker Stack:
 - .env.example template (no secrets)
 - Dockerfile with multi-stage build
 - docker-compose.yml with PostgreSQL
@@ -89,8 +94,8 @@ Bug Fixes:
 - Fix print label page loading state
 
 Fixes these errors:
+- sh: drizzle-kit: not found
 - npm ci error: package-lock.json was in .dockerignore
-- npm ci error: missing package-lock.json
 - cd: asset-management: No such file or directory"
 
 # 7. Push to GitHub

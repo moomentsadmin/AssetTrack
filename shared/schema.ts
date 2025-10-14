@@ -128,6 +128,8 @@ export const systemSettings = pgTable("system_settings", {
   companyName: text("company_name"),
   companyWebsite: text("company_website"),
   companyLogo: text("company_logo"),
+  headerText: text("header_text"),
+  footerText: text("footer_text"),
   headerLinks: jsonb("header_links"),
   footerLinks: jsonb("footer_links"),
   defaultCurrency: text("default_currency").notNull().default("USD"),

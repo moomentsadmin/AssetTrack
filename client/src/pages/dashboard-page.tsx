@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { useBranding } from "@/hooks/use-branding";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Package, Users, AlertTriangle, CheckCircle, Loader2, TrendingDown } from "lucide-react";
 import { Asset, AssetAssignment, User } from "@shared/schema";
@@ -8,6 +9,7 @@ import { useLocation } from "wouter";
 
 export default function DashboardPage() {
   const [, setLocation] = useLocation();
+  const { companyName, companyLogo } = useBranding();
 
   const { data: assets = [], isLoading: assetsLoading } = useQuery<Asset[]>({
     queryKey: ["/api/assets"],
@@ -54,11 +56,16 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-        <p className="text-muted-foreground mt-2">
-          Overview of your asset management system
-        </p>
+      <div className="flex items-center gap-4">
+        {companyLogo && (
+          <img src={companyLogo} alt={companyName} className="h-12 w-12 object-contain" data-testid="img-dashboard-logo" />
+        )}
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+          <p className="text-muted-foreground mt-1">
+            {companyName} - Asset Management Overview
+          </p>
+        </div>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">

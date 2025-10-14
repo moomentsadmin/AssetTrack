@@ -15,13 +15,19 @@ This full-stack application provides complete asset lifecycle management with ro
 - **Personal Profile**: All users can update their own information (fullName, email, department) and change passwords
 - **Asset Management**: Full CRUD for multiple asset types with status tracking and photo URLs
 - **Location Management**: Physical location tracking with dropdown selection for assets
-- **Employee Management**: Track team members and contractors
+- **Employee Management**: Comprehensive employee and contractor management
+  - Add employees manually with role assignment
+  - Bulk employee upload via CSV
+  - Download CSV template for bulk uploads
+  - Admin/manager access required
 - **Department Organization**: Organize assets and employees by department
 - **Assignment Workflow**: Check-in/check-out assets with assignment history
 - **Asset Notes**: Maintenance logs and observations
 - **Audit Trail**: Complete history of all asset-related activities
 - **System Health**: Admin dashboard for monitoring system status, statistics, and activity
-- **Company Branding**: Configure company name, logo, website, and currency preferences
+- **Company Branding**: Configure company name, logo, website, currency, and header/footer text
+  - Company logo displayed on login and dashboard pages
+  - Custom header and footer text shown throughout the application
 
 ### Advanced Features
 - **Depreciation Calculator**: Automatic asset value tracking using straight-line and declining balance methods
@@ -174,6 +180,9 @@ Navigate to Settings page to configure:
 - **Company Branding**: Customizable company settings
   - Company name, website, and logo URL configuration
   - Logo preview functionality
+  - Header and footer text customization
+  - Logo displayed on login and dashboard pages
+  - Custom header/footer text shown on login page
   - Currency selection (USD, EUR, GBP, JPY, CAD, AUD, INR)
   - Admin/manager access to branding settings
 - **Asset Photos**: Photo URL field for asset images

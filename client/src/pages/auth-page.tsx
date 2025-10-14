@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
+import { useBranding } from "@/hooks/use-branding";
 import { Redirect } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,6 +28,7 @@ const setupSchema = z.object({
 
 export default function AuthPage() {
   const { user, loginMutation } = useAuth();
+  const { companyName, companyLogo, headerText, footerText } = useBranding();
   const [setupRequired, setSetupRequired] = useState<boolean | null>(null);
   const [isCheckingSetup, setIsCheckingSetup] = useState(true);
   const { toast } = useToast();
@@ -103,15 +105,25 @@ export default function AuthPage() {
   // Show setup screen if setup is required
   if (setupRequired) {
     return (
-      <div className="min-h-screen grid lg:grid-cols-2">
-        <div className="flex items-center justify-center p-8">
+      <div className="min-h-screen flex flex-col">
+        {headerText && (
+          <div className="bg-primary/5 border-b py-3 px-6">
+            <p className="text-sm text-center text-muted-foreground" data-testid="text-header">{headerText}</p>
+          </div>
+        )}
+        <div className="flex-1 grid lg:grid-cols-2">
+          <div className="flex items-center justify-center p-8">
           <Card className="w-full max-w-md">
             <CardHeader>
-              <div className="flex items-center gap-2 mb-2">
-                <div className="p-2 bg-primary/10 rounded-lg">
-                  <Package className="h-6 w-6 text-primary" />
-                </div>
-                <CardTitle className="text-2xl">Welcome to Asset Management</CardTitle>
+              <div className="flex items-center gap-3 mb-2">
+                {companyLogo ? (
+                  <img src={companyLogo} alt={companyName} className="h-10 w-10 object-contain" />
+                ) : (
+                  <div className="p-2 bg-primary/10 rounded-lg">
+                    <Package className="h-6 w-6 text-primary" />
+                  </div>
+                )}
+                <CardTitle className="text-2xl">Welcome to {companyName}</CardTitle>
               </div>
               <CardDescription>
                 First-time setup required
@@ -196,8 +208,9 @@ export default function AuthPage() {
               </Form>
             </CardContent>
           </Card>
-        </div>
-        <div className="hidden lg:flex items-center justify-center bg-muted p-12">
+          </div>
+
+          <div className="hidden lg:flex items-center justify-center bg-muted p-12">
           <div className="max-w-lg space-y-8">
             <div>
               <h1 className="text-4xl font-bold tracking-tight mb-4">
@@ -245,20 +258,36 @@ export default function AuthPage() {
             </div>
           </div>
         </div>
+        </div>
+        {footerText && (
+          <div className="bg-muted border-t py-3 px-6">
+            <p className="text-xs text-center text-muted-foreground" data-testid="text-footer">{footerText}</p>
+          </div>
+        )}
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen grid lg:grid-cols-2">
-      <div className="flex items-center justify-center p-8">
+    <div className="min-h-screen flex flex-col">
+      {headerText && (
+        <div className="bg-primary/5 border-b py-3 px-6">
+          <p className="text-sm text-center text-muted-foreground" data-testid="text-header">{headerText}</p>
+        </div>
+      )}
+      <div className="flex-1 grid lg:grid-cols-2">
+        <div className="flex items-center justify-center p-8">
         <Card className="w-full max-w-md">
           <CardHeader>
-            <div className="flex items-center gap-2 mb-2">
-              <div className="p-2 bg-primary/10 rounded-lg">
-                <Package className="h-6 w-6 text-primary" />
-              </div>
-              <CardTitle className="text-2xl">Asset Management</CardTitle>
+            <div className="flex items-center gap-3 mb-2">
+              {companyLogo ? (
+                <img src={companyLogo} alt={companyName} className="h-10 w-10 object-contain" data-testid="img-company-logo" />
+              ) : (
+                <div className="p-2 bg-primary/10 rounded-lg">
+                  <Package className="h-6 w-6 text-primary" />
+                </div>
+              )}
+              <CardTitle className="text-2xl">{companyName}</CardTitle>
             </div>
             <CardDescription>
               Sign in to your account
@@ -306,9 +335,9 @@ export default function AuthPage() {
             </Form>
           </CardContent>
         </Card>
-      </div>
+        </div>
 
-      <div className="hidden lg:flex items-center justify-center bg-muted p-12">
+        <div className="hidden lg:flex items-center justify-center bg-muted p-12">
         <div className="max-w-lg space-y-8">
           <div>
             <h1 className="text-4xl font-bold tracking-tight mb-4">
@@ -359,6 +388,12 @@ export default function AuthPage() {
           </div>
         </div>
       </div>
+      </div>
+      {footerText && (
+        <div className="bg-muted border-t py-3 px-6">
+          <p className="text-xs text-center text-muted-foreground" data-testid="text-footer">{footerText}</p>
+        </div>
+      )}
     </div>
   );
 }

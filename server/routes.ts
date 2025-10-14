@@ -50,7 +50,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.post("/api/users", requireAuth, requireAdmin, async (req, res) => {
+  app.post("/api/users", requireAuth, requireAdminOrManager, async (req, res) => {
     try {
       // Validate request body
       const validatedData = insertUserSchema.parse(req.body);
@@ -590,6 +590,66 @@ export function registerRoutes(app: Express): Server {
   });
 
   // CSV Import route
+  // Bulk import users/employees
+  app.post("/api/import/users", requireAuth, requireAdminOrManager, upload.single("file"), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).send("No file uploaded");
+      }
+
+      const fileContent = req.file.buffer.toString("utf-8");
+      const parsed = Papa.parse(fileContent, { header: true, skipEmptyLines: true });
+
+      let success = 0;
+      let failed = 0;
+      const errors: string[] = [];
+
+      for (const row of parsed.data) {
+        try {
+          const data: any = row;
+          
+          // Validate required fields
+          if (!data.fullName || !data.email || !data.username || !data.password || !data.role) {
+            errors.push(`Row missing required fields: ${JSON.stringify(data)}`);
+            failed++;
+            continue;
+          }
+
+          // Hash password
+          const hashedPassword = await bcrypt.hash(data.password, 10);
+
+          // Create user
+          await storage.createUser({
+            fullName: data.fullName,
+            email: data.email,
+            username: data.username,
+            password: hashedPassword,
+            role: data.role,
+            department: data.department || null,
+            isContractor: data.isContractor === "true" || data.isContractor === true,
+          });
+
+          success++;
+        } catch (error: any) {
+          errors.push(`Error importing row: ${error.message}`);
+          failed++;
+        }
+      }
+
+      // Create audit entry
+      await storage.createAuditEntry({
+        assetId: null,
+        userId: req.user!.id,
+        action: "Bulk user import completed",
+        details: { success, failed, fileName: req.file.originalname },
+      });
+
+      res.json({ success, failed, errors });
+    } catch (error: any) {
+      res.status(500).send(error.message);
+    }
+  });
+
   app.post("/api/import/assets", requireAuth, requireAdminOrManager, upload.single("file"), async (req, res) => {
     try {
       if (!req.file) {

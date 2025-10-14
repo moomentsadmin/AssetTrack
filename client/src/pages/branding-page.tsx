@@ -18,6 +18,8 @@ const brandingSchema = z.object({
   companyName: z.string().optional(),
   companyWebsite: z.string().url("Must be a valid URL").optional().or(z.literal("")),
   companyLogo: z.string().optional(),
+  headerText: z.string().optional(),
+  footerText: z.string().optional(),
   defaultCurrency: z.string().default("USD"),
 });
 
@@ -36,6 +38,8 @@ export default function BrandingPage() {
       companyName: "",
       companyWebsite: "",
       companyLogo: "",
+      headerText: "",
+      footerText: "",
       defaultCurrency: "USD",
     },
   });
@@ -47,6 +51,8 @@ export default function BrandingPage() {
         companyName: settings.companyName || "",
         companyWebsite: settings.companyWebsite || "",
         companyLogo: settings.companyLogo || "",
+        headerText: settings.headerText || "",
+        footerText: settings.footerText || "",
         defaultCurrency: settings.defaultCurrency || "USD",
       });
     }
@@ -178,6 +184,48 @@ export default function BrandingPage() {
                   </div>
                 </div>
               )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Header & Footer</CardTitle>
+              <CardDescription>Customize header and footer text displayed on login page</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <FormField
+                control={form.control}
+                name="headerText"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Header Text</FormLabel>
+                    <FormControl>
+                      <Input {...field} value={field.value || ""} placeholder="Welcome to our Asset Management System" data-testid="input-header-text" />
+                    </FormControl>
+                    <FormDescription>
+                      Custom text to display in the header (optional)
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="footerText"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Footer Text</FormLabel>
+                    <FormControl>
+                      <Input {...field} value={field.value || ""} placeholder="© 2024 Company Name. All rights reserved." data-testid="input-footer-text" />
+                    </FormControl>
+                    <FormDescription>
+                      Custom text to display in the footer (optional)
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </CardContent>
           </Card>
 

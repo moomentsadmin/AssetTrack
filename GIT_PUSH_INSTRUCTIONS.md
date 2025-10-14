@@ -8,12 +8,14 @@ I've created all the missing Docker deployment files and updated documentation. 
 - **`.env.example`** - Environment template (NO secrets, safe to commit)
 - **`Dockerfile`** - Multi-stage Docker build (FIXED npm ci error)
 - **`docker-compose.yml`** - Complete Docker stack with PostgreSQL
-- **`.dockerignore`** - Docker build optimization
+- **`.dockerignore`** - **FIXED! No longer excludes package-lock.json**
 - **`package-lock.json`** - Dependency lock file (REQUIRED for Docker)
 
 ### New Documentation Files ✅
 - **`DOCKER_QUICKSTART.md`** - Step-by-step Docker deployment guide
 - **`DEPLOYMENT_FIX.md`** - Summary of fixes and deployment instructions
+- **`DOCKER_BUILD_FIX.md`** - npm ci error fix
+- **`DOCKERIGNORE_FIX.md`** - **CRITICAL: .dockerignore was excluding package-lock.json**
 - **`GIT_PUSH_INSTRUCTIONS.md`** - This file
 
 ### Updated Files ✅
@@ -56,13 +58,13 @@ git add .env.example
 git add Dockerfile
 git add docker-compose.yml
 git add .dockerignore
-
-# Add package-lock.json (CRITICAL for Docker build!)
 git add package-lock.json
 
 # Add documentation files
 git add DOCKER_QUICKSTART.md
 git add DEPLOYMENT_FIX.md
+git add DOCKER_BUILD_FIX.md
+git add DOCKERIGNORE_FIX.md
 git add GIT_PUSH_INSTRUCTIONS.md
 
 # Add updated files
@@ -106,38 +108,41 @@ You should see:
 ### Step 5: Commit Changes
 
 ```bash
-git commit -m "Add Docker deployment and fix build errors
+git commit -m "Fix Docker build: package-lock.json was excluded by .dockerignore
 
-- Add complete Docker deployment stack
-  - .env.example template (no secrets)
-  - Dockerfile with multi-stage build (FIXED npm ci error)
-  - docker-compose.yml with PostgreSQL
-  - .dockerignore for build optimization
-  - package-lock.json (required for npm ci)
+CRITICAL FIX:
+- Remove package-lock.json from .dockerignore (was blocking Docker build)
+  
+Docker Build Fixes:
+- Fix .dockerignore to include package-lock.json (was on line 4)
+- Fix Dockerfile npm ci error (remove deprecated --only=production)
+- Add package-lock.json to git repository (required for npm ci)
+- Fix multi-stage build logic (don't overwrite node_modules)
 
-- Fix Docker build errors
-  - Fix Dockerfile npm ci error (was using deprecated --only=production)
-  - Fix node_modules overwrite issue in multi-stage build
-  - Add package-lock.json to repository (required for npm ci)
+Docker Deployment Stack:
+- .env.example template (no secrets)
+- Dockerfile with multi-stage build
+- docker-compose.yml with PostgreSQL
+- .dockerignore (fixed - no longer excludes package-lock.json)
 
-- Fix deployment documentation
-  - Correct repository name (AssetTrackr not asset-management)
-  - Add DOCKER_QUICKSTART.md with step-by-step guide
-  - Add DEPLOYMENT_FIX.md with error fixes
-  - Update DEPLOYMENT.md with correct paths
+Documentation:
+- Correct repository name (AssetTrackr not asset-management)
+- Add DOCKER_QUICKSTART.md deployment guide
+- Add DOCKERIGNORE_FIX.md (critical fix documentation)
+- Add DOCKER_BUILD_FIX.md (npm ci fix)
+- Update DEPLOYMENT.md with correct paths
 
-- Fix application bugs
-  - Fix print label page loading state (combined all loading states)
+Security:
+- Add .env to .gitignore (prevent secrets in git)
+- Verify .env.example has only placeholders
 
-- Security improvements
-  - Add .env to .gitignore (prevent secrets in git)
-  - Verify .env.example has only placeholders
+Bug Fixes:
+- Fix print label page loading state
 
-Fixes deployment errors:
-- npm ci error: requires package-lock.json
-- RUN npm ci --only=production (deprecated flag)
-- cd: asset-management: No such file or directory
-- .env.example: No such file or directory"
+Fixes these errors:
+- npm ci error: package-lock.json was in .dockerignore
+- npm ci error: missing package-lock.json
+- cd: asset-management: No such file or directory"
 ```
 
 ### Step 6: Push to GitHub

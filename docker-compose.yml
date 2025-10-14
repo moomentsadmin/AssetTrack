@@ -49,7 +49,7 @@ services:
     networks:
       - asset-network
     command: >
-      sh -c "npx drizzle-kit push && npm start"
+      sh -c "npm run db:push && npm start"
 
 volumes:
   postgres_data:

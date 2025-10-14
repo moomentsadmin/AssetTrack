@@ -26,7 +26,8 @@ ENV NODE_ENV=production
 # Copy package files
 COPY package*.json ./
 
-# Install ALL dependencies (needed for drizzle-kit migrations)
+# Install ALL dependencies (including drizzle-kit from devDependencies)
+# We need drizzle-kit for database migrations on container startup
 RUN npm ci
 
 # Copy built application from build stage

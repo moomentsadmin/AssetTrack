@@ -26,16 +26,13 @@ ENV NODE_ENV=production
 # Copy package files
 COPY package*.json ./
 
-# Install only production dependencies
-RUN npm ci --only=production
+# Install ALL dependencies (needed for drizzle-kit migrations)
+RUN npm ci
 
 # Copy built application from build stage
 COPY --from=build /app/dist ./dist
 COPY --from=build /app/drizzle.config.ts ./drizzle.config.ts
 COPY --from=build /app/shared ./shared
-
-# Copy node_modules from build stage (includes drizzle-kit for migrations)
-COPY --from=build /app/node_modules ./node_modules
 
 # Create non-root user
 RUN addgroup -g 1001 -S nodejs && \

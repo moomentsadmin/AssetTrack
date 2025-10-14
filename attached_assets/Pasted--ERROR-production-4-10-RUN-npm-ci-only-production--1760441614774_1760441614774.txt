@@ -1,0 +1,40 @@
+ => ERROR [production  4/10] RUN npm ci --only=production                                                                                                                                        1.0s
+ => CANCELED [build 4/6] RUN npm ci                                                                                                                                                              1.1s
+------
+ > [production  4/10] RUN npm ci --only=production:
+0.473 npm warn config only Use `--omit=dev` to omit dev dependencies from the install.
+0.980 npm error code EUSAGE
+0.980 npm error
+0.980 npm error The `npm ci` command can only install with an existing package-lock.json or
+0.980 npm error npm-shrinkwrap.json with lockfileVersion >= 1. Run an install with npm@5 or
+0.980 npm error later to generate a package-lock.json file, then try again.
+0.980 npm error
+0.980 npm error Clean install a project
+0.980 npm error
+0.980 npm error Usage:
+0.980 npm error npm ci
+0.980 npm error
+0.980 npm error Options:
+0.980 npm error [--install-strategy <hoisted|nested|shallow|linked>] [--legacy-bundling]
+0.980 npm error [--global-style] [--omit <dev|optional|peer> [--omit <dev|optional|peer> ...]]
+0.980 npm error [--include <prod|dev|optional|peer> [--include <prod|dev|optional|peer> ...]]
+0.980 npm error [--strict-peer-deps] [--foreground-scripts] [--ignore-scripts] [--no-audit]
+0.980 npm error [--no-bin-links] [--no-fund] [--dry-run]
+0.980 npm error [-w|--workspace <workspace-name> [-w|--workspace <workspace-name> ...]]
+0.980 npm error [-ws|--workspaces] [--include-workspace-root] [--install-links]
+0.980 npm error
+0.980 npm error aliases: clean-install, ic, install-clean, isntall-clean
+0.980 npm error
+0.980 npm error Run "npm help ci" for more info
+0.983 npm error A complete log of this run can be found in: /root/.npm/_logs/2025-10-14T11_33_19_086Z-debug-0.log
+------
+Dockerfile:30
+--------------------
+  28 |
+  29 |     # Install only production dependencies
+  30 | >>> RUN npm ci --only=production
+  31 |
+  32 |     # Copy built application from build stage
+--------------------
+ERROR: failed to build: failed to solve: process "/bin/sh -c npm ci --only=production" did not complete successfully: exit code: 1
+ERROR: Service 'app' failed to build : Build failed

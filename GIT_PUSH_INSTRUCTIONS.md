@@ -6,9 +6,10 @@ I've created all the missing Docker deployment files and updated documentation. 
 
 ### New Docker Files Created ✅
 - **`.env.example`** - Environment template (NO secrets, safe to commit)
-- **`Dockerfile`** - Multi-stage Docker build
+- **`Dockerfile`** - Multi-stage Docker build (FIXED npm ci error)
 - **`docker-compose.yml`** - Complete Docker stack with PostgreSQL
 - **`.dockerignore`** - Docker build optimization
+- **`package-lock.json`** - Dependency lock file (REQUIRED for Docker)
 
 ### New Documentation Files ✅
 - **`DOCKER_QUICKSTART.md`** - Step-by-step Docker deployment guide
@@ -56,6 +57,9 @@ git add Dockerfile
 git add docker-compose.yml
 git add .dockerignore
 
+# Add package-lock.json (CRITICAL for Docker build!)
+git add package-lock.json
+
 # Add documentation files
 git add DOCKER_QUICKSTART.md
 git add DEPLOYMENT_FIX.md
@@ -102,13 +106,19 @@ You should see:
 ### Step 5: Commit Changes
 
 ```bash
-git commit -m "Add Docker deployment and fix deployment issues
+git commit -m "Add Docker deployment and fix build errors
 
 - Add complete Docker deployment stack
   - .env.example template (no secrets)
-  - Dockerfile with multi-stage build  
+  - Dockerfile with multi-stage build (FIXED npm ci error)
   - docker-compose.yml with PostgreSQL
   - .dockerignore for build optimization
+  - package-lock.json (required for npm ci)
+
+- Fix Docker build errors
+  - Fix Dockerfile npm ci error (was using deprecated --only=production)
+  - Fix node_modules overwrite issue in multi-stage build
+  - Add package-lock.json to repository (required for npm ci)
 
 - Fix deployment documentation
   - Correct repository name (AssetTrackr not asset-management)
@@ -124,9 +134,10 @@ git commit -m "Add Docker deployment and fix deployment issues
   - Verify .env.example has only placeholders
 
 Fixes deployment errors:
+- npm ci error: requires package-lock.json
+- RUN npm ci --only=production (deprecated flag)
 - cd: asset-management: No such file or directory
-- .env.example: No such file or directory  
-- docker-compose.yml: No such file or directory"
+- .env.example: No such file or directory"
 ```
 
 ### Step 6: Push to GitHub
@@ -207,19 +218,20 @@ ports:
 
 ## 📋 Files Summary
 
-**Commit These (Total: 11 files):**
+**Commit These (Total: 12 files):**
 1. `.env.example` ✅
-2. `Dockerfile` ✅
+2. `Dockerfile` ✅ (FIXED npm ci error)
 3. `docker-compose.yml` ✅
 4. `.dockerignore` ✅
-5. `DOCKER_QUICKSTART.md` ✅
-6. `DEPLOYMENT_FIX.md` ✅
-7. `GIT_PUSH_INSTRUCTIONS.md` ✅
-8. `.gitignore` (updated) ✅
-9. `README.md` (updated) ✅
-10. `DEPLOYMENT.md` (updated) ✅
-11. `GITHUB_PUSH_GUIDE.md` (updated) ✅
-12. `client/src/pages/print-label-page.tsx` (fixed) ✅
+5. `package-lock.json` ✅ (CRITICAL - required for Docker build!)
+6. `DOCKER_QUICKSTART.md` ✅
+7. `DEPLOYMENT_FIX.md` ✅
+8. `GIT_PUSH_INSTRUCTIONS.md` ✅
+9. `.gitignore` (updated) ✅
+10. `README.md` (updated) ✅
+11. `DEPLOYMENT.md` (updated) ✅
+12. `GITHUB_PUSH_GUIDE.md` (updated) ✅
+13. `client/src/pages/print-label-page.tsx` (fixed) ✅
 
 **NEVER Commit:**
 - `.env` ❌ (contains real passwords)

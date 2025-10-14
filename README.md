@@ -125,8 +125,8 @@ See [DOCKER_QUICKSTART.md](DOCKER_QUICKSTART.md) for detailed Docker deployment 
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/yourusername/asset-management.git
-cd asset-management
+git clone https://github.com/moomentsadmin/AssetTrackr.git
+cd AssetTrackr
 ```
 
 ### 2. Install Dependencies

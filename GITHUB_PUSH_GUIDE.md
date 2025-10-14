@@ -93,12 +93,27 @@ Changes:
 git push origin main
 ```
 
+### Files to Commit
+
+**New Docker Files (CRITICAL):**
+- ✅ `.env.example` - Environment template
+- ✅ `Dockerfile` - Container build configuration
+- ✅ `docker-compose.yml` - Docker Compose stack
+- ✅ `.dockerignore` - Docker build exclusions
+- ✅ `DOCKER_QUICKSTART.md` - Docker deployment guide
+
+**Updated Documentation:**
+- ✅ `DEPLOYMENT.md` - Corrected directory name (AssetTrackr)
+- ✅ `README.md` - Added Docker quick start
+- ✅ `GITHUB_PUSH_GUIDE.md` - This file
+
 ### Important Notes
 
 **Before Pushing:**
 - Review the files being committed: `git status`
 - Check for sensitive information: Ensure no API keys or passwords in code
 - Verify .gitignore is properly configured
+- **CRITICAL**: Ensure .env.example contains NO real passwords (only placeholders)
 
 **After Pushing:**
 - Verify all files are on GitHub

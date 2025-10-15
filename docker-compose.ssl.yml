@@ -21,6 +21,8 @@ services:
       - "--entrypoints.websecure.address=:443"
       
       # Let's Encrypt Certificate Resolver
+      # IMPORTANT: Email and domain are fetched from .env file
+      # DOMAIN and LETSENCRYPT_EMAIL must be set in .env for SSL to work
       - "--certificatesresolvers.letsencrypt.acme.tlschallenge=true"
       - "--certificatesresolvers.letsencrypt.acme.email=${LETSENCRYPT_EMAIL}"
       - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
@@ -54,7 +56,8 @@ services:
       # Enable Traefik for itself (Dashboard)
       - "traefik.enable=true"
       
-      # Dashboard Router (replace traefik.yourdomain.com with your domain)
+      # Dashboard Router
+      # Uses ${DOMAIN} from .env file (e.g., if DOMAIN=example.com, dashboard is at traefik.example.com)
       - "traefik.http.routers.dashboard.rule=Host(`traefik.${DOMAIN}`)"
       - "traefik.http.routers.dashboard.entrypoints=websecure"
       - "traefik.http.routers.dashboard.tls.certresolver=letsencrypt"
@@ -118,6 +121,8 @@ services:
       - "traefik.enable=true"
       
       # Main Application Router
+      # Uses ${DOMAIN} from .env file for SSL certificate generation
+      # Certificates are automatically obtained for both ${DOMAIN} and www.${DOMAIN}
       - "traefik.http.routers.asset-app.rule=Host(`${DOMAIN}`) || Host(`www.${DOMAIN}`)"
       - "traefik.http.routers.asset-app.entrypoints=websecure"
       - "traefik.http.routers.asset-app.tls.certresolver=letsencrypt"

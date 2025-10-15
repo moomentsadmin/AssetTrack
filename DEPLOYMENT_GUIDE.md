@@ -84,8 +84,13 @@ nano .env
 
 **Required `.env` configuration:**
 ```env
-# Domain Configuration
+# Domain Configuration (REQUIRED for SSL)
+# IMPORTANT: DOMAIN is used by Let's Encrypt to generate SSL certificates
+# Certificates will be automatically generated for both ${DOMAIN} and www.${DOMAIN}
 DOMAIN=yourdomain.com
+
+# Let's Encrypt email for certificate notifications
+# You'll receive expiry warnings 30 days before expiration (auto-renewal at 60 days)
 LETSENCRYPT_EMAIL=admin@yourdomain.com
 
 # Database
@@ -99,6 +104,13 @@ SESSION_SECRET=your_secure_random_32_char_secret
 # Traefik Dashboard (optional)
 TRAEFIK_DASHBOARD_AUTH=admin:$$2y$$05$$...
 ```
+
+**⚠️ Critical:** The `DOMAIN` variable in `.env` is used by Traefik to:
+1. Generate Let's Encrypt SSL certificates for your domain
+2. Configure routing rules for HTTPS traffic
+3. Set up the Traefik dashboard at `traefik.${DOMAIN}`
+
+Without `DOMAIN` properly set, SSL certificate generation will fail.
 
 **Generate secure SESSION_SECRET:**
 ```bash
@@ -144,9 +156,18 @@ docker-compose -f docker-compose.ssl.yml up -d
 docker-compose -f docker-compose.ssl.yml logs -f traefik
 ```
 
-**Wait for:**
+**How SSL Certificate Generation Works:**
+1. Traefik reads `DOMAIN` from `.env` file
+2. Uses `LETSENCRYPT_EMAIL` for Let's Encrypt account
+3. Automatically requests certificates for `${DOMAIN}` and `www.${DOMAIN}`
+4. Stores certificates in `./letsencrypt/acme.json`
+5. Auto-renews every 60 days
+
+**Wait for in logs:**
 ```
 ✅ "Certificates obtained for yourdomain.com"
+✅ "Certificates obtained for www.yourdomain.com"
+✅ "Certificates obtained for traefik.yourdomain.com"
 ```
 
 #### Step 4: Access Application
@@ -197,9 +218,12 @@ PGDATABASE=asset_db
 PGUSER=your_db_user
 PGPASSWORD=your_db_password
 
-# Application
+# Domain Configuration (REQUIRED for SSL)
+# These values are used by Let's Encrypt for SSL certificate generation
 DOMAIN=yourdomain.com
 LETSENCRYPT_EMAIL=admin@yourdomain.com
+
+# Application
 SESSION_SECRET=your_secure_secret
 ```
 
@@ -304,6 +328,8 @@ nano .env
 
 **`.env` configuration:**
 ```env
+# Domain Configuration (REQUIRED for SSL)
+# The DOMAIN variable is fetched by Traefik for Let's Encrypt SSL certificate generation
 DOMAIN=yourdomain.com
 LETSENCRYPT_EMAIL=admin@yourdomain.com
 
@@ -662,6 +688,8 @@ nano .env
 
 **`.env` configuration:**
 ```env
+# Domain Configuration (REQUIRED for SSL)
+# DOMAIN and LETSENCRYPT_EMAIL are fetched from .env for SSL certificate generation
 DOMAIN=yourdomain.com
 LETSENCRYPT_EMAIL=admin@yourdomain.com
 
@@ -976,9 +1004,25 @@ pm2 restart asset-management
 NODE_ENV=production
 PORT=5000
 
-# Domain (for Docker SSL deployment)
+# ===================================
+# DOMAIN CONFIGURATION (CRITICAL for SSL)
+# ===================================
+# IMPORTANT: These variables are fetched by Traefik from .env file for:
+# 1. Let's Encrypt SSL certificate generation
+# 2. HTTPS routing configuration
+# 3. Automatic certificate renewal
+#
+# DOMAIN - Your domain name (without https://)
+# Traefik uses ${DOMAIN} to generate SSL certificates for:
+# - ${DOMAIN} (e.g., yourdomain.com)
+# - www.${DOMAIN} (e.g., www.yourdomain.com)
+# - traefik.${DOMAIN} (e.g., traefik.yourdomain.com) for dashboard
 DOMAIN=yourdomain.com
+
+# LETSENCRYPT_EMAIL - Email for Let's Encrypt notifications
+# You'll receive certificate expiry warnings (auto-renewal happens at 60 days)
 LETSENCRYPT_EMAIL=admin@yourdomain.com
+# ===================================
 
 # Database
 DATABASE_URL=postgresql://user:password@host:5432/database
@@ -994,6 +1038,30 @@ SESSION_SECRET=your_secure_random_32_character_secret
 # Traefik Dashboard (Docker SSL only)
 TRAEFIK_DASHBOARD_AUTH=admin:hashed_password
 ```
+
+### How DOMAIN Variable Works with SSL
+
+**In docker-compose.ssl.yml:**
+```yaml
+# Traefik reads DOMAIN from .env and uses it for:
+
+# 1. Let's Encrypt certificate generation
+certificatesresolvers.letsencrypt.acme.email=${LETSENCRYPT_EMAIL}
+
+# 2. Main application routing (SSL certificate auto-generated)
+traefik.http.routers.asset-app.rule=Host(`${DOMAIN}`) || Host(`www.${DOMAIN}`)
+traefik.http.routers.asset-app.tls.certresolver=letsencrypt
+
+# 3. Traefik dashboard routing (SSL certificate auto-generated)
+traefik.http.routers.dashboard.rule=Host(`traefik.${DOMAIN}`)
+traefik.http.routers.dashboard.tls.certresolver=letsencrypt
+```
+
+**Result:**
+- If `DOMAIN=example.com`, Traefik automatically generates SSL certificates for:
+  - `example.com`
+  - `www.example.com`
+  - `traefik.example.com`
 
 ### Generate Secure Secrets
 
@@ -1222,19 +1290,37 @@ cat backup.sql | docker-compose -f docker-compose.ssl.yml exec -T db psql -U ass
 
 **Problem:** "Your connection is not private" or `NET::ERR_CERT_AUTHORITY_INVALID`
 
+**Root Causes:**
+1. `DOMAIN` variable not set in `.env` file
+2. DNS not pointing to server
+3. Old/invalid certificates cached
+4. Cloudflare proxy enabled (must be DNS only)
+
 **Solution:**
 ```bash
-# Check DNS points to server
-dig yourdomain.com +short
+# Step 1: Verify DOMAIN is set in .env
+cat .env | grep DOMAIN
+# Should show: DOMAIN=yourdomain.com
 
-# Remove old certificates
+# Step 2: Verify LETSENCRYPT_EMAIL is set
+cat .env | grep LETSENCRYPT_EMAIL
+# Should show: LETSENCRYPT_EMAIL=admin@yourdomain.com
+
+# Step 3: Check DNS points to server
+dig yourdomain.com +short
+# Should show your server IP (not Cloudflare IP)
+
+# Step 4: Remove old certificates
 docker-compose -f docker-compose.ssl.yml down
 rm -rf letsencrypt/
 docker-compose -f docker-compose.ssl.yml up -d
 
-# Watch certificate generation
+# Step 5: Watch certificate generation
 docker-compose -f docker-compose.ssl.yml logs -f traefik
+# Wait for: "Certificates obtained for yourdomain.com"
 ```
+
+**⚠️ Important:** Traefik fetches `DOMAIN` and `LETSENCRYPT_EMAIL` from the `.env` file to generate SSL certificates. If these are missing or incorrect, certificate generation will fail.
 
 #### Database Connection Failed
 
@@ -1280,19 +1366,35 @@ docker-compose -f docker-compose.ssl.yml up -d
 
 **Problem:** Traefik shows 404 error
 
+**Root Cause:** `DOMAIN` variable not set or incorrectly set in `.env` file
+
 **Solution:**
 ```bash
-# Verify DOMAIN is set in .env
+# Step 1: Verify DOMAIN is set in .env
 cat .env | grep DOMAIN
+# Must show: DOMAIN=yourdomain.com (your actual domain)
 
-# Check Traefik routing labels
+# Step 2: If DOMAIN is missing, add it
+echo "DOMAIN=yourdomain.com" >> .env
+echo "LETSENCRYPT_EMAIL=admin@yourdomain.com" >> .env
+
+# Step 3: Check Traefik routing labels use DOMAIN variable
 docker inspect asset-app | grep -i "traefik.http.routers"
-
 # Should show: Host(`yourdomain.com`)
 
-# Restart Traefik
-docker-compose -f docker-compose.ssl.yml restart traefik
+# Step 4: Restart all containers to pick up new .env values
+docker-compose -f docker-compose.ssl.yml down
+docker-compose -f docker-compose.ssl.yml up -d
+
+# Step 5: Verify routing works
+docker-compose -f docker-compose.ssl.yml logs traefik | grep "yourdomain.com"
 ```
+
+**How Routing Works:**
+1. Traefik reads `DOMAIN=yourdomain.com` from `.env` file
+2. Creates routing rules: `Host(\`${DOMAIN}\`)` → `Host(\`yourdomain.com\`)`
+3. Routes HTTPS traffic from yourdomain.com to the application
+4. Without `DOMAIN` set, routing rules are incomplete and return 404
 
 #### PM2 Application Crashes
 

@@ -99,29 +99,38 @@ A comprehensive IT asset management system for tracking hardware, software, lice
 - **npm** or **yarn** package manager
 - **Domain Name** (for SSL/HTTPS deployment)
 
-## 🔒 Production Deployment with SSL (Port 443)
+## 🚀 Production Deployment
 
-**Deploy with automatic HTTPS and Let's Encrypt SSL certificates:**
+**Deploy anywhere with our comprehensive deployment guide:**
 
+📚 **[DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)** - Complete deployment documentation for all platforms
+
+### Quick Deploy Options
+
+#### 🐳 Docker with SSL (5 minutes)
 ```bash
-# 1. Run automated SSL setup script
+# Automated setup with Let's Encrypt SSL
 ./setup-ssl.sh
-
-# 2. Access your app securely at:
-# https://yourdomain.com
+# Access: https://yourdomain.com
 ```
 
 **What you get:**
-- ✅ Automatic SSL certificate generation
+- ✅ Automatic HTTPS with Let's Encrypt
 - ✅ Auto-renewal every 60 days
-- ✅ HTTP → HTTPS redirect
-- ✅ A+ SSL security rating
 - ✅ Traefik reverse proxy
-- ✅ Security headers (HSTS, XSS protection)
+- ✅ A+ SSL security rating
 
-**Quick SSL deployment guides:**
-- 📖 **[SSL_QUICK_START.md](SSL_QUICK_START.md)** - 5-minute SSL setup
-- 📚 **[SSL_DEPLOYMENT.md](SSL_DEPLOYMENT.md)** - Complete SSL documentation
+#### ☁️ Cloud Platforms Supported
+- **AWS** - EC2 + RDS, Elastic Beanstalk
+- **Azure** - App Service + PostgreSQL
+- **Google Cloud** - Cloud Run + Cloud SQL
+- **DigitalOcean** - App Platform, Droplet + Database
+- **Heroku** - Container deployment
+
+#### 🖥️ Traditional Server
+- **Ubuntu + Nginx + PM2** - Full control deployment
+
+**See [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) for detailed instructions on all deployment methods.**
 
 ---
 

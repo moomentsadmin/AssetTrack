@@ -162,7 +162,16 @@ Navigate to Settings page to configure:
 
 ## Recent Development
 
-### Latest Updates (October 14, 2025)
+### Latest Updates (October 15, 2025)
+- **Documentation Consolidation**: Merged all deployment documentation into comprehensive guides
+  - Created DEPLOYMENT_GUIDE.md: 900+ line complete deployment guide for all platforms
+  - Created QUICK_START.md: Beginner-friendly quick start guide
+  - Archived 10+ redundant deployment docs to .old-docs/ folder
+  - Updated README.md with cleaner deployment section
+  - Covers: Docker (SSL), AWS, Azure, GCP, DigitalOcean, Heroku, Ubuntu/Nginx
+  - Includes: Security, troubleshooting, monitoring, scaling guides
+
+### Previous Updates (October 14, 2025)
 - **QR Code Labels**: Print professional asset tags with QR codes
   - Printable labels (85mm x 54mm - standard ID card size)
   - QR codes link to asset details page for instant access

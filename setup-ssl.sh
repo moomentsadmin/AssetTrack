@@ -31,13 +31,14 @@ if ! command -v docker &> /dev/null; then
     exit 1
 fi
 
-# Check Docker Compose
-if ! command -v docker-compose &> /dev/null; then
-    echo "❌ Docker Compose is not installed. Please install Docker Compose first."
+# Check Docker Compose (V2)
+if ! docker compose version &> /dev/null; then
+    echo "❌ Docker Compose V2 is not installed. Please install Docker Compose V2."
+    echo "   Install with: sudo apt install docker-compose-plugin"
     exit 1
 fi
 
-echo "✅ Docker and Docker Compose are installed"
+echo "✅ Docker and Docker Compose V2 are installed"
 echo ""
 
 # ===================================
@@ -77,7 +78,7 @@ if [ ! -f .env ]; then
         if [[ "$response" =~ ^([yY][eE][sS]|[yY])$ ]]; then
             ${EDITOR:-nano} .env
         else
-            echo "⚠️  Remember to edit .env before running 'docker-compose -f docker-compose.ssl.yml up -d'"
+            echo "⚠️  Remember to edit .env before running 'docker compose -f docker-compose.ssl.yml up -d'"
             exit 0
         fi
     else
@@ -208,7 +209,7 @@ read -r response
 if [[ "$response" =~ ^([yY][eE][sS]|[yY])$ ]]; then
     echo ""
     echo "Building and starting containers..."
-    docker-compose -f docker-compose.ssl.yml up -d --build
+    docker compose -f docker-compose.ssl.yml up -d --build
     
     echo ""
     echo "=========================================="
@@ -220,19 +221,19 @@ if [[ "$response" =~ ^([yY][eE][sS]|[yY])$ ]]; then
     echo "   Dashboard: https://traefik.$DOMAIN"
     echo ""
     echo "📝 View logs:"
-    echo "   docker-compose -f docker-compose.ssl.yml logs -f"
+    echo "   docker compose -f docker-compose.ssl.yml logs -f"
     echo ""
     echo "📊 Check services:"
-    echo "   docker-compose -f docker-compose.ssl.yml ps"
+    echo "   docker compose -f docker-compose.ssl.yml ps"
     echo ""
     echo "⏳ Note: SSL certificates may take 1-2 minutes to generate on first run."
-    echo "   Check logs with: docker-compose -f docker-compose.ssl.yml logs -f traefik"
+    echo "   Check logs with: docker compose -f docker-compose.ssl.yml logs -f traefik"
     echo ""
 else
     echo ""
     echo "Manual deployment:"
-    echo "   docker-compose -f docker-compose.ssl.yml up -d --build"
+    echo "   docker compose -f docker-compose.ssl.yml up -d --build"
     echo ""
     echo "View logs:"
-    echo "   docker-compose -f docker-compose.ssl.yml logs -f"
+    echo "   docker compose -f docker-compose.ssl.yml logs -f"
 fi

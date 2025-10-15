@@ -1,300 +1,47 @@
 # Asset Management System
 
-A comprehensive IT asset management system for tracking hardware, software, licenses, and equipment assigned to employees and contractors.
-
 ## Overview
+This full-stack application provides a comprehensive IT asset management system for tracking hardware, software, licenses, and equipment assigned to employees and contractors. It offers complete asset lifecycle management with role-based access control, depreciation tracking, audit trails, and email notifications. The system aims to streamline asset management processes for businesses, offering robust features for tracking, organization, and compliance.
 
-This full-stack application provides complete asset lifecycle management with role-based access control, depreciation tracking, audit trails, and email notifications.
+## User Preferences
+I prefer clear, concise explanations and direct answers. For coding tasks, I lean towards modern, maintainable code using best practices. I want the agent to prioritize security and efficient resource utilization. When suggesting changes, please outline the impact and rationale. Do not make changes to folder `node_modules` or files `package-lock.json`.
 
-## Features Implemented
-
-### Core Functionality
-- **Authentication**: Username/password authentication with role-based access (Admin, Manager, Employee)
-- **First-Time Setup**: Automated admin account creation on first deployment
-- **User Management**: Complete admin CRUD interface for managing user accounts
-- **Personal Profile**: All users can update their own information (fullName, email, department) and change passwords
-- **Asset Management**: Full CRUD for multiple asset types with status tracking and photo URLs
-- **Location Management**: Physical location tracking with dropdown selection for assets
-- **QR Code Labels**: Print professional asset labels with QR codes
-  - Printable labels (85mm x 54mm) with QR codes linking to asset details
-  - Includes company logo, location, date, and asset information
-  - Two identical labels per page for cutting and backup
-  - Auto-trigger print dialog for quick printing
-  - Scan QR code to instantly view asset details
-- **Employee Management**: Comprehensive employee and contractor management
-  - Add employees manually with role assignment
-  - Bulk employee upload via CSV
-  - Download CSV template for bulk uploads
-  - Admin/manager access required
-- **Department Organization**: Organize assets and employees by department
-- **Assignment Workflow**: Check-in/check-out assets with assignment history
-- **Asset Notes**: Maintenance logs and observations
-- **Audit Trail**: Complete history of all asset-related activities
-- **System Health**: Admin dashboard for monitoring system status, statistics, and activity
-- **Company Branding**: Configure company name, logo, website, currency, and header/footer text
-  - Company logo displayed on login, dashboard, and QR labels
-  - Custom header and footer text shown throughout the application
-
-### Advanced Features
-- **Depreciation Calculator**: Automatic asset value tracking using straight-line and declining balance methods
-- **Custom Fields**: Dynamic field definitions for different asset types
-- **CSV Import**: Bulk asset import functionality
-- **Email Notifications**: Configurable notifications via SendGrid, Gmail (SMTP), or Office 365
-- **Search & Filters**: Asset search and filtering by status, type, and department
-- **Dark Mode**: Full dark mode support with modern, clean UI
-- **User Management**: Complete admin user management with secure CRUD operations
-  - Create, edit, and delete user accounts (admin-only)
-  - Role assignment (Admin, Manager, Employee)
-  - Password management with bcrypt hashing
-  - Protection against self-deletion
-  - Password sanitization (never sent to client)
-
-## Tech Stack
+## System Architecture
+The application follows a modern SaaS dashboard design with a professional blue accent and supports both dark and light modes.
 
 ### Frontend
-- React with TypeScript
-- TanStack Query for data fetching
-- Wouter for routing
-- shadcn/ui components with Tailwind CSS
-- React Hook Form with Zod validation
+- **Framework**: React with TypeScript
+- **Data Fetching**: TanStack Query
+- **Routing**: Wouter
+- **UI Components**: shadcn/ui with Tailwind CSS
+- **Form Management**: React Hook Form with Zod validation
 
 ### Backend
-- Express.js with TypeScript
-- PostgreSQL with Drizzle ORM
-- Passport.js for authentication
-- Nodemailer for email notifications
-- Session-based auth with connect-pg-simple
+- **Framework**: Express.js with TypeScript
+- **Database**: PostgreSQL with Drizzle ORM
+- **Authentication**: Passport.js with session-based authentication (connect-pg-simple)
+- **Email**: Nodemailer for notifications
 
-## Database Schema
+### Core Features & Design Decisions
+- **Authentication**: Username/password with role-based access (Admin, Manager, Employee); first-time setup creates an admin account.
+- **User Management**: Admin CRUD for users, personal profile updates for all users.
+- **Asset Management**: Full CRUD for assets, status tracking, photo URLs, QR code labels, assignment workflow, notes, and depreciation calculation.
+- **Organization**: Employee and department management, including bulk upload via CSV.
+- **Audit Trail**: Comprehensive logging of all asset-related activities.
+- **System Health**: Admin dashboard for monitoring system status and statistics.
+- **Customization**: Configurable company branding (name, logo, website, currency, header/footer text).
+- **Role-Based Access Control (RBAC)**: Strict authorization implemented in both frontend (ProtectedRoute, dynamic sidebar) and backend (middleware like `requireAdmin`).
+    - **Employee**: Dashboard, Assets, Employees, Departments, Audit Trail, Profile.
+    - **Manager**: All Employee features + Locations, Custom Fields, Import Data, Branding, Settings.
+    - **Admin**: Full control including System Health and User Management.
+- **Custom Fields**: Stored as JSONB for flexibility, allowing dynamic field definitions per asset type.
+- **Email Notifications**: Configurable for asset assignments, warranty expiry, and return reminders, supporting SendGrid and generic SMTP.
 
-### Main Tables
-- **users**: User accounts with roles (admin, manager, employee)
-- **assets**: Hardware, software, licenses, accessories, office equipment, vehicles
-- **departments**: Organizational units
-- **asset_assignments**: Assignment tracking with dates
-- **asset_notes**: Maintenance logs and notes
-- **audit_trail**: Complete activity history
-- **custom_field_definitions**: Dynamic custom fields per asset type
-- **email_settings**: SMTP/SendGrid configuration
-- **system_settings**: Application configuration including first-time setup status, company branding
-
-## First-Time Setup
-
-On first deployment or when the database is empty:
-1. Navigate to the application URL
-2. The setup page will automatically appear
-3. Fill in the admin account details:
-   - **Full Name**: Your full name
-   - **Email**: Your email address
-   - **Username**: Choose a username (min. 3 characters)
-   - **Password**: Choose a secure password (min. 8 characters)
-4. Click "Create Admin Account"
-5. You'll be automatically logged in as the admin
-
-**Security Notes**: 
-- The setup process requires custom credentials - no hard-coded defaults
-- Setup can only be run once per deployment
-- The first person to access the setup URL controls the admin account (suitable for private deployments)
-- All setup attempts are logged with IP addresses for monitoring
-- Public registration is disabled - only admins can create new user accounts through the admin panel
-
-## API Endpoints
-
-### Authentication & Setup
-- GET `/api/setup/status` - Check if first-time setup is required
-- POST `/api/setup` - Create admin account with custom credentials (first-time only)
-- POST `/api/login` - Login
-- POST `/api/logout` - Logout
-- GET `/api/user` - Get current user
-- POST `/api/register` - Disabled (returns 403)
-
-### User Management (Admin Only)
-- GET `/api/users` - List all users (passwords sanitized)
-- POST `/api/users` - Create new user account
-- PATCH `/api/users/:id` - Update user account (self-update or admin)
-- DELETE `/api/users/:id` - Delete user account (cannot delete self)
-
-### Profile Management (All Users)
-- Users can update their own profile: fullName, email, department
-- Users can change their own password (with current password verification)
-- Non-admin users cannot change: role, isContractor, username
-- Whitelist approach for field filtering (security hardened)
-
-### Assets
-- GET `/api/assets` - List all assets
-- POST `/api/assets` - Create asset
-- PATCH `/api/assets/:id` - Update asset
-- DELETE `/api/assets/:id` - Delete asset
-- PATCH `/api/assets/:id/depreciation` - Update depreciation
-- POST `/api/assets/:id/calculate-depreciation` - Auto-calculate depreciation
-
-### Assignments
-- GET `/api/assignments` - List assignments
-- POST `/api/assignments` - Create assignment
-- PATCH `/api/assignments/:id/return` - Return asset
-
-### Other Endpoints
-- Departments: GET/POST/PATCH/DELETE `/api/departments`
-- Users: GET `/api/users`
-- Audit: GET `/api/audit`
-- Custom Fields: GET/POST/DELETE `/api/custom-fields`
-- Import: POST `/api/import/csv`
-- Settings: GET/POST `/api/settings/email`
-
-## Email Notifications
-
-The system supports email notifications for:
-- Asset assignments
-- Warranty expiry alerts
-- Return reminders
-
-### Supported Providers
-1. **SendGrid**: Configure API key in Settings
-2. **SMTP** (Gmail, Office 365, etc.): Configure SMTP host, port, credentials
-
-### Configuration
-Navigate to Settings page to configure:
-- Email provider (SendGrid or SMTP)
-- SMTP host and port
-- Authentication credentials
-- From name and email
-- Enable/disable notification types
-
-## Recent Development
-
-### Latest Updates (October 15, 2025)
-- **Documentation Consolidation**: Merged all deployment documentation into comprehensive guides
-  - Created DEPLOYMENT_GUIDE.md: 900+ line complete deployment guide for all platforms
-  - Created QUICK_START.md: Beginner-friendly quick start guide
-  - Archived 10+ redundant deployment docs to .old-docs/ folder
-  - Updated README.md with cleaner deployment section
-  - Covers: Docker (SSL), AWS, Azure, GCP, DigitalOcean, Heroku, Ubuntu/Nginx
-  - Includes: Security, troubleshooting, monitoring, scaling guides
-
-### Previous Updates (October 14, 2025)
-- **QR Code Labels**: Print professional asset tags with QR codes
-  - Printable labels (85mm x 54mm - standard ID card size)
-  - QR codes link to asset details page for instant access
-  - Includes company branding (logo and name)
-  - Shows location, purchase date, and asset description
-  - Two labels per page for cutting and backup
-  - Accessible from asset actions dropdown menu
-  - Print-optimized CSS for clean professional output
-
-### Previous Updates (October 2025)
-- **Security Hardening**: First-time setup now requires custom admin credentials (no hard-coded defaults)
-- **User Management**: Complete admin CRUD interface for managing user accounts
-  - Password security: bcrypt hashing, sanitization in API responses, validation
-  - Role-based access control with admin-only restrictions
-  - Self-deletion protection
-- **Personal Profile Page**: All users can manage their own profiles
-  - Update personal information: fullName, email, department
-  - Change password with current password verification
-  - Whitelist approach: non-admin users cannot modify role, contractor status, or username
-  - Secure field filtering prevents privilege escalation
-- **Location Management**: Physical location tracking system
-  - CRUD operations for location management (admin/manager access)
-  - Assets can be assigned to specific locations via dropdown
-  - Location statistics showing asset count and total value
-- **System Health Monitoring**: Admin dashboard for system oversight
-  - Real-time database and server status
-  - User and asset statistics
-  - Asset distribution charts by status
-  - Recent activity from audit trail
-  - System resource overview (departments, locations, audit entries)
-- **Company Branding**: Customizable company settings
-  - Company name, website, and logo URL configuration
-  - Logo preview functionality
-  - Header and footer text customization
-  - Logo displayed on login and dashboard pages
-  - Custom header/footer text shown on login page
-  - Currency selection (USD, EUR, GBP, JPY, CAD, AUD, INR)
-  - Admin/manager access to branding settings
-- **Asset Photos**: Photo URL field for asset images
-  - Optional photo URL input in asset form
-  - Supports external image URLs for asset documentation
-- **Production Ready**: Application fully tested and prepared for deployment
-- **Fixed Critical Bug**: Asset creation with date fields now works correctly - dates are properly converted from ISO strings to Date objects
-- **Authentication**: Passport.js configured with proper error handling and session management
-- **Testing**: Comprehensive end-to-end tests passing for login, asset creation, assignment workflow, and logout
-- Fixed custom field form initialization and filtering
-- Added email notification integration with nodemailer
-- Implemented depreciation auto-calculation based on purchase date
-- Added comprehensive audit logging for all asset actions including depreciation
-
-### Architecture Decisions
-- Modern SaaS dashboard design with professional blue accent (hsl(217 91% 60%))
-- Dark mode as primary theme with light mode support
-- PostgreSQL for reliable data persistence
-- Session-based authentication for security
-- Role-based access control with ProtectedRoute component supporting allowedRoles
-- Custom fields stored as JSONB for flexibility
-- Comprehensive audit trail for compliance
-
-### Role-Based Access Control
-The application implements strict role-based authorization at both frontend and backend:
-
-**Employee Access** (Most Restrictive):
-- Main Menu: Dashboard, Assets, Employees, Departments, Audit Trail, Profile
-- Cannot access: Administration section, Locations, Branding, System Health, User Management
-
-**Manager Access**:
-- All Employee features plus:
-- Administration Section: Locations, Custom Fields, Import Data, Branding, Settings
-- Cannot access: System Health (admin only), User Management (admin only)
-
-**Admin Access** (Full Control):
-- All Manager features plus:
-- System Health monitoring dashboard
-- User Management (create, edit, delete users)
-- Full system configuration
-
-**Implementation**:
-- Frontend: `ProtectedRoute` component with `allowedRoles` parameter
-- Sidebar: Dynamic menu filtering based on user role and `adminOnly` flags
-- Backend: `requireAdmin` and `requireAdminOrManager` middleware on API routes
-- Access denied page shown when unauthorized users attempt restricted routes
-
-## Running the Application
-
-The workflow "Start application" runs `npm run dev` which:
-1. Starts Express server on port 5000
-2. Serves Vite frontend
-3. Connects to PostgreSQL database
-
-Database migrations are handled via:
-```bash
-npm run db:push
-```
-
-## Production Deployment
-
-A comprehensive deployment guide is available in `DEPLOYMENT.md` covering:
-- **Ubuntu Server**: PM2, Nginx, PostgreSQL setup with SSL
-- **Docker**: Internal DB and external DB configurations
-- **AWS**: EC2 + RDS, Elastic Beanstalk deployments
-- **Digital Ocean**: App Platform and Droplet + Managed Database
-- **Azure**: App Service + Azure Database for PostgreSQL
-- **Security**: Best practices, firewall, SSL/TLS configuration
-- **Monitoring**: Health checks, logging, and backup strategies
-
-## Next Steps for Production
-
-1. **Deployment**: Follow the `DEPLOYMENT.md` guide for your chosen platform
-2. **Email Configuration**: Set up SendGrid API key or SMTP credentials in Settings
-3. **User Management**: Create additional admin/manager/employee accounts
-4. **Department Setup**: Create your organization's departments
-5. **Custom Fields**: Define custom fields for your specific asset types
-6. **Import Data**: Use CSV import for bulk asset and employee upload
-7. **Backup Strategy**: Configure automated database backups
-8. **Security**: Ensure SESSION_SECRET is secure, enable SSL/HTTPS
-
-## Notes
-
-- All sensitive operations require authentication
-- Admin users have full access to all features
-- Managers can view and manage assets but not system settings
-- Employees can view assets assigned to them
-- All asset modifications are logged in audit trail
-- Depreciation calculations persist to database
-- Email notifications fire asynchronously to avoid blocking
+## External Dependencies
+- **Database**: PostgreSQL
+- **Email Services**:
+    - SendGrid (API key configuration)
+    - SMTP (for services like Gmail, Office 365)
+- **Authentication**: Passport.js
+- **UI Libraries**: shadcn/ui, Tailwind CSS
+- **Other**: Nodemailer, TanStack Query, Wouter, React Hook Form, Zod.

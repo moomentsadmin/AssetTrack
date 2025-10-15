@@ -5,7 +5,7 @@
 I've fixed **6 critical deployment issues** that were blocking your Docker deployment:
 
 ### 1. ❌ Missing Docker Files → ✅ FIXED
-- **Problem**: No `.env.example`, `Dockerfile`, `docker-compose.yml`
+- **Problem**: No `.env.example`, `Dockerfile`, `docker compose.yml`
 - **Solution**: Created complete Docker deployment stack
 
 ### 2. ❌ Wrong Directory Name → ✅ FIXED
@@ -25,7 +25,7 @@ I've fixed **6 critical deployment issues** that were blocking your Docker deplo
 - **Solution**: Removed from `.dockerignore`
 
 ### 6. ❌ drizzle-kit Not Found → ✅ FIXED ⭐
-- **Problem**: `docker-compose.yml` used `npm run db:push` (drizzle-kit not in PATH)
+- **Problem**: `docker compose.yml` used `npm run db:push` (drizzle-kit not in PATH)
 - **Solution**: Changed to `npx drizzle-kit push`
 
 ---
@@ -36,7 +36,7 @@ I've fixed **6 critical deployment issues** that were blocking your Docker deplo
 
 ```bash
 # 1. Add all Docker files
-git add docker-compose.yml .dockerignore package-lock.json .env.example Dockerfile .gitignore
+git add docker compose.yml .dockerignore package-lock.json .env.example Dockerfile .gitignore
 
 # 2. Add documentation (7 new files)
 git add DRIZZLE_KIT_FIX.md DOCKERIGNORE_FIX.md DOCKER_BUILD_FIX.md DOCKER_QUICKSTART.md DEPLOYMENT_FIX.md GIT_PUSH_INSTRUCTIONS.md FINAL_PUSH_COMMANDS.md ALL_FIXES_SUMMARY.md
@@ -51,11 +51,11 @@ git status | grep "\.env$"
 git commit -m "Fix Docker deployment: drizzle-kit PATH and package-lock.json issues
 
 CRITICAL FIXES:
-- Fix drizzle-kit not found: use npx in docker-compose.yml
+- Fix drizzle-kit not found: use npx in docker compose.yml
 - Fix .dockerignore excluding package-lock.json (was blocking build)
 
 Docker Runtime Fixes:
-- Change docker-compose.yml command to 'npx drizzle-kit push'
+- Change docker compose.yml command to 'npx drizzle-kit push'
 - Previously 'npm run db:push' couldn't find drizzle-kit in PATH
 
 Docker Build Fixes:
@@ -66,7 +66,7 @@ Docker Build Fixes:
 Docker Stack:
 - .env.example template (no secrets)
 - Dockerfile with multi-stage build
-- docker-compose.yml with PostgreSQL
+- docker compose.yml with PostgreSQL
 - .dockerignore (fixed)
 
 Documentation:
@@ -114,13 +114,13 @@ nano .env
 #   SESSION_SECRET=$(openssl rand -base64 32)
 
 # 5. Build and start Docker
-docker-compose up -d
+docker compose up -d
 
 # 6. Watch logs (should see database migration, then "serving on port 5000")
-docker-compose logs -f app
+docker compose logs -f app
 
 # 7. Verify services are running
-docker-compose ps
+docker compose ps
 # Both "app" and "db" should show "Up" ✅
 
 # 8. Access application
@@ -132,7 +132,7 @@ docker-compose ps
 ## 📦 What's Being Committed (17 Files)
 
 **Critical Docker Files (6):**
-1. ✅ `docker-compose.yml` - **FIXED! Uses npx drizzle-kit push**
+1. ✅ `docker compose.yml` - **FIXED! Uses npx drizzle-kit push**
 2. ✅ `.dockerignore` - **FIXED! No longer excludes package-lock.json**
 3. ✅ `package-lock.json` - **Now included in Docker build**
 4. ✅ `.env.example` - Environment template (no secrets)
@@ -167,9 +167,9 @@ docker-compose ps
    - Missing environment template file
    - ✅ Fixed: Created `.env.example`
 
-3. **Third Error**: `ERROR: Can't find docker-compose.yml`
+3. **Third Error**: `ERROR: Can't find docker compose.yml`
    - Missing Docker configuration
-   - ✅ Fixed: Created `Dockerfile`, `docker-compose.yml`, `.dockerignore`
+   - ✅ Fixed: Created `Dockerfile`, `docker compose.yml`, `.dockerignore`
 
 4. **Fourth Error**: `npm ci error: requires package-lock.json`
    - Dockerfile used deprecated `--only=production` flag
@@ -198,7 +198,7 @@ After deployment, you should see:
    - ✅ "Successfully tagged assettrackr_app"
 
 3. **Docker Start**: Services running
-   - ✅ `docker-compose ps` shows "Up"
+   - ✅ `docker compose ps` shows "Up"
    - ✅ Logs show "serving on port 5000"
 
 4. **Browser**: Application accessible
@@ -212,22 +212,22 @@ After deployment, you should see:
 ### "drizzle-kit still not found"
 ```bash
 # Rebuild containers
-docker-compose down
-docker-compose build --no-cache
-docker-compose up -d
+docker compose down
+docker compose build --no-cache
+docker compose up -d
 ```
 
 ### "Database migration fails"
 ```bash
 # Run migration manually
-docker-compose exec app npx drizzle-kit push --force
+docker compose exec app npx drizzle-kit push --force
 
 # Check database
-docker-compose exec db psql -U asset_user asset_management -c "\dt"
+docker compose exec db psql -U asset_user asset_management -c "\dt"
 ```
 
 ### "Port 5000 already in use"
-Edit `docker-compose.yml`:
+Edit `docker compose.yml`:
 ```yaml
 ports:
   - "8080:5000"  # Use different port

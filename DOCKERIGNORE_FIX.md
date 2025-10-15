@@ -33,7 +33,7 @@ All issues are now fixed! Here are the complete commands:
 
 ```bash
 # 1. Add all Docker files (including fixed .dockerignore!)
-git add .env.example Dockerfile docker-compose.yml .dockerignore package-lock.json
+git add .env.example Dockerfile docker compose.yml .dockerignore package-lock.json
 
 # 2. Add documentation
 git add .gitignore DOCKER_QUICKSTART.md DEPLOYMENT_FIX.md DOCKER_BUILD_FIX.md DOCKERIGNORE_FIX.md GIT_PUSH_INSTRUCTIONS.md
@@ -57,7 +57,7 @@ Critical Fixes:
 Docker Deployment Stack:
 - .env.example template (no secrets)
 - Dockerfile with multi-stage build
-- docker-compose.yml with PostgreSQL
+- docker compose.yml with PostgreSQL
 - .dockerignore (fixed - no longer excludes package-lock.json)
 
 Documentation:
@@ -121,10 +121,10 @@ nano .env
 #   SESSION_SECRET=generate_with_openssl_rand_base64_32
 
 # 5. Build and start Docker
-docker-compose up -d
+docker compose up -d
 
 # 6. Check logs
-docker-compose logs -f app
+docker compose logs -f app
 # Should show: "serving on port 5000" ✅
 
 # 7. Access application
@@ -140,7 +140,7 @@ docker-compose logs -f app
 2. ✅ `package-lock.json` - **Will now be included in Docker build**
 3. ✅ `.env.example` - Environment template
 4. ✅ `Dockerfile` - Multi-stage build
-5. ✅ `docker-compose.yml` - Complete stack
+5. ✅ `docker compose.yml` - Complete stack
 6. ✅ `.gitignore` - Excludes .env
 7. ✅ `DOCKERIGNORE_FIX.md` - This file
 8. ✅ `DOCKER_BUILD_FIX.md` - npm ci fix
@@ -212,11 +212,11 @@ git push origin main
 ```bash
 # Normal - first build downloads Node.js image
 # Subsequent builds are cached and faster
-docker-compose up -d --build
+docker compose up -d --build
 ```
 
 ### "Port 5000 already in use"
-Edit `docker-compose.yml`:
+Edit `docker compose.yml`:
 ```yaml
 ports:
   - "8080:5000"  # Use port 8080 instead

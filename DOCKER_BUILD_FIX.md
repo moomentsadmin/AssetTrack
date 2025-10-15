@@ -48,7 +48,7 @@ The `npm ci` command **requires** `package-lock.json` to be in the repository.
 
 ```bash
 # 1. Add all Docker files (including package-lock.json!)
-git add .env.example Dockerfile docker-compose.yml .dockerignore package-lock.json
+git add .env.example Dockerfile docker compose.yml .dockerignore package-lock.json
 
 # 2. Add documentation
 git add .gitignore DOCKER_QUICKSTART.md DEPLOYMENT_FIX.md GIT_PUSH_INSTRUCTIONS.md DOCKER_BUILD_FIX.md
@@ -81,7 +81,7 @@ git push origin main
 
 **Critical Docker Files:**
 1. ✅ `Dockerfile` - **FIXED npm ci error**
-2. ✅ `docker-compose.yml` - Complete stack
+2. ✅ `docker compose.yml` - Complete stack
 3. ✅ `.dockerignore` - Build optimization
 4. ✅ `.env.example` - Environment template (no secrets)
 5. ✅ `package-lock.json` - **REQUIRED for Docker build!**
@@ -124,11 +124,11 @@ nano .env
 # Update: PGPASSWORD and SESSION_SECRET
 
 # 4. Build and start
-docker-compose up -d
+docker compose up -d
 
 # 5. Verify
-docker-compose ps          # Both services "Up"
-docker-compose logs -f app # Check logs
+docker compose ps          # Both services "Up"
+docker compose logs -f app # Check logs
 
 # 6. Access
 # http://localhost:5000
@@ -175,7 +175,7 @@ ls -lh package-lock.json
 ```
 
 ### "Port 5000 in use"
-Edit `docker-compose.yml`:
+Edit `docker compose.yml`:
 ```yaml
 ports:
   - "8080:5000"  # Use different port

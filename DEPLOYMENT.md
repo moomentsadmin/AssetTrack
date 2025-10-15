@@ -262,7 +262,7 @@ sudo crontab -e
 
 The repository includes ready-to-use Docker configuration files:
 - `Dockerfile` - Multi-stage build for production
-- `docker-compose.yml` - Complete stack with PostgreSQL
+- `docker compose.yml` - Complete stack with PostgreSQL
 - `.env.example` - Environment template
 
 **Steps:**
@@ -280,10 +280,10 @@ nano .env
 # Update: PGPASSWORD, SESSION_SECRET (generate with: openssl rand -base64 32)
 
 # 4. Start with Docker Compose
-docker-compose up -d
+docker compose up -d
 
 # 5. Check logs
-docker-compose logs -f app
+docker compose logs -f app
 
 # 6. Access application
 # http://localhost:5000
@@ -293,16 +293,16 @@ docker-compose logs -f app
 
 ```bash
 # Stop services
-docker-compose down
+docker compose down
 
 # Restart services
-docker-compose restart
+docker compose restart
 
 # View logs
-docker-compose logs -f
+docker compose logs -f
 
 # Rebuild after code changes
-docker-compose up -d --build
+docker compose up -d --build
 ```
 
 ### Option 1: Docker with Internal Database (Manual)
@@ -313,7 +313,7 @@ docker-compose up -d --build
 # See Dockerfile in repository root
 ```
 
-**`docker-compose.yml` (with internal database):**
+**`docker compose.yml` (with internal database):**
 
 ```yaml
 version: '3.8'
@@ -377,26 +377,26 @@ SESSION_SECRET=your_session_secret_min_32_chars
 
 ```bash
 # Build and run
-docker-compose up -d
+docker compose up -d
 
 # Wait for database to be ready, then run migrations
-docker-compose exec app npm run db:push
+docker compose exec app npm run db:push
 
 # View logs
-docker-compose logs -f
+docker compose logs -f
 
 # Stop
-docker-compose down
+docker compose down
 
 # Stop and remove volumes
-docker-compose down -v
+docker compose down -v
 ```
 
-> **Important**: Always run `docker-compose exec app npm run db:push` after starting the containers to initialize the database schema.
+> **Important**: Always run `docker compose exec app npm run db:push` after starting the containers to initialize the database schema.
 
 ### Option 2: Docker with External Database
 
-**`docker-compose.external-db.yml`:**
+**`docker compose.external-db.yml`:**
 
 ```yaml
 version: '3.8'
@@ -439,10 +439,10 @@ SESSION_SECRET=your_session_secret
 
 ```bash
 # Run with external DB
-docker-compose -f docker-compose.external-db.yml up -d
+docker compose -f docker compose.external-db.yml up -d
 
 # Run migrations
-docker-compose -f docker-compose.external-db.yml exec app npm run db:push
+docker compose -f docker compose.external-db.yml exec app npm run db:push
 ```
 
 ---
@@ -866,14 +866,14 @@ pm2 restart asset-management
 
 ```bash
 # View container logs
-docker-compose logs -f
+docker compose logs -f
 
 # Check container status
-docker-compose ps
+docker compose ps
 
 # Rebuild and restart
-docker-compose down
-docker-compose up --build -d
+docker compose down
+docker compose up --build -d
 ```
 
 ---

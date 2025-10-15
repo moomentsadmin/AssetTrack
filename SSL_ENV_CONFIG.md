@@ -31,7 +31,7 @@ LETSENCRYPT_EMAIL=admin@yourdomain.com
 
 When you start the containers:
 ```bash
-docker-compose -f docker-compose.ssl.yml up -d
+docker compose -f docker compose.ssl.yml up -d
 ```
 
 Traefik **automatically fetches** these variables from `.env`:
@@ -113,7 +113,7 @@ docker inspect asset-app | grep -i "traefik.http.routers"
 ### Watch Certificate Generation
 
 ```bash
-docker-compose -f docker-compose.ssl.yml logs -f traefik
+docker compose -f docker compose.ssl.yml logs -f traefik
 
 # Wait for these messages:
 # ✅ "Certificates obtained for example.com"
@@ -138,8 +138,8 @@ echo "DOMAIN=yourdomain.com" >> .env
 echo "LETSENCRYPT_EMAIL=admin@yourdomain.com" >> .env
 
 # Restart containers
-docker-compose -f docker-compose.ssl.yml down
-docker-compose -f docker-compose.ssl.yml up -d
+docker compose -f docker compose.ssl.yml down
+docker compose -f docker compose.ssl.yml up -d
 ```
 
 ### Issue 2: DNS Not Configured
@@ -166,9 +166,9 @@ dig yourdomain.com +short
 **Solution:**
 ```bash
 # Remove old certificates
-docker-compose -f docker-compose.ssl.yml down
+docker compose -f docker compose.ssl.yml down
 rm -rf letsencrypt/
-docker-compose -f docker-compose.ssl.yml up -d
+docker compose -f docker compose.ssl.yml up -d
 ```
 
 ---
@@ -185,7 +185,7 @@ cp .env.ssl.example .env
 nano .env
 
 # Then start containers
-docker-compose -f docker-compose.ssl.yml up -d
+docker compose -f docker compose.ssl.yml up -d
 ```
 
 ### 2. Use Real Email for LETSENCRYPT_EMAIL
@@ -224,7 +224,7 @@ If using Cloudflare:
 - `LETSENCRYPT_EMAIL` - Fetched from `.env` for Let's Encrypt account
 
 **Where They're Used:**
-- `docker-compose.ssl.yml` - Traefik configuration
+- `docker compose.ssl.yml` - Traefik configuration
 - Let's Encrypt - Certificate generation and renewal
 - Routing rules - HTTPS traffic routing
 
@@ -245,7 +245,7 @@ If using Cloudflare:
 - **Main Deployment Guide:** [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)
 - **Quick Start:** [QUICK_START.md](QUICK_START.md)
 - **Environment Template:** [.env.ssl.example](.env.ssl.example)
-- **Docker Compose:** [docker-compose.ssl.yml](docker-compose.ssl.yml)
+- **Docker Compose:** [docker compose.ssl.yml](docker compose.ssl.yml)
 
 ---
 

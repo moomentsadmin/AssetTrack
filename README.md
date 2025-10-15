@@ -148,7 +148,7 @@ cp .env.example .env
 nano .env  # Update PGPASSWORD and SESSION_SECRET
 
 # Start with Docker Compose
-docker-compose up -d
+docker compose up -d
 
 # Access application
 # http://localhost:5000
@@ -306,10 +306,10 @@ cp .env.example .env
 # Edit .env with your settings
 
 # Start with Docker Compose
-docker-compose up -d
+docker compose up -d
 
 # Run migrations
-docker-compose exec app npm run db:push
+docker compose exec app npm run db:push
 ```
 
 ## 🔐 Security Features

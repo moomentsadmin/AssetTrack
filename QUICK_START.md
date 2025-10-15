@@ -222,7 +222,7 @@ openssl rand -base64 32
 ### Backup Database
 ```bash
 # Docker
-docker-compose -f docker-compose.ssl.yml exec db pg_dump -U asset_user asset_management > backup.sql
+docker compose -f docker compose.ssl.yml exec db pg_dump -U asset_user asset_management > backup.sql
 
 # Local
 pg_dump asset_management > backup.sql
@@ -232,8 +232,8 @@ pg_dump asset_management > backup.sql
 ```bash
 # Docker SSL
 git pull
-docker-compose -f docker-compose.ssl.yml build --no-cache
-docker-compose -f docker-compose.ssl.yml up -d
+docker compose -f docker compose.ssl.yml build --no-cache
+docker compose -f docker compose.ssl.yml up -d
 
 # Local Dev
 git pull
@@ -251,10 +251,10 @@ npm run dev
 **Docker SSL:**
 ```bash
 # Check containers
-docker-compose -f docker-compose.ssl.yml ps
+docker compose -f docker compose.ssl.yml ps
 
 # Check logs
-docker-compose -f docker-compose.ssl.yml logs -f
+docker compose -f docker compose.ssl.yml logs -f
 
 # Verify DNS
 dig yourdomain.com +short
@@ -273,12 +273,12 @@ psql asset_management -c "SELECT version();"
 
 ```bash
 # Regenerate certificates
-docker-compose -f docker-compose.ssl.yml down
+docker compose -f docker compose.ssl.yml down
 rm -rf letsencrypt/
-docker-compose -f docker-compose.ssl.yml up -d
+docker compose -f docker compose.ssl.yml up -d
 
 # Watch certificate generation
-docker-compose -f docker-compose.ssl.yml logs -f traefik
+docker compose -f docker compose.ssl.yml logs -f traefik
 ```
 
 ### Database Connection Failed

@@ -31,10 +31,10 @@ SESSION_SECRET=your_secure_random_session_secret_min_32_characters
 
 ```bash
 # 4. Start the application
-docker-compose up -d
+docker compose up -d
 
 # 5. Wait for services to be ready (about 30 seconds)
-docker-compose logs -f app
+docker compose logs -f app
 
 # Watch for: "serving on port 5000"
 # Press Ctrl+C to exit logs
@@ -59,43 +59,43 @@ docker-compose logs -f app
 
 ```bash
 # View logs
-docker-compose logs -f app      # Application logs
-docker-compose logs -f db       # Database logs
+docker compose logs -f app      # Application logs
+docker compose logs -f db       # Database logs
 
 # Stop services
-docker-compose down
+docker compose down
 
 # Start services
-docker-compose up -d
+docker compose up -d
 
 # Restart services
-docker-compose restart
+docker compose restart
 
 # Rebuild after code changes
-docker-compose up -d --build
+docker compose up -d --build
 
 # Remove all data (careful!)
-docker-compose down -v
+docker compose down -v
 ```
 
 ### Accessing the Database
 
 ```bash
 # Connect to PostgreSQL
-docker-compose exec db psql -U asset_user -d asset_management
+docker compose exec db psql -U asset_user -d asset_management
 
 # Backup database
-docker-compose exec db pg_dump -U asset_user asset_management > backup.sql
+docker compose exec db pg_dump -U asset_user asset_management > backup.sql
 
 # Restore database
-docker-compose exec -T db psql -U asset_user asset_management < backup.sql
+docker compose exec -T db psql -U asset_user asset_management < backup.sql
 ```
 
 ### Troubleshooting
 
 **Port 5000 already in use?**
 ```bash
-# Edit docker-compose.yml and change port mapping:
+# Edit docker compose.yml and change port mapping:
 ports:
   - "8080:5000"  # Access on http://localhost:8080
 ```
@@ -103,26 +103,26 @@ ports:
 **Database connection errors?**
 ```bash
 # Check database is healthy
-docker-compose ps
+docker compose ps
 
 # Restart database
-docker-compose restart db
+docker compose restart db
 
 # Check database logs
-docker-compose logs db
+docker compose logs db
 ```
 
 **Application won't start?**
 ```bash
 # Check logs for errors
-docker-compose logs app
+docker compose logs app
 
 # Rebuild the image
-docker-compose up -d --build
+docker compose up -d --build
 
 # Reset everything (removes data!)
-docker-compose down -v
-docker-compose up -d
+docker compose down -v
+docker compose up -d
 ```
 
 ### Production Deployment
@@ -145,7 +145,7 @@ SMTP_USER=your_email@gmail.com
 SMTP_PASSWORD=your_app_password
 ```
 
-**Add to `docker-compose.yml`:**
+**Add to `docker compose.yml`:**
 ```yaml
 services:
   app:

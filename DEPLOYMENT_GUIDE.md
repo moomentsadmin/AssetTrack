@@ -10,7 +10,7 @@ Comprehensive deployment guide for the Asset Management System across all major 
 2. [Docker Deployments](#docker-deployments)
    - [Docker with Let's Encrypt SSL](#docker-with-lets-encrypt-ssl)
    - [Docker with External Database](#docker-with-external-database)
-   - [Docker Compose (Development)](#docker-compose-development)
+   - [Docker Compose (Development)](#docker compose-development)
 3. [Cloud Platform Deployments](#cloud-platform-deployments)
    - [AWS (EC2 + RDS)](#aws-ec2--rds)
    - [AWS (Elastic Beanstalk)](#aws-elastic-beanstalk)
@@ -150,10 +150,10 @@ dig yourdomain.com +short
 
 ```bash
 # Start containers
-docker-compose -f docker-compose.ssl.yml up -d
+docker compose -f docker compose.ssl.yml up -d
 
 # Watch certificate generation (Ctrl+C to exit)
-docker-compose -f docker-compose.ssl.yml logs -f traefik
+docker compose -f docker compose.ssl.yml logs -f traefik
 ```
 
 **How SSL Certificate Generation Works:**
@@ -185,18 +185,18 @@ docker-compose -f docker-compose.ssl.yml logs -f traefik
 
 ```bash
 # View logs
-docker-compose -f docker-compose.ssl.yml logs -f
+docker compose -f docker compose.ssl.yml logs -f
 
 # Restart containers
-docker-compose -f docker-compose.ssl.yml restart
+docker compose -f docker compose.ssl.yml restart
 
 # Stop containers
-docker-compose -f docker-compose.ssl.yml down
+docker compose -f docker compose.ssl.yml down
 
 # Update application
 git pull
-docker-compose -f docker-compose.ssl.yml build --no-cache
-docker-compose -f docker-compose.ssl.yml up -d
+docker compose -f docker compose.ssl.yml build --no-cache
+docker compose -f docker compose.ssl.yml up -d
 ```
 
 ---
@@ -207,7 +207,7 @@ docker-compose -f docker-compose.ssl.yml up -d
 
 #### Configuration
 
-Edit `docker-compose.ssl.yml` and **remove the `db` service**, then update `.env`:
+Edit `docker compose.ssl.yml` and **remove the `db` service**, then update `.env`:
 
 ```env
 # External Database Configuration
@@ -231,7 +231,7 @@ SESSION_SECRET=your_secure_secret
 
 ```bash
 # Start containers (without database)
-docker-compose -f docker-compose.ssl.yml up -d
+docker compose -f docker compose.ssl.yml up -d
 
 # Migrations run automatically on startup
 ```
@@ -250,7 +250,7 @@ cp .env.example .env
 nano .env
 
 # Start services
-docker-compose up -d
+docker compose up -d
 
 # Access app
 http://localhost:5000
@@ -314,8 +314,8 @@ sudo usermod -aG docker ubuntu
 newgrp docker
 
 # Install Docker Compose
-sudo curl -L "https://github.com/docker/compose/releases/download/v2.20.0/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-sudo chmod +x /usr/local/bin/docker-compose
+sudo curl -L "https://github.com/docker/compose/releases/download/v2.20.0/docker compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker compose
+sudo chmod +x /usr/local/bin/docker compose
 
 # Clone repository
 git clone https://github.com/yourusername/AssetTrackr.git
@@ -344,10 +344,10 @@ PGPASSWORD=your_rds_password
 SESSION_SECRET=$(openssl rand -base64 32)
 ```
 
-**Remove internal database from `docker-compose.ssl.yml`:**
+**Remove internal database from `docker compose.ssl.yml`:**
 ```bash
-# Edit docker-compose.ssl.yml
-nano docker-compose.ssl.yml
+# Edit docker compose.ssl.yml
+nano docker compose.ssl.yml
 
 # Remove the entire 'db:' service section
 # Remove 'db' from networks in asset-app
@@ -356,10 +356,10 @@ nano docker-compose.ssl.yml
 **Deploy:**
 ```bash
 # Start containers
-docker-compose -f docker-compose.ssl.yml up -d
+docker compose -f docker compose.ssl.yml up -d
 
 # Check logs
-docker-compose -f docker-compose.ssl.yml logs -f
+docker compose -f docker compose.ssl.yml logs -f
 ```
 
 #### Step 5: Configure DNS
@@ -674,8 +674,8 @@ curl -fsSL https://get.docker.com -o get-docker.sh
 sh get-docker.sh
 
 # Install Docker Compose
-curl -L "https://github.com/docker/compose/releases/download/v2.20.0/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-chmod +x /usr/local/bin/docker-compose
+curl -L "https://github.com/docker/compose/releases/download/v2.20.0/docker compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker compose
+chmod +x /usr/local/bin/docker compose
 
 # Clone repository
 git clone https://github.com/yourusername/AssetTrackr.git
@@ -706,13 +706,13 @@ SESSION_SECRET=$(openssl rand -base64 32)
 
 **Remove internal database:**
 ```bash
-# Edit docker-compose.ssl.yml and remove 'db' service
-nano docker-compose.ssl.yml
+# Edit docker compose.ssl.yml and remove 'db' service
+nano docker compose.ssl.yml
 ```
 
 **Deploy:**
 ```bash
-docker-compose -f docker-compose.ssl.yml up -d
+docker compose -f docker compose.ssl.yml up -d
 ```
 
 ---
@@ -1041,7 +1041,7 @@ TRAEFIK_DASHBOARD_AUTH=admin:hashed_password
 
 ### How DOMAIN Variable Works with SSL
 
-**In docker-compose.ssl.yml:**
+**In docker compose.ssl.yml:**
 ```yaml
 # Traefik reads DOMAIN from .env and uses it for:
 
@@ -1274,10 +1274,10 @@ crontab -e
 **Docker Backups:**
 ```bash
 # Backup database container
-docker-compose -f docker-compose.ssl.yml exec db pg_dump -U asset_user asset_management > backup.sql
+docker compose -f docker compose.ssl.yml exec db pg_dump -U asset_user asset_management > backup.sql
 
 # Restore
-cat backup.sql | docker-compose -f docker-compose.ssl.yml exec -T db psql -U asset_user asset_management
+cat backup.sql | docker compose -f docker compose.ssl.yml exec -T db psql -U asset_user asset_management
 ```
 
 ---
@@ -1311,12 +1311,12 @@ dig yourdomain.com +short
 # Should show your server IP (not Cloudflare IP)
 
 # Step 4: Remove old certificates
-docker-compose -f docker-compose.ssl.yml down
+docker compose -f docker compose.ssl.yml down
 rm -rf letsencrypt/
-docker-compose -f docker-compose.ssl.yml up -d
+docker compose -f docker compose.ssl.yml up -d
 
 # Step 5: Watch certificate generation
-docker-compose -f docker-compose.ssl.yml logs -f traefik
+docker compose -f docker compose.ssl.yml logs -f traefik
 # Wait for: "Certificates obtained for yourdomain.com"
 ```
 
@@ -1348,7 +1348,7 @@ cat .env | grep DATABASE_URL
 **Solution:**
 ```bash
 # Check logs
-docker-compose -f docker-compose.ssl.yml logs asset-app
+docker compose -f docker compose.ssl.yml logs asset-app
 
 # Common issues:
 # - Missing environment variables
@@ -1357,9 +1357,9 @@ docker-compose -f docker-compose.ssl.yml logs asset-app
 # - Build failed
 
 # Rebuild from scratch
-docker-compose -f docker-compose.ssl.yml down
-docker-compose -f docker-compose.ssl.yml build --no-cache
-docker-compose -f docker-compose.ssl.yml up -d
+docker compose -f docker compose.ssl.yml down
+docker compose -f docker compose.ssl.yml build --no-cache
+docker compose -f docker compose.ssl.yml up -d
 ```
 
 #### 404 Page Not Found (Traefik)
@@ -1383,11 +1383,11 @@ docker inspect asset-app | grep -i "traefik.http.routers"
 # Should show: Host(`yourdomain.com`)
 
 # Step 4: Restart all containers to pick up new .env values
-docker-compose -f docker-compose.ssl.yml down
-docker-compose -f docker-compose.ssl.yml up -d
+docker compose -f docker compose.ssl.yml down
+docker compose -f docker compose.ssl.yml up -d
 
 # Step 5: Verify routing works
-docker-compose -f docker-compose.ssl.yml logs traefik | grep "yourdomain.com"
+docker compose -f docker compose.ssl.yml logs traefik | grep "yourdomain.com"
 ```
 
 **How Routing Works:**
@@ -1421,13 +1421,13 @@ pm2 describe asset-management
 **Docker:**
 ```bash
 # Check all services
-docker-compose -f docker-compose.ssl.yml ps
+docker compose -f docker compose.ssl.yml ps
 
 # Check specific service
-docker-compose -f docker-compose.ssl.yml logs asset-app
+docker compose -f docker compose.ssl.yml logs asset-app
 
 # Exec into container
-docker-compose -f docker-compose.ssl.yml exec asset-app sh
+docker compose -f docker compose.ssl.yml exec asset-app sh
 ```
 
 **Application:**
@@ -1439,7 +1439,7 @@ curl http://localhost:5000
 curl https://yourdomain.com
 
 # Check database connectivity
-docker-compose -f docker-compose.ssl.yml exec db psql -U asset_user -d asset_management -c "SELECT version();"
+docker compose -f docker compose.ssl.yml exec db psql -U asset_user -d asset_management -c "SELECT version();"
 ```
 
 **Nginx:**
@@ -1492,9 +1492,9 @@ location ~* \.(jpg|jpeg|png|gif|ico|css|js)$ {
 **Docker Logs:**
 ```bash
 # View logs
-docker-compose -f docker-compose.ssl.yml logs -f
+docker compose -f docker compose.ssl.yml logs -f
 
-# Limit log size (add to docker-compose.ssl.yml)
+# Limit log size (add to docker compose.ssl.yml)
 logging:
   driver: "json-file"
   options:
@@ -1558,7 +1558,7 @@ pm2 link <secret> <public>
 
 **Load Balancer + Multiple Instances:**
 ```yaml
-# docker-compose.scale.yml
+# docker compose.scale.yml
 services:
   app:
     deploy:

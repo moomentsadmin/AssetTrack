@@ -1,0 +1,119 @@
+version: '3.8'
+
+services:
+  # Traefik Reverse Proxy with Let's Encrypt
+  traefik:
+    image: traefik:v3.0
+    container_name: asset-traefik
+    restart: unless-stopped
+    command:
+      # API and Dashboard
+      - "--api.dashboard=true"
+      - "--api.insecure=false"
+      
+      # Docker Provider
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--providers.docker.network=asset-network"
+      
+      # Entrypoints (Ports)
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      
+      # Let's Encrypt Certificate Resolver
+      - "--certificatesresolvers.letsencrypt.acme.tlschallenge=true"
+      - "--certificatesresolvers.letsencrypt.acme.email=${LETSENCRYPT_EMAIL}"
+      - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
+      
+      # Uncomment for testing (staging server - no rate limits)
+      # - "--certificatesresolvers.letsencrypt.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory"
+      
+      # Global HTTP to HTTPS Redirect
+      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
+      
+      # Logging
+      - "--log.level=INFO"
+      - "--accesslog=true"
+    
+    ports:
+      - "80:80"
+      - "443:443"
+    
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "./letsencrypt:/letsencrypt"
+      - "./traefik-logs:/logs"
+    
+    networks:
+      - asset-network
+    
+    labels:
+      # Enable Traefik for itself (Dashboard)
+      - "traefik.enable=true"
+      
+      # Dashboard Router
+      - "traefik.http.routers.dashboard.rule=Host(`traefik.${DOMAIN}`)"
+      - "traefik.http.routers.dashboard.entrypoints=websecure"
+      - "traefik.http.routers.dashboard.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.dashboard.service=api@internal"
+      
+      # Dashboard Basic Auth
+      - "traefik.http.routers.dashboard.middlewares=dashboard-auth"
+      - "traefik.http.middlewares.dashboard-auth.basicauth.users=${TRAEFIK_DASHBOARD_AUTH}"
+
+  # Application Server (Using External Database)
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: asset-app
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 5000
+      # External database connection
+      # Option 1: Use full connection string
+      DATABASE_URL: ${DATABASE_URL}
+      # Option 2: Use individual components (if DATABASE_URL not set)
+      PGHOST: ${PGHOST:-}
+      PGPORT: ${PGPORT:-5432}
+      PGDATABASE: ${PGDATABASE:-}
+      PGUSER: ${PGUSER:-}
+      PGPASSWORD: ${PGPASSWORD:-}
+      PGSSLMODE: ${PGSSLMODE:-require}
+      # Application configuration
+      SESSION_SECRET: ${SESSION_SECRET}
+    volumes:
+      - ./logs:/app/logs
+    networks:
+      - asset-network
+    command: >
+      sh -c "npm run db:push && npm start"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:5000/api/user"]
+      interval: 30s
+      timeout: 10s
+      start_period: 40s
+      retries: 3
+    
+    labels:
+      # Enable Traefik
+      - "traefik.enable=true"
+      
+      # Main Application Router
+      - "traefik.http.routers.assettrackr.rule=Host(`${DOMAIN}`) || Host(`www.${DOMAIN}`)"
+      - "traefik.http.routers.assettrackr.entrypoints=websecure"
+      - "traefik.http.routers.assettrackr.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.assettrackr.tls.domains[0].main=${DOMAIN}"
+      - "traefik.http.routers.assettrackr.tls.domains[0].sans=www.${DOMAIN}"
+      
+      # Load Balancer
+      - "traefik.http.services.assettrackr.loadbalancer.server.port=5000"
+
+networks:
+  asset-network:
+    driver: bridge
+
+# No volumes section - using external database
+# Data persistence is handled by your external database provider

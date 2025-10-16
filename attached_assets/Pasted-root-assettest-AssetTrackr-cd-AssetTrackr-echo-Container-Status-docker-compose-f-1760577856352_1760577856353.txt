@@ -1,0 +1,84 @@
+root@assettest:~/AssetTrackr# cd ~/AssetTrackr
+
+echo "=== Container Status ==="
+docker compose -f docker-compose.ssl.yml ps
+echo ""
+
+echo "=== App Logs ==="
+docker compose -f docker-compose.ssl.yml logs app --tail 50
+echo ""
+
+echo "=== API Test ==="
+docker compose -f docker-compose.ssl.yml exec app wget -qO- http://localhost:5000/api/setup/status 2>&1
+echo ""
+
+echo "=== User Count ==="
+docker compose -f docker-compose.ssl.yml exec db psql -U asset_user -d asset_management -c "SELECT COUNT(*) FROM users;" 2>&1
+=== Container Status ===
+WARN[0000] /root/AssetTrackr/docker-compose.ssl.yml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion
+NAME            IMAGE                COMMAND                  SERVICE   CREATED         STATUS                   PORTS
+asset-app       assettrackr-app      "docker-entrypoint.s…"   app       4 minutes ago   Up 3 minutes (healthy)   5000/tcp
+asset-db        postgres:15-alpine   "docker-entrypoint.s…"   db        4 minutes ago   Up 4 minutes (healthy)   5432/tcp
+asset-traefik   traefik:v3.0         "/entrypoint.sh --ap…"   traefik   4 minutes ago   Up 4 minutes             0.0.0.0:80->80/tcp, [::]:80->80/tcp, 0.0.0.0:443->443/tcp, [::]:443->443/tcp
+
+=== App Logs ===
+WARN[0000] /root/AssetTrackr/docker-compose.ssl.yml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion
+asset-app  |     _redirects: 0,
+asset-app  |     _autoPong: true,
+asset-app  |     _url: 'wss://db/v2',
+asset-app  |     _req: null,
+asset-app  |     [Symbol(shapeMode)]: false,
+asset-app  |     [Symbol(kCapture)]: false
+asset-app  |   },
+asset-app  |   [Symbol(kType)]: 'error',
+asset-app  |   [Symbol(kError)]: Error: connect ECONNREFUSED 172.18.0.2:443
+asset-app  |       at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1611:16) {
+asset-app  |     errno: -111,
+asset-app  |     code: 'ECONNREFUSED',
+asset-app  |     syscall: 'connect',
+asset-app  |     address: '172.18.0.2',
+asset-app  |     port: 443
+asset-app  |   },
+asset-app  |   [Symbol(kMessage)]: 'connect ECONNREFUSED 172.18.0.2:443'
+asset-app  | }
+asset-app  |
+asset-app  | Node.js v20.19.5
+asset-app  |
+asset-app  | > rest-express@1.0.0 db:push
+asset-app  | > drizzle-kit push
+asset-app  |
+asset-app  | No config path provided, using default 'drizzle.config.ts'
+asset-app  | Reading config file '/app/drizzle.config.ts'
+asset-app  | Using 'pg' driver for database querying
+asset-app  | [⣷] Pulling schema from database...
+[⣯] Pulling schema from database...
+[⣟] Pulling schema from database...
+[⡿] Pulling schema from database...
+[⢿] Pulling schema from database...
+[⣻] Pulling schema from database...
+[✓] Pulling schema from database...
+asset-app  | [i] No changes detected
+asset-app  |
+asset-app  | > rest-express@1.0.0 start
+asset-app  | > NODE_ENV=production node dist/index.js
+asset-app  |
+asset-app  | 1:20:22 AM [express] serving on port 5000
+asset-app  | 1:20:24 AM [express] GET /api/user 401 in 13ms
+asset-app  | 1:20:40 AM [express] GET /api/user 401 in 1ms
+asset-app  | 1:20:40 AM [express] GET /api/settings/system 500 in 99ms
+asset-app  | 1:20:40 AM [express] GET /api/setup/status 500 in 13ms
+asset-app  | 1:21:01 AM [express] GET /api/user 401 in 2ms
+asset-app  | 1:21:37 AM [express] GET /api/user 401 in 1ms
+asset-app  | 1:22:13 AM [express] GET /api/user 401 in 1ms
+asset-app  | 1:22:49 AM [express] GET /api/user 401 in 1ms
+asset-app  | 1:23:25 AM [express] GET /api/user 401 in 1ms
+asset-app  | 1:24:01 AM [express] GET /api/user 401 in 2ms
+
+=== API Test ===
+WARN[0000] /root/AssetTrackr/docker-compose.ssl.yml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion
+wget: can't connect to remote host: Connection refused
+
+=== User Count ===
+WARN[0000] /root/AssetTrackr/docker-compose.ssl.yml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion
+psql: error: connection to server on socket "/var/run/postgresql/.s.PGSQL.5432" failed: FATAL:  role "asset_user" does not exist
+root@assettest:~/AssetTrackr#

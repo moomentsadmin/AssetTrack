@@ -28,7 +28,8 @@ COPY package*.json ./
 
 # Install ALL dependencies (including drizzle-kit from devDependencies)
 # We need drizzle-kit for database migrations on container startup
-RUN npm ci
+# Use --production=false to install devDependencies even with NODE_ENV=production
+RUN npm ci --production=false
 
 # Copy built application from build stage
 COPY --from=build /app/dist ./dist

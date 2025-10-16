@@ -1,0 +1,110 @@
+root@assettest:~/AssetTrackr# docker compose -f docker-compose.ssl.yml ps
+WARN[0000] /root/AssetTrackr/docker-compose.ssl.yml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion
+NAME            IMAGE                COMMAND                  SERVICE   CREATED         STATUS                           PORTS
+asset-app       assettrackr-app      "docker-entrypoint.s…"   app       7 minutes ago   Restarting (127) 9 seconds ago
+asset-db        postgres:15-alpine   "docker-entrypoint.s…"   db        7 minutes ago   Up 7 minutes (healthy)           5432/tcp
+asset-traefik   traefik:v3.0         "/entrypoint.sh --ap…"   traefik   7 minutes ago   Up 7 minutes                     0.0.0.0:80->80/tcp, [::]:80->80/tcp, 0.0.0.0:443->443/tcp, [::]:443->443/tcp
+root@assettest:~/AssetTrackr# docker compose -f docker-compose.ssl.yml logs app --tail 50
+WARN[0000] /root/AssetTrackr/docker-compose.ssl.yml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion
+asset-app  |
+asset-app  | > rest-express@1.0.0 db:push
+asset-app  | > drizzle-kit push
+asset-app  |
+asset-app  | sh: drizzle-kit: not found
+asset-app  |
+asset-app  | > rest-express@1.0.0 db:push
+asset-app  | > drizzle-kit push
+asset-app  |
+asset-app  | sh: drizzle-kit: not found
+asset-app  |
+asset-app  | > rest-express@1.0.0 db:push
+asset-app  | > drizzle-kit push
+asset-app  |
+asset-app  | sh: drizzle-kit: not found
+asset-app  |
+asset-app  | > rest-express@1.0.0 db:push
+asset-app  | > drizzle-kit push
+asset-app  |
+asset-app  | sh: drizzle-kit: not found
+asset-app  |
+asset-app  | > rest-express@1.0.0 db:push
+asset-app  | > drizzle-kit push
+asset-app  |
+asset-app  | sh: drizzle-kit: not found
+asset-app  |
+asset-app  | > rest-express@1.0.0 db:push
+asset-app  | > drizzle-kit push
+asset-app  |
+asset-app  | sh: drizzle-kit: not found
+asset-app  |
+asset-app  | > rest-express@1.0.0 db:push
+asset-app  | > drizzle-kit push
+asset-app  |
+asset-app  | sh: drizzle-kit: not found
+asset-app  |
+asset-app  | > rest-express@1.0.0 db:push
+asset-app  | > drizzle-kit push
+asset-app  |
+asset-app  | sh: drizzle-kit: not found
+asset-app  |
+asset-app  | > rest-express@1.0.0 db:push
+asset-app  | > drizzle-kit push
+asset-app  |
+asset-app  | sh: drizzle-kit: not found
+asset-app  |
+asset-app  | > rest-express@1.0.0 db:push
+asset-app  | > drizzle-kit push
+asset-app  |
+asset-app  | sh: drizzle-kit: not found
+root@assettest:~/AssetTrackr# docker compose -f docker-compose.ssl.yml logs traefik --tail 50
+WARN[0000] /root/AssetTrackr/docker-compose.ssl.yml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion
+asset-traefik  | 2025-10-16T01:07:53Z WRN Could not find network named "asset-network" for container "/asset-traefik". Maybe you're missing the project's prefix in the label? container=traefik-assettrackr-53fd82d80ad68f03a5e02a6142e1a8e925c35ca00e1a981d9a10a543519c8dd4 providerName=docker serviceName=traefik-assettrackr
+asset-traefik  | 2025-10-16T01:07:53Z WRN Defaulting to first available network (&{"assettrackr_asset-network" "172.18.0.2" '\x00' "" "d65340ce2ff58847c5aa549c7335e05cbaaf136bb40882fb34c25b3888a1eb0f"}) for container "/asset-traefik". container=traefik-assettrackr-53fd82d80ad68f03a5e02a6142e1a8e925c35ca00e1a981d9a10a543519c8dd4 providerName=docker serviceName=traefik-assettrackr
+asset-traefik  | 2025-10-16T01:07:54Z WRN Could not find network named "asset-network" for container "/asset-traefik". Maybe you're missing the project's prefix in the label? container=traefik-assettrackr-53fd82d80ad68f03a5e02a6142e1a8e925c35ca00e1a981d9a10a543519c8dd4 providerName=docker serviceName=traefik-assettrackr
+asset-traefik  | 2025-10-16T01:07:54Z WRN Defaulting to first available network (&{"assettrackr_asset-network" "172.18.0.2" '\x00' "" "d65340ce2ff58847c5aa549c7335e05cbaaf136bb40882fb34c25b3888a1eb0f"}) for container "/asset-traefik". container=traefik-assettrackr-53fd82d80ad68f03a5e02a6142e1a8e925c35ca00e1a981d9a10a543519c8dd4 providerName=docker serviceName=traefik-assettrackr
+asset-traefik  | 2025-10-16T01:07:57Z WRN Could not find network named "asset-network" for container "/asset-traefik". Maybe you're missing the project's prefix in the label? container=traefik-assettrackr-53fd82d80ad68f03a5e02a6142e1a8e925c35ca00e1a981d9a10a543519c8dd4 providerName=docker serviceName=traefik-assettrackr
+asset-traefik  | 2025-10-16T01:07:57Z WRN Defaulting to first available network (&{"assettrackr_asset-network" "172.18.0.2" '\x00' "" "d65340ce2ff58847c5aa549c7335e05cbaaf136bb40882fb34c25b3888a1eb0f"}) for container "/asset-traefik". container=traefik-assettrackr-53fd82d80ad68f03a5e02a6142e1a8e925c35ca00e1a981d9a10a543519c8dd4 providerName=docker serviceName=traefik-assettrackr
+asset-traefik  | 2025-10-16T01:07:57Z WRN Could not find network named "asset-network" for container "/asset-traefik". Maybe you're missing the project's prefix in the label? container=traefik-assettrackr-53fd82d80ad68f03a5e02a6142e1a8e925c35ca00e1a981d9a10a543519c8dd4 providerName=docker serviceName=traefik-assettrackr
+asset-traefik  | 2025-10-16T01:07:57Z WRN Defaulting to first available network (&{"assettrackr_asset-network" "172.18.0.2" '\x00' "" "d65340ce2ff58847c5aa549c7335e05cbaaf136bb40882fb34c25b3888a1eb0f"}) for container "/asset-traefik". container=traefik-assettrackr-53fd82d80ad68f03a5e02a6142e1a8e925c35ca00e1a981d9a10a543519c8dd4 providerName=docker serviceName=traefik-assettrackr
+asset-traefik  | 2025-10-16T01:08:04Z WRN Could not find network named "asset-network" for container "/asset-traefik". Maybe you're missing the project's prefix in the label? container=traefik-assettrackr-53fd82d80ad68f03a5e02a6142e1a8e925c35ca00e1a981d9a10a543519c8dd4 providerName=docker serviceName=traefik-assettrackr
+asset-traefik  | 2025-10-16T01:08:04Z WRN Defaulting to first available network (&{"assettrackr_asset-network" "172.18.0.2" '\x00' "" "d65340ce2ff58847c5aa549c7335e05cbaaf136bb40882fb34c25b3888a1eb0f"}) for container "/asset-traefik". container=traefik-assettrackr-53fd82d80ad68f03a5e02a6142e1a8e925c35ca00e1a981d9a10a543519c8dd4 providerName=docker serviceName=traefik-assettrackr
+asset-traefik  | 2025-10-16T01:08:04Z WRN Could not find network named "asset-network" for container "/asset-traefik". Maybe you're missing the project's prefix in the label? container=traefik-assettrackr-53fd82d80ad68f03a5e02a6142e1a8e925c35ca00e1a981d9a10a543519c8dd4 providerName=docker serviceName=traefik-assettrackr
+asset-traefik  | 2025-10-16T01:08:04Z WRN Defaulting to first available network (&{"assettrackr_asset-network" "172.18.0.2" '\x00' "" "d65340ce2ff58847c5aa549c7335e05cbaaf136bb40882fb34c25b3888a1eb0f"}) for container "/asset-traefik". container=traefik-assettrackr-53fd82d80ad68f03a5e02a6142e1a8e925c35ca00e1a981d9a10a543519c8dd4 providerName=docker serviceName=traefik-assettrackr
+asset-traefik  | 49.205.121.9 - - [16/Oct/2025:01:08:16 +0000] "GET / HTTP/2.0" 404 19 "-" "-" 1 "-" "-" 0ms
+asset-traefik  | 49.205.121.9 - - [16/Oct/2025:01:08:16 +0000] "GET /favicon.ico HTTP/2.0" 404 19 "-" "-" 2 "-" "-" 0ms
+asset-traefik  | 2025-10-16T01:08:17Z WRN Could not find network named "asset-network" for container "/asset-traefik". Maybe you're missing the project's prefix in the label? container=traefik-assettrackr-53fd82d80ad68f03a5e02a6142e1a8e925c35ca00e1a981d9a10a543519c8dd4 providerName=docker serviceName=traefik-assettrackr
+asset-traefik  | 2025-10-16T01:08:17Z WRN Defaulting to first available network (&{"assettrackr_asset-network" "172.18.0.2" '\x00' "" "d65340ce2ff58847c5aa549c7335e05cbaaf136bb40882fb34c25b3888a1eb0f"}) for container "/asset-traefik". container=traefik-assettrackr-53fd82d80ad68f03a5e02a6142e1a8e925c35ca00e1a981d9a10a543519c8dd4 providerName=docker serviceName=traefik-assettrackr
+asset-traefik  | 2025-10-16T01:08:18Z WRN Could not find network named "asset-network" for container "/asset-traefik". Maybe you're missing the project's prefix in the label? container=traefik-assettrackr-53fd82d80ad68f03a5e02a6142e1a8e925c35ca00e1a981d9a10a543519c8dd4 providerName=docker serviceName=traefik-assettrackr
+asset-traefik  | 2025-10-16T01:08:18Z WRN Defaulting to first available network (&{"assettrackr_asset-network" "172.18.0.2" '\x00' "" "d65340ce2ff58847c5aa549c7335e05cbaaf136bb40882fb34c25b3888a1eb0f"}) for container "/asset-traefik". container=traefik-assettrackr-53fd82d80ad68f03a5e02a6142e1a8e925c35ca00e1a981d9a10a543519c8dd4 providerName=docker serviceName=traefik-assettrackr
+asset-traefik  | 2025-10-16T01:08:43Z WRN Could not find network named "asset-network" for container "/asset-traefik". Maybe you're missing the project's prefix in the label? container=traefik-assettrackr-53fd82d80ad68f03a5e02a6142e1a8e925c35ca00e1a981d9a10a543519c8dd4 providerName=docker serviceName=traefik-assettrackr
+asset-traefik  | 2025-10-16T01:08:43Z WRN Defaulting to first available network (&{"assettrackr_asset-network" "172.18.0.2" '\x00' "" "d65340ce2ff58847c5aa549c7335e05cbaaf136bb40882fb34c25b3888a1eb0f"}) for container "/asset-traefik". container=traefik-assettrackr-53fd82d80ad68f03a5e02a6142e1a8e925c35ca00e1a981d9a10a543519c8dd4 providerName=docker serviceName=traefik-assettrackr
+asset-traefik  | 2025-10-16T01:08:44Z WRN Could not find network named "asset-network" for container "/asset-traefik". Maybe you're missing the project's prefix in the label? container=traefik-assettrackr-53fd82d80ad68f03a5e02a6142e1a8e925c35ca00e1a981d9a10a543519c8dd4 providerName=docker serviceName=traefik-assettrackr
+asset-traefik  | 2025-10-16T01:08:44Z WRN Defaulting to first available network (&{"assettrackr_asset-network" "172.18.0.2" '\x00' "" "d65340ce2ff58847c5aa549c7335e05cbaaf136bb40882fb34c25b3888a1eb0f"}) for container "/asset-traefik". container=traefik-assettrackr-53fd82d80ad68f03a5e02a6142e1a8e925c35ca00e1a981d9a10a543519c8dd4 providerName=docker serviceName=traefik-assettrackr
+asset-traefik  | 2025-10-16T01:09:06Z ERR Error while Peeking first byte error="read tcp 172.18.0.2:80->49.205.121.9:33858: i/o timeout"
+asset-traefik  | 204.76.203.208 - - [16/Oct/2025:01:09:11 +0000] "PROPFIND / HTTP/1.1" 404 19 "-" "-" 3 "-" "-" 0ms
+asset-traefik  | 2025-10-16T01:09:35Z WRN Could not find network named "asset-network" for container "/asset-traefik". Maybe you're missing the project's prefix in the label? container=traefik-assettrackr-53fd82d80ad68f03a5e02a6142e1a8e925c35ca00e1a981d9a10a543519c8dd4 providerName=docker serviceName=traefik-assettrackr
+asset-traefik  | 2025-10-16T01:09:35Z WRN Defaulting to first available network (&{"assettrackr_asset-network" "172.18.0.2" '\x00' "" "d65340ce2ff58847c5aa549c7335e05cbaaf136bb40882fb34c25b3888a1eb0f"}) for container "/asset-traefik". container=traefik-assettrackr-53fd82d80ad68f03a5e02a6142e1a8e925c35ca00e1a981d9a10a543519c8dd4 providerName=docker serviceName=traefik-assettrackr
+asset-traefik  | 2025-10-16T01:09:35Z WRN Could not find network named "asset-network" for container "/asset-traefik". Maybe you're missing the project's prefix in the label? container=traefik-assettrackr-53fd82d80ad68f03a5e02a6142e1a8e925c35ca00e1a981d9a10a543519c8dd4 providerName=docker serviceName=traefik-assettrackr
+asset-traefik  | 2025-10-16T01:09:35Z WRN Defaulting to first available network (&{"assettrackr_asset-network" "172.18.0.2" '\x00' "" "d65340ce2ff58847c5aa549c7335e05cbaaf136bb40882fb34c25b3888a1eb0f"}) for container "/asset-traefik". container=traefik-assettrackr-53fd82d80ad68f03a5e02a6142e1a8e925c35ca00e1a981d9a10a543519c8dd4 providerName=docker serviceName=traefik-assettrackr
+asset-traefik  | 2025-10-16T01:10:35Z WRN Could not find network named "asset-network" for container "/asset-traefik". Maybe you're missing the project's prefix in the label? container=traefik-assettrackr-53fd82d80ad68f03a5e02a6142e1a8e925c35ca00e1a981d9a10a543519c8dd4 providerName=docker serviceName=traefik-assettrackr
+asset-traefik  | 2025-10-16T01:10:35Z WRN Defaulting to first available network (&{"assettrackr_asset-network" "172.18.0.2" '\x00' "" "d65340ce2ff58847c5aa549c7335e05cbaaf136bb40882fb34c25b3888a1eb0f"}) for container "/asset-traefik". container=traefik-assettrackr-53fd82d80ad68f03a5e02a6142e1a8e925c35ca00e1a981d9a10a543519c8dd4 providerName=docker serviceName=traefik-assettrackr
+asset-traefik  | 2025-10-16T01:10:36Z WRN Could not find network named "asset-network" for container "/asset-traefik". Maybe you're missing the project's prefix in the label? container=traefik-assettrackr-53fd82d80ad68f03a5e02a6142e1a8e925c35ca00e1a981d9a10a543519c8dd4 providerName=docker serviceName=traefik-assettrackr
+asset-traefik  | 2025-10-16T01:10:36Z WRN Defaulting to first available network (&{"assettrackr_asset-network" "172.18.0.2" '\x00' "" "d65340ce2ff58847c5aa549c7335e05cbaaf136bb40882fb34c25b3888a1eb0f"}) for container "/asset-traefik". container=traefik-assettrackr-53fd82d80ad68f03a5e02a6142e1a8e925c35ca00e1a981d9a10a543519c8dd4 providerName=docker serviceName=traefik-assettrackr
+asset-traefik  | 49.205.121.9 - - [16/Oct/2025:01:10:59 +0000] "GET / HTTP/2.0" 404 19 "-" "-" 4 "-" "-" 0ms
+asset-traefik  | 2025-10-16T01:11:36Z WRN Could not find network named "asset-network" for container "/asset-traefik". Maybe you're missing the project's prefix in the label? container=traefik-assettrackr-53fd82d80ad68f03a5e02a6142e1a8e925c35ca00e1a981d9a10a543519c8dd4 providerName=docker serviceName=traefik-assettrackr
+asset-traefik  | 2025-10-16T01:11:36Z WRN Defaulting to first available network (&{"assettrackr_asset-network" "172.18.0.2" '\x00' "" "d65340ce2ff58847c5aa549c7335e05cbaaf136bb40882fb34c25b3888a1eb0f"}) for container "/asset-traefik". container=traefik-assettrackr-53fd82d80ad68f03a5e02a6142e1a8e925c35ca00e1a981d9a10a543519c8dd4 providerName=docker serviceName=traefik-assettrackr
+asset-traefik  | 2025-10-16T01:11:36Z WRN Could not find network named "asset-network" for container "/asset-traefik". Maybe you're missing the project's prefix in the label? container=traefik-assettrackr-53fd82d80ad68f03a5e02a6142e1a8e925c35ca00e1a981d9a10a543519c8dd4 providerName=docker serviceName=traefik-assettrackr
+asset-traefik  | 2025-10-16T01:11:36Z WRN Defaulting to first available network (&{"assettrackr_asset-network" "172.18.0.2" '\x00' "" "d65340ce2ff58847c5aa549c7335e05cbaaf136bb40882fb34c25b3888a1eb0f"}) for container "/asset-traefik". container=traefik-assettrackr-53fd82d80ad68f03a5e02a6142e1a8e925c35ca00e1a981d9a10a543519c8dd4 providerName=docker serviceName=traefik-assettrackr
+asset-traefik  | 2025-10-16T01:12:36Z WRN Could not find network named "asset-network" for container "/asset-traefik". Maybe you're missing the project's prefix in the label? container=traefik-assettrackr-53fd82d80ad68f03a5e02a6142e1a8e925c35ca00e1a981d9a10a543519c8dd4 providerName=docker serviceName=traefik-assettrackr
+asset-traefik  | 2025-10-16T01:12:36Z WRN Defaulting to first available network (&{"assettrackr_asset-network" "172.18.0.2" '\x00' "" "d65340ce2ff58847c5aa549c7335e05cbaaf136bb40882fb34c25b3888a1eb0f"}) for container "/asset-traefik". container=traefik-assettrackr-53fd82d80ad68f03a5e02a6142e1a8e925c35ca00e1a981d9a10a543519c8dd4 providerName=docker serviceName=traefik-assettrackr
+asset-traefik  | 2025-10-16T01:12:37Z WRN Could not find network named "asset-network" for container "/asset-traefik". Maybe you're missing the project's prefix in the label? container=traefik-assettrackr-53fd82d80ad68f03a5e02a6142e1a8e925c35ca00e1a981d9a10a543519c8dd4 providerName=docker serviceName=traefik-assettrackr
+asset-traefik  | 2025-10-16T01:12:37Z WRN Defaulting to first available network (&{"assettrackr_asset-network" "172.18.0.2" '\x00' "" "d65340ce2ff58847c5aa549c7335e05cbaaf136bb40882fb34c25b3888a1eb0f"}) for container "/asset-traefik". container=traefik-assettrackr-53fd82d80ad68f03a5e02a6142e1a8e925c35ca00e1a981d9a10a543519c8dd4 providerName=docker serviceName=traefik-assettrackr
+asset-traefik  | 204.76.203.208 - - [16/Oct/2025:01:13:16 +0000] "PROPFIND / HTTP/1.1" 404 19 "-" "-" 5 "-" "-" 0ms
+asset-traefik  | 2025-10-16T01:13:37Z WRN Could not find network named "asset-network" for container "/asset-traefik". Maybe you're missing the project's prefix in the label? container=traefik-assettrackr-53fd82d80ad68f03a5e02a6142e1a8e925c35ca00e1a981d9a10a543519c8dd4 providerName=docker serviceName=traefik-assettrackr
+asset-traefik  | 2025-10-16T01:13:37Z WRN Defaulting to first available network (&{"assettrackr_asset-network" "172.18.0.2" '\x00' "" "d65340ce2ff58847c5aa549c7335e05cbaaf136bb40882fb34c25b3888a1eb0f"}) for container "/asset-traefik". container=traefik-assettrackr-53fd82d80ad68f03a5e02a6142e1a8e925c35ca00e1a981d9a10a543519c8dd4 providerName=docker serviceName=traefik-assettrackr
+asset-traefik  | 2025-10-16T01:13:37Z WRN Could not find network named "asset-network" for container "/asset-traefik". Maybe you're missing the project's prefix in the label? container=traefik-assettrackr-53fd82d80ad68f03a5e02a6142e1a8e925c35ca00e1a981d9a10a543519c8dd4 providerName=docker serviceName=traefik-assettrackr
+asset-traefik  | 2025-10-16T01:13:37Z WRN Defaulting to first available network (&{"assettrackr_asset-network" "172.18.0.2" '\x00' "" "d65340ce2ff58847c5aa549c7335e05cbaaf136bb40882fb34c25b3888a1eb0f"}) for container "/asset-traefik". container=traefik-assettrackr-53fd82d80ad68f03a5e02a6142e1a8e925c35ca00e1a981d9a10a543519c8dd4 providerName=docker serviceName=traefik-assettrackr
+asset-traefik  | 2025-10-16T01:14:37Z WRN Could not find network named "asset-network" for container "/asset-traefik". Maybe you're missing the project's prefix in the label? container=traefik-assettrackr-53fd82d80ad68f03a5e02a6142e1a8e925c35ca00e1a981d9a10a543519c8dd4 providerName=docker serviceName=traefik-assettrackr
+asset-traefik  | 2025-10-16T01:14:37Z WRN Defaulting to first available network (&{"assettrackr_asset-network" "172.18.0.2" '\x00' "" "d65340ce2ff58847c5aa549c7335e05cbaaf136bb40882fb34c25b3888a1eb0f"}) for container "/asset-traefik". container=traefik-assettrackr-53fd82d80ad68f03a5e02a6142e1a8e925c35ca00e1a981d9a10a543519c8dd4 providerName=docker serviceName=traefik-assettrackr
+asset-traefik  | 2025-10-16T01:14:38Z WRN Could not find network named "asset-network" for container "/asset-traefik". Maybe you're missing the project's prefix in the label? container=traefik-assettrackr-53fd82d80ad68f03a5e02a6142e1a8e925c35ca00e1a981d9a10a543519c8dd4 providerName=docker serviceName=traefik-assettrackr
+asset-traefik  | 2025-10-16T01:14:38Z WRN Defaulting to first available network (&{"assettrackr_asset-network" "172.18.0.2" '\x00' "" "d65340ce2ff58847c5aa549c7335e05cbaaf136bb40882fb34c25b3888a1eb0f"}) for container "/asset-traefik". container=traefik-assettrackr-53fd82d80ad68f03a5e02a6142e1a8e925c35ca00e1a981d9a10a543519c8dd4 providerName=docker serviceName=traefik-assettrackr

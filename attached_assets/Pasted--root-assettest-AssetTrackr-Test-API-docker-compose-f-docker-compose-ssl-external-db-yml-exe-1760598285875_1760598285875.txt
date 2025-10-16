@@ -1,0 +1,75 @@
+
+root@assettest:~/AssetTrackr# # Test API
+docker compose -f docker-compose.ssl-external-db.yml exec app wget -qO- http://localhost:5000/api/setup/status
+wget: can't connect to remote host: Connection refused
+root@assettest:~/AssetTrackr# ^C
+root@assettest:~/AssetTrackr# nano .env
+root@assettest:~/AssetTrackr# docker compose -f docker-compose.ssl-external-db.yml ps
+NAME            IMAGE             COMMAND                  SERVICE   CREATED             STATUS                         PORTS
+asset-app       assettrackr-app   "docker-entrypoint.s…"   app       About an hour ago   Up About an hour (unhealthy)   5000/tcp
+asset-traefik   traefik:v3.0      "/entrypoint.sh --ap…"   traefik   About an hour ago   Up About an hour               0.0.0.0:80->80/tcp, [::]:80->80/tcp, 0.0.0.0:443->443/tcp, [::]:443->443/tcp
+root@assettest:~/AssetTrackr# ^C
+root@assettest:~/AssetTrackr# echo "Current DATABASE_URL:"
+Current DATABASE_URL:
+root@assettest:~/AssetTrackr# cat .env | grep DATABASE_URL
+DATABASE_URL=postgresql://assetmtguser:AVNS_dp-pYZBBwIwYifkVEr9@db-pg-sgp1-59856-do-user-13968818-0.d.db.ondigitalocean.com:25060/assetmtg?sslmode=no-verify
+root@assettest:~/AssetTrackr# ^C
+root@assettest:~/AssetTrackr# # Restart the app
+docker compose -f docker-compose.ssl-external-db.yml restart app
+
+# Watch logs
+docker compose -f docker-compose.ssl-external-db.yml logs -f app
+[+] Restarting 1/1
+ ✔ Container asset-app  Started                                                                                                                                                                  1.0s
+asset-app  |
+asset-app  | > rest-express@1.0.0 db:push
+asset-app  | > drizzle-kit push
+asset-app  |
+asset-app  | No config path provided, using default 'drizzle.config.ts'
+asset-app  | Reading config file '/app/drizzle.config.ts'
+asset-app  | Using 'pg' driver for database querying
+asset-app  | [⣷] Pulling schema from database...
+[⣯] Pulling schema from database...
+asset-app  | Error: self-signed certificate in certificate chain
+asset-app  |     at /app/node_modules/pg-pool/index.js:45:11
+asset-app  |     at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+asset-app  |     at async Object.query (/app/node_modules/drizzle-kit/bin.cjs:80601:26)
+asset-app  |     at async fromDatabase2 (/app/node_modules/drizzle-kit/bin.cjs:19253:25) {
+asset-app  |   code: 'SELF_SIGNED_CERT_IN_CHAIN'
+asset-app  | }
+asset-app  | npm notice
+asset-app  | npm notice New major version of npm available! 10.8.2 -> 11.6.2
+asset-app  | npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.6.2
+asset-app  | npm notice To update run: npm install -g npm@11.6.2
+asset-app  | npm notice
+asset-app  |
+asset-app  | > rest-express@1.0.0 start
+asset-app  | > NODE_ENV=production node dist/index.js
+asset-app  |
+asset-app  | 5:56:15 AM [express] serving on port 5000
+asset-app  | npm error path /app
+asset-app  | npm error command failed
+asset-app  | npm error signal SIGTERM
+asset-app  | npm error command sh -c NODE_ENV=production node dist/index.js
+asset-app  | npm error A complete log of this run can be found in: /home/nodejs/.npm/_logs/2025-10-16T05_56_14_464Z-debug-0.log
+asset-app  |
+asset-app  | > rest-express@1.0.0 db:push
+asset-app  | > drizzle-kit push
+asset-app  |
+asset-app  | No config path provided, using default 'drizzle.config.ts'
+asset-app  | Reading config file '/app/drizzle.config.ts'
+asset-app  | Using 'pg' driver for database querying
+asset-app  | [⣷] Pulling schema from database...
+[⣯] Pulling schema from database...
+asset-app  | Error: self-signed certificate in certificate chain
+asset-app  |     at /app/node_modules/pg-pool/index.js:45:11
+asset-app  |     at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+asset-app  |     at async Object.query (/app/node_modules/drizzle-kit/bin.cjs:80601:26)
+asset-app  |     at async fromDatabase2 (/app/node_modules/drizzle-kit/bin.cjs:19253:25) {
+asset-app  |   code: 'SELF_SIGNED_CERT_IN_CHAIN'
+asset-app  | }
+asset-app  |
+asset-app  | > rest-express@1.0.0 start
+asset-app  | > NODE_ENV=production node dist/index.js
+asset-app  |
+asset-app  | 7:04:31 AM [express] serving on port 5000

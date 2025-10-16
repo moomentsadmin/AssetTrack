@@ -1,0 +1,143 @@
+# Production Docker Compose - Asset Management System
+# Supports both local PostgreSQL and external managed databases (DigitalOcean, AWS RDS, etc.)
+# 
+# USAGE:
+# - Local Database:   Set USE_EXTERNAL_DB=false in .env (or omit it)
+# - External Database: Set USE_EXTERNAL_DB=true and provide DATABASE_URL in .env
+#
+# Deploy: docker compose -f docker-compose.production.yml up -d --build
+
+services:
+  # Traefik Reverse Proxy with Let's Encrypt SSL/TLS
+  traefik:
+    image: traefik:v3.0
+    container_name: asset-traefik
+    restart: unless-stopped
+    command:
+      # API and Dashboard
+      - "--api.dashboard=true"
+      - "--api.insecure=false"
+      
+      # Docker Provider
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--providers.docker.network=asset-network"
+      
+      # Entrypoints
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      
+      # Let's Encrypt
+      - "--certificatesresolvers.letsencrypt.acme.tlschallenge=true"
+      - "--certificatesresolvers.letsencrypt.acme.email=${LETSENCRYPT_EMAIL}"
+      - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
+      
+      # HTTP to HTTPS Redirect
+      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
+      
+      # Logging
+      - "--log.level=INFO"
+      - "--accesslog=true"
+    
+    ports:
+      - "80:80"
+      - "443:443"
+    
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "./letsencrypt:/letsencrypt"
+      - "./traefik-logs:/logs"
+    
+    networks:
+      - asset-network
+    
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.dashboard.rule=Host(`traefik.${DOMAIN}`)"
+      - "traefik.http.routers.dashboard.entrypoints=websecure"
+      - "traefik.http.routers.dashboard.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.dashboard.service=api@internal"
+      - "traefik.http.routers.dashboard.middlewares=dashboard-auth"
+      - "traefik.http.middlewares.dashboard-auth.basicauth.users=${TRAEFIK_DASHBOARD_AUTH:-admin:$$2y$$05$$admin}"
+
+  # PostgreSQL Database (Only used when USE_EXTERNAL_DB=false)
+  db:
+    image: postgres:15-alpine
+    container_name: asset-db
+    restart: unless-stopped
+    profiles:
+      - local-db
+    environment:
+      POSTGRES_USER: ${PGUSER:-asset_user}
+      POSTGRES_PASSWORD: ${PGPASSWORD:-change_this_password}
+      POSTGRES_DB: ${PGDATABASE:-asset_management}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${PGUSER:-asset_user}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - asset-network
+
+  # Application Server
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: asset-app
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+        required: false
+    environment:
+      NODE_ENV: production
+      PORT: 5000
+      
+      # Database Configuration
+      # If USE_EXTERNAL_DB=true, uses DATABASE_URL from .env
+      # Otherwise constructs from PGUSER, PGPASSWORD, etc.
+      DATABASE_URL: ${DATABASE_URL:-postgresql://${PGUSER:-asset_user}:${PGPASSWORD:-change_this_password}@db:5432/${PGDATABASE:-asset_management}}
+      
+      # SSL Configuration for External Databases (DigitalOcean, AWS RDS, etc.)
+      # Disables certificate validation for managed databases with self-signed certs
+      NODE_TLS_REJECT_UNAUTHORIZED: ${NODE_TLS_REJECT_UNAUTHORIZED:-0}
+      
+      # Session Secret
+      SESSION_SECRET: ${SESSION_SECRET:-change_this_to_secure_random_string}
+      
+    volumes:
+      - ./logs:/app/logs
+    
+    networks:
+      - asset-network
+    
+    command: >
+      sh -c "npm run db:push && npm start"
+    
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:5000/api/user"]
+      interval: 30s
+      timeout: 10s
+      start_period: 60s
+      retries: 3
+    
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.assetapp.rule=Host(`${DOMAIN}`) || Host(`www.${DOMAIN}`)"
+      - "traefik.http.routers.assetapp.entrypoints=websecure"
+      - "traefik.http.routers.assetapp.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.assetapp.tls.domains[0].main=${DOMAIN}"
+      - "traefik.http.routers.assetapp.tls.domains[0].sans=www.${DOMAIN}"
+      - "traefik.http.services.assetapp.loadbalancer.server.port=5000"
+
+networks:
+  asset-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local

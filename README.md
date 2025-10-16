@@ -101,16 +101,20 @@ A comprehensive IT asset management system for tracking hardware, software, lice
 
 ## 🚀 Production Deployment
 
-**Deploy anywhere with our comprehensive deployment guide:**
+### Quick Production Deploy (5 minutes)
 
-📚 **[DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)** - Complete deployment documentation for all platforms
-
-### Quick Deploy Options
-
-#### 🐳 Docker with SSL (5 minutes)
 ```bash
-# Automated setup with Let's Encrypt SSL
-./setup-ssl.sh
+# Clone repository
+git clone https://github.com/yourusername/AssetTrackr.git
+cd AssetTrackr
+
+# Configure environment
+cp .env.production.example .env
+nano .env  # Configure domain, database, secrets
+
+# Deploy with automated script
+./deploy.sh
+
 # Access: https://yourdomain.com
 ```
 
@@ -118,19 +122,44 @@ A comprehensive IT asset management system for tracking hardware, software, lice
 - ✅ Automatic HTTPS with Let's Encrypt
 - ✅ Auto-renewal every 60 days
 - ✅ Traefik reverse proxy
-- ✅ A+ SSL security rating
+- ✅ Supports local or external databases
+- ✅ Production-ready security
 
-#### ☁️ Cloud Platforms Supported
-- **AWS** - EC2 + RDS, Elastic Beanstalk
-- **Azure** - App Service + PostgreSQL
-- **Google Cloud** - Cloud Run + Cloud SQL
-- **DigitalOcean** - App Platform, Droplet + Database
-- **Heroku** - Container deployment
+### 📚 Documentation
 
-#### 🖥️ Traditional Server
-- **Ubuntu + Nginx + PM2** - Full control deployment
+- **[PRODUCTION_DEPLOYMENT.md](PRODUCTION_DEPLOYMENT.md)** - Complete deployment guide ⭐
+- **[DEPLOYMENT_SOLUTION.md](DEPLOYMENT_SOLUTION.md)** - Quick start & what's fixed
+- **[DIGITALOCEAN_DATABASE_SETUP.md](DIGITALOCEAN_DATABASE_SETUP.md)** - DigitalOcean database setup
+- **[EXTERNAL_DATABASE_SETUP.md](EXTERNAL_DATABASE_SETUP.md)** - Other external database providers
 
-**See [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) for detailed instructions on all deployment methods.**
+### 🗄️ Database Options
+
+#### Local PostgreSQL (Containerized)
+```env
+USE_EXTERNAL_DB=false
+PGUSER=asset_user
+PGPASSWORD=secure_password
+PGDATABASE=asset_management
+```
+
+#### External Managed Database (Recommended)
+Supports: DigitalOcean, AWS RDS, Azure, Google Cloud SQL, Neon, Supabase
+
+```env
+USE_EXTERNAL_DB=true
+DATABASE_URL=postgresql://user:pass@host:port/db?sslmode=require
+NODE_TLS_REJECT_UNAUTHORIZED=0  # For managed databases
+```
+
+### ☁️ Supported Platforms
+- **DigitalOcean** - Managed Database + Droplet ✅
+- **AWS** - RDS + EC2 ✅
+- **Azure** - Database for PostgreSQL ✅
+- **Google Cloud** - Cloud SQL ✅
+- **Neon** - Serverless PostgreSQL ✅
+- **Supabase** - Managed PostgreSQL ✅
+
+**See [PRODUCTION_DEPLOYMENT.md](PRODUCTION_DEPLOYMENT.md) for step-by-step instructions.**
 
 ---
 
@@ -284,32 +313,40 @@ On first deployment or when the database is empty:
 - Import: `POST /api/import/csv`, `POST /api/import/users`
 - Settings: `GET/POST /api/settings/email`, `GET/POST /api/settings/system`
 
-## 🚢 Production Deployment
+## 🛠️ Production Management
 
-Comprehensive deployment documentation is available in [`DEPLOYMENT.md`](DEPLOYMENT.md), covering:
-
-- **Ubuntu Server**: PM2, Nginx, PostgreSQL setup with SSL
-- **Docker**: Internal DB and external DB configurations
-- **AWS**: EC2 + RDS, Elastic Beanstalk deployments
-- **Digital Ocean**: App Platform and Droplet + Managed Database
-- **Azure**: App Service + Azure Database for PostgreSQL
-- **Security Best Practices**: Firewall, SSL/TLS, secret management
-- **Monitoring**: Health checks, logging, backup strategies
-
-### Quick Deploy with Docker
+### Common Commands
 
 ```bash
-# Clone and configure
-git clone https://github.com/yourusername/asset-management.git
-cd asset-management
-cp .env.example .env
-# Edit .env with your settings
+# Start application
+docker compose -f docker-compose.production.yml up -d
 
-# Start with Docker Compose
-docker compose up -d
+# Stop application
+docker compose -f docker-compose.production.yml down
 
-# Run migrations
-docker compose exec app npm run db:push
+# View logs
+docker compose -f docker-compose.production.yml logs -f app
+
+# Restart application
+docker compose -f docker-compose.production.yml restart app
+
+# Rebuild after code changes
+docker compose -f docker-compose.production.yml up -d --build
+
+# Run database migrations
+docker compose -f docker-compose.production.yml exec app npm run db:push
+```
+
+### Deployment Modes
+
+**Local Database:**
+```bash
+docker compose -f docker-compose.production.yml --profile local-db up -d --build
+```
+
+**External Database:**
+```bash
+docker compose -f docker-compose.production.yml up -d --build
 ```
 
 ## 🔐 Security Features

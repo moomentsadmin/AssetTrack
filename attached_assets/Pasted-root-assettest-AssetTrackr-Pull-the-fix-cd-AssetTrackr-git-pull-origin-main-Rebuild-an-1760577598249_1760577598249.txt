@@ -1,0 +1,73 @@
+root@assettest:~/AssetTrackr# # Pull the fix
+cd ~/AssetTrackr
+git pull origin main
+
+# Rebuild and restart
+docker compose -f docker-compose.ssl.yml down
+docker compose -f docker-compose.ssl.yml up -d --build
+remote: Enumerating objects: 21, done.
+remote: Counting objects: 100% (21/21), done.
+remote: Compressing objects: 100% (7/7), done.
+remote: Total 17 (delta 10), reused 17 (delta 10), pack-reused 0 (from 0)
+Unpacking objects: 100% (17/17), 61.25 KiB | 6.80 MiB/s, done.
+From https://github.com/moomentsadmin/AssetTrackr
+ * branch            main       -> FETCH_HEAD
+   9f12d09..63e16fd  main       -> origin/main
+Updating 9f12d09..63e16fd
+Fast-forward
+ .replit                                                                                                                      |   4 -
+ Dockerfile                                                                                                                   |   3 +-
+ SSL_TROUBLESHOOTING.md                                                                                                       | 356 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ ...-assettest-AssetTrackr-docker-compose-f-docker-compose-ssl-yml-ps-WARN-0000-root-AssetTra-1760577326523_1760577326523.txt | 110 ++++++++++++++++++++
+ ...t-assettest-AssetTrackr-docker-compose-f-docker-compose-ssl-yml-up-d-Usage-docker-compose-1760543795366_1760543795367.txt |  60 +++++++++++
+ attached_assets/image_1760576945119.png                                                                                      | Bin 0 -> 20062 bytes
+ attached_assets/image_1760577024628.png                                                                                      | Bin 0 -> 54603 bytes
+ diagnose.sh                                                                                                                  |  85 ++++++++++++++++
+ 8 files changed, 613 insertions(+), 5 deletions(-)
+ create mode 100644 SSL_TROUBLESHOOTING.md
+ create mode 100644 attached_assets/Pasted-root-assettest-AssetTrackr-docker-compose-f-docker-compose-ssl-yml-ps-WARN-0000-root-AssetTra-1760577326523_1760577326523.txt
+ create mode 100644 attached_assets/Pasted-root-assettest-AssetTrackr-docker-compose-f-docker-compose-ssl-yml-up-d-Usage-docker-compose-1760543795366_1760543795367.txt
+ create mode 100644 attached_assets/image_1760576945119.png
+ create mode 100644 attached_assets/image_1760577024628.png
+ create mode 100644 diagnose.sh
+WARN[0000] /root/AssetTrackr/docker-compose.ssl.yml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion
+[+] Running 4/4
+ ✔ Container asset-traefik            Removed                                                                                                                                                   10.3s
+ ✔ Container asset-app                Removed                                                                                                                                                    0.0s
+ ✔ Container asset-db                 Removed                                                                                                                                                    0.2s
+ ✔ Network assettrackr_asset-network  Removed                                                                                                                                                    0.2s
+WARN[0000] /root/AssetTrackr/docker-compose.ssl.yml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion
+[+] Building 136.1s (19/19) FINISHED
+ => [internal] load local bake definitions                                                                                                                                                       0.0s
+ => => reading from stdin 483B                                                                                                                                                                   0.0s
+ => [internal] load build definition from Dockerfile                                                                                                                                             0.0s
+ => => transferring dockerfile: 1.43kB                                                                                                                                                           0.0s
+ => [internal] load metadata for docker.io/library/node:20-alpine                                                                                                                                1.8s
+ => [internal] load .dockerignore                                                                                                                                                                0.0s
+ => => transferring context: 406B                                                                                                                                                                0.0s
+ => [build 1/6] FROM docker.io/library/node:20-alpine@sha256:1ab6fc5a31d515dc7b6b25f6acfda2001821f2c2400252b6cb61044bd9f9ad48                                                                    0.0s
+ => [internal] load build context                                                                                                                                                                0.0s
+ => => transferring context: 123.44kB                                                                                                                                                            0.0s
+ => CACHED [build 2/6] WORKDIR /app                                                                                                                                                              0.0s
+ => CACHED [build 3/6] COPY package*.json ./                                                                                                                                                     0.0s
+ => CACHED [build 4/6] RUN npm ci                                                                                                                                                                0.0s
+ => [build 5/6] COPY . .                                                                                                                                                                         0.1s
+ => [production 4/9] RUN npm ci --production=false                                                                                                                                              14.8s
+ => [build 6/6] RUN npm run build                                                                                                                                                               12.3s
+ => [production 5/9] COPY --from=build /app/dist ./dist                                                                                                                                          0.1s
+ => [production 6/9] COPY --from=build /app/drizzle.config.ts ./drizzle.config.ts                                                                                                                0.1s
+ => [production 7/9] COPY --from=build /app/shared ./shared                                                                                                                                      0.1s
+ => [production 8/9] RUN addgroup -g 1001 -S nodejs &&     adduser -S nodejs -u 1001                                                                                                             0.3s
+ => [production 9/9] RUN chown -R nodejs:nodejs /app                                                                                                                                           113.1s
+ => exporting to image                                                                                                                                                                           5.7s
+ => => exporting layers                                                                                                                                                                          5.6s
+ => => writing image sha256:71ab2fc7194cbcf6cafefa6659418259073cfc70683c4b0ad9742be15de04fe0                                                                                                     0.0s
+ => => naming to docker.io/library/assettrackr-app                                                                                                                                               0.0s
+ => resolving provenance for metadata file                                                                                                                                                       0.0s
+[+] Running 5/5
+ ✔ assettrackr-app                    Built                                                                                                                                                      0.0s
+ ✔ Network assettrackr_asset-network  Created                                                                                                                                                    0.1s
+ ✔ Container asset-traefik            Started                                                                                                                                                    0.4s
+ ✔ Container asset-db                 Healthy                                                                                                                                                   10.9s
+ ✔ Container asset-app                Started                                                                                                                                                   11.0s
+root@assettest:~/AssetTrackr#

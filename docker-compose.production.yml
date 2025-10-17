@@ -127,11 +127,9 @@ services:
     
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.assetapp.rule=Host(`${DOMAIN}`) || Host(`www.${DOMAIN}`)"
+      - "traefik.http.routers.assetapp.rule=Host(`${DOMAIN}`)"
       - "traefik.http.routers.assetapp.entrypoints=websecure"
       - "traefik.http.routers.assetapp.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.assetapp.tls.domains[0].main=${DOMAIN}"
-      - "traefik.http.routers.assetapp.tls.domains[0].sans=www.${DOMAIN}"
       - "traefik.http.services.assetapp.loadbalancer.server.port=5000"
 
 networks:

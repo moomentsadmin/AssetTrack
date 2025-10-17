@@ -127,9 +127,11 @@ nano .env  # Configure domain, database, secrets
 
 ### 📚 Documentation
 
+- **[FIRST_TIME_SETUP.md](FIRST_TIME_SETUP.md)** - First-time setup guide (port 5000) ⭐
 - **[PRODUCTION_DEPLOYMENT.md](PRODUCTION_DEPLOYMENT.md)** - Complete deployment guide ⭐
 - **[CLOUD_DEPLOYMENT_GUIDE.md](CLOUD_DEPLOYMENT_GUIDE.md)** - AWS, Azure, Google Cloud, DigitalOcean, Ubuntu ⭐
 - **[DOCKER_INSTALLATION_GUIDE.md](DOCKER_INSTALLATION_GUIDE.md)** - Docker installation for all platforms
+- **[DEPLOYMENT_QUICK_REFERENCE.md](DEPLOYMENT_QUICK_REFERENCE.md)** - Quick deployment reference
 - **[DEPLOYMENT_SOLUTION.md](DEPLOYMENT_SOLUTION.md)** - Quick start & what's fixed
 - **[DIGITALOCEAN_DATABASE_SETUP.md](DIGITALOCEAN_DATABASE_SETUP.md)** - DigitalOcean database setup
 - **[EXTERNAL_DATABASE_SETUP.md](EXTERNAL_DATABASE_SETUP.md)** - Other external database providers

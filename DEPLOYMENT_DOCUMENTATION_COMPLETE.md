@@ -50,6 +50,19 @@ Fast deployment commands for:
 
 ### Production Deployment Guides
 ```
+📄 FIRST_TIME_SETUP.md                ⭐ First-time setup (port 5000)
+   ├── Access URLs (local & production)
+   ├── Automatic setup detection
+   ├── Admin account creation
+   └── Troubleshooting
+
+📄 DOCKER_INSTALLATION_GUIDE.md      ⭐ Docker installation guide
+   ├── Ubuntu/Debian installation
+   ├── CentOS/RHEL/Fedora installation
+   ├── macOS installation
+   ├── Windows installation
+   └── Troubleshooting
+
 📄 CLOUD_DEPLOYMENT_GUIDE.md          ⭐ Main cloud deployment guide
    ├── AWS (EC2, Beanstalk, ECS)
    ├── Azure (App Service, Containers, AKS)

@@ -190,6 +190,8 @@ TRAEFIK_DASHBOARD_AUTH=admin:$$2y$$05$$your_hash_here
 
 ### Step 3: Deploy Application
 
+📖 **[FIRST_TIME_SETUP.md](FIRST_TIME_SETUP.md)** - Complete first-time setup guide
+
 **For Local Database:**
 ```bash
 docker compose -f docker-compose.production.yml --profile local-db up -d --build
@@ -230,14 +232,22 @@ docker compose -f docker-compose.production.yml exec app wget -qO- http://localh
 # Should return: {"needsSetup":true}
 ```
 
-### Step 6: Access Application
+### Step 6: Access Application & First-Time Setup
 
-Visit: **https://yourdomain.com**
+Visit: **https://yourdomain.com** or **http://your-server-ip:5000**
 
+**First-Time Setup (Automatic):**
 1. Redirects to HTTPS automatically
-2. Shows setup page (first time)
-3. Create admin account
-4. Login and start using!
+2. Shows setup page on first visit
+3. Fill in admin account details:
+   - Full Name
+   - Email
+   - Username (min 3 characters)
+   - Password (min 8 characters)
+4. Click "Create Admin Account"
+5. Automatically logged in and ready to use!
+
+📖 **Complete First-Time Setup Guide:** [FIRST_TIME_SETUP.md](FIRST_TIME_SETUP.md)
 
 **Traefik Dashboard:** https://traefik.yourdomain.com
 

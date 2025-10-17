@@ -337,13 +337,16 @@ One docker-compose.production.yml handles:
 
 ## 📋 Files to Commit to GitHub
 
-### New Cloud Documentation (3 files)
+### New Documentation (5 files)
 ```bash
+git add FIRST_TIME_SETUP.md                    # NEW: First-time setup guide
+git add DOCKER_INSTALLATION_GUIDE.md           # NEW: Docker installation
 git add CLOUD_DEPLOYMENT_GUIDE.md
 git add DEPLOYMENT_QUICK_REFERENCE.md
 git add DEPLOYMENT_DOCUMENTATION_COMPLETE.md
 git add NEW_DOCUMENTATION_SUMMARY.md
-git add README.md  # Updated
+git add README.md                              # Updated
+git add PRODUCTION_DEPLOYMENT.md               # Updated
 ```
 
 ### All Production Files (15 files total)

@@ -184,8 +184,8 @@ docker --version
 docker compose version
 
 # Clone repository
-git clone https://github.com/yourusername/AssetTrackr.git
-cd AssetTrackr
+git clone https://github.com/yourusername/AssetTrack.git
+cd AssetTrack
 
 # Create .env
 cp .env.production.example .env
@@ -742,8 +742,8 @@ ssh root@your-droplet-ip
 curl -fsSL https://get.docker.com | sh
 
 # Clone repository
-git clone https://github.com/yourusername/AssetTrackr.git
-cd AssetTrackr
+git clone https://github.com/yourusername/AssetTrack.git
+cd AssetTrack
 
 # Create .env
 cp .env.production.example .env
@@ -841,8 +841,8 @@ sudo usermod -aG docker $USER
 exit
 
 # Clone repository
-git clone https://github.com/yourusername/AssetTrackr.git
-cd AssetTrackr
+git clone https://github.com/yourusername/AssetTrack.git
+cd AssetTrack
 
 # Create .env
 cp .env.production.example .env
@@ -912,8 +912,8 @@ sudo npm install -g pm2
 
 ```bash
 # Clone repository
-git clone https://github.com/yourusername/AssetTrackr.git
-cd AssetTrackr
+git clone https://github.com/yourusername/AssetTrack.git
+cd AssetTrack
 
 # Install dependencies
 npm install

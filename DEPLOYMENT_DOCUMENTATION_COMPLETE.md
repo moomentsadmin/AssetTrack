@@ -174,8 +174,8 @@ Fast deployment commands for:
 ```bash
 # On your server
 curl -fsSL https://get.docker.com | sh
-git clone https://github.com/yourusername/AssetTrackr.git
-cd AssetTrackr
+git clone https://github.com/yourusername/AssetTrack.git
+cd AssetTrack
 cp .env.production.example .env
 # Configure .env with DigitalOcean DATABASE_URL
 ./deploy.sh
@@ -189,8 +189,8 @@ cp .env.production.example .env
 # SSH to EC2:
 ssh -i key.pem ubuntu@elastic-ip
 curl -fsSL https://get.docker.com | sh
-git clone https://github.com/yourusername/AssetTrackr.git
-cd AssetTrackr
+git clone https://github.com/yourusername/AssetTrack.git
+cd AssetTrack
 # Configure .env with RDS endpoint
 ./deploy.sh
 ```
@@ -213,8 +213,8 @@ gcloud run deploy assettrackr \
 curl -fsSL https://get.docker.com | sudo sh
 
 # Deploy
-git clone https://github.com/yourusername/AssetTrackr.git
-cd AssetTrackr
+git clone https://github.com/yourusername/AssetTrack.git
+cd AssetTrack
 cp .env.production.example .env
 # Configure for local or external database
 docker compose -f docker-compose.production.yml --profile local-db up -d --build

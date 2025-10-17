@@ -122,8 +122,8 @@ After pushing to GitHub:
 
 ```bash
 # Clone fresh copy
-git clone https://github.com/moomentsadmin/AssetTrackr.git
-cd AssetTrackr
+git clone https://github.com/moomentsadmin/AssetTrack.git
+cd AssetTrack
 
 # Install Docker Compose V2
 sudo apt update

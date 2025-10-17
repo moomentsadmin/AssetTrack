@@ -105,8 +105,8 @@ A comprehensive IT asset management system for tracking hardware, software, lice
 
 ```bash
 # Clone repository
-git clone https://github.com/yourusername/AssetTrackr.git
-cd AssetTrackr
+git clone https://github.com/yourusername/AssetTrack.git
+cd AssetTrack
 
 # Configure environment
 cp .env.production.example .env
@@ -187,8 +187,8 @@ NODE_TLS_REJECT_UNAUTHORIZED=0  # For managed databases
 
 ```bash
 # Clone repository
-git clone https://github.com/moomentsadmin/AssetTrackr.git
-cd AssetTrackr
+git clone https://github.com/moomentsadmin/AssetTrack.git
+cd AssetTrack
 
 # Create environment file
 cp .env.example .env
@@ -208,8 +208,8 @@ See [DOCKER_QUICKSTART.md](DOCKER_QUICKSTART.md) for detailed Docker deployment 
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/moomentsadmin/AssetTrackr.git
-cd AssetTrackr
+git clone https://github.com/moomentsadmin/AssetTrack.git
+cd AssetTrack
 ```
 
 ### 2. Install Dependencies

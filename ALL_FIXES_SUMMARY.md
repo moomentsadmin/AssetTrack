@@ -97,8 +97,8 @@ Once pushed to GitHub:
 
 ```bash
 # 1. Clone repository (correct name!)
-git clone https://github.com/moomentsadmin/AssetTrackr.git
-cd AssetTrackr
+git clone https://github.com/moomentsadmin/AssetTrack.git
+cd AssetTrack
 
 # 2. Verify package-lock.json exists
 ls -lh package-lock.json

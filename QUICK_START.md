@@ -12,8 +12,8 @@ Get up and running in minutes with the Asset Management System.
 
 ```bash
 # Clone repository
-git clone https://github.com/yourusername/AssetTrackr.git
-cd AssetTrackr
+git clone https://github.com/yourusername/AssetTrack.git
+cd AssetTrack
 
 # Run automated setup
 chmod +x setup-ssl.sh
@@ -42,8 +42,8 @@ chmod +x setup-ssl.sh
 
 ```bash
 # 1. Clone repository
-git clone https://github.com/yourusername/AssetTrackr.git
-cd AssetTrackr
+git clone https://github.com/yourusername/AssetTrack.git
+cd AssetTrack
 
 # 2. Install dependencies
 npm install

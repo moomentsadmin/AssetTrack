@@ -200,8 +200,8 @@ sudo usermod -aG docker $USER
 ### 2. Deploy Application
 ```bash
 # Clone repository
-git clone https://github.com/yourusername/AssetTrackr.git
-cd AssetTrackr
+git clone https://github.com/yourusername/AssetTrack.git
+cd AssetTrack
 
 # Configure environment
 cp .env.production.example .env

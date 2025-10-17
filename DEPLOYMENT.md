@@ -54,8 +54,8 @@ GRANT ALL PRIVILEGES ON DATABASE asset_management_prod TO asset_user;
 
 ```bash
 # Clone repository
-git clone https://github.com/yourusername/AssetTrackr.git
-cd AssetTrackr
+git clone https://github.com/yourusername/AssetTrack.git
+cd AssetTrack
 
 # Install all dependencies (needed for build)
 npm ci
@@ -269,8 +269,8 @@ The repository includes ready-to-use Docker configuration files:
 
 ```bash
 # 1. Clone repository
-git clone https://github.com/yourusername/AssetTrackr.git
-cd AssetTrackr
+git clone https://github.com/yourusername/AssetTrack.git
+cd AssetTrack
 
 # 2. Create environment file
 cp .env.example .env

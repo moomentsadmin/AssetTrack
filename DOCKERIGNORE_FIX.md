@@ -104,8 +104,8 @@ Once pushed to GitHub, deploy with these commands:
 
 ```bash
 # 1. Clone repository (use correct name!)
-git clone https://github.com/moomentsadmin/AssetTrackr.git
-cd AssetTrackr
+git clone https://github.com/moomentsadmin/AssetTrack.git
+cd AssetTrack
 
 # 2. Verify package-lock.json is present
 ls -lh package-lock.json

@@ -218,7 +218,7 @@ Your repository will have:
 1. **Update Deployment on Server**
    ```bash
    ssh your-server
-   cd AssetTrackr
+   cd AssetTrack
    git pull origin main
    # Review new documentation
    ```

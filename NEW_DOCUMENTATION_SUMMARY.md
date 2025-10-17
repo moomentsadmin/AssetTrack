@@ -150,8 +150,8 @@ ssh root@your-droplet
 
 # Install Docker and deploy
 curl -fsSL https://get.docker.com | sh
-git clone https://github.com/yourusername/AssetTrackr.git
-cd AssetTrackr
+git clone https://github.com/yourusername/AssetTrack.git
+cd AssetTrack
 cp .env.production.example .env
 nano .env  # Configure with DigitalOcean DATABASE_URL
 ./deploy.sh
@@ -167,8 +167,8 @@ nano .env  # Configure with DigitalOcean DATABASE_URL
 ssh -i key.pem ubuntu@elastic-ip
 
 curl -fsSL https://get.docker.com | sh
-git clone https://github.com/yourusername/AssetTrackr.git
-cd AssetTrackr
+git clone https://github.com/yourusername/AssetTrack.git
+cd AssetTrack
 # Configure .env with RDS endpoint
 ./deploy.sh
 ```

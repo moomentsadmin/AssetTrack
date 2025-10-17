@@ -113,8 +113,8 @@ After pushing, verify on GitHub:
 
 ```bash
 # 1. Clone (correct name!)
-git clone https://github.com/moomentsadmin/AssetTrackr.git
-cd AssetTrackr
+git clone https://github.com/moomentsadmin/AssetTrack.git
+cd AssetTrack
 
 # 2. Create environment file
 cp .env.example .env

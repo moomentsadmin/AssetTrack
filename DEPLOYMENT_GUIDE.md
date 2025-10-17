@@ -41,8 +41,8 @@ Comprehensive deployment guide for the Asset Management System across all major 
 
 ```bash
 # 1. Clone repository
-git clone https://github.com/yourusername/AssetTrackr.git
-cd AssetTrackr
+git clone https://github.com/yourusername/AssetTrack.git
+cd AssetTrack
 
 # 2. Run automated setup
 chmod +x setup-ssl.sh
@@ -318,8 +318,8 @@ sudo curl -L "https://github.com/docker/compose/releases/download/v2.20.0/docker
 sudo chmod +x /usr/local/bin/docker compose
 
 # Clone repository
-git clone https://github.com/yourusername/AssetTrackr.git
-cd AssetTrackr
+git clone https://github.com/yourusername/AssetTrack.git
+cd AssetTrack
 
 # Configure environment
 cp .env.ssl.example .env
@@ -678,8 +678,8 @@ curl -L "https://github.com/docker/compose/releases/download/v2.20.0/docker comp
 chmod +x /usr/local/bin/docker compose
 
 # Clone repository
-git clone https://github.com/yourusername/AssetTrackr.git
-cd AssetTrackr
+git clone https://github.com/yourusername/AssetTrack.git
+cd AssetTrack
 
 # Configure environment
 cp .env.ssl.example .env
@@ -828,8 +828,8 @@ GRANT ALL PRIVILEGES ON DATABASE asset_management TO asset_user;
 
 ```bash
 # Clone repository
-git clone https://github.com/yourusername/AssetTrackr.git
-cd AssetTrackr
+git clone https://github.com/yourusername/AssetTrack.git
+cd AssetTrack
 
 # Install dependencies
 npm ci
@@ -986,7 +986,7 @@ sudo systemctl status nginx
 sudo nginx -t
 
 # Update application
-cd AssetTrackr
+cd AssetTrack
 git pull
 npm ci
 npm run build

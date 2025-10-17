@@ -35,8 +35,8 @@ Fast reference guide for deploying Asset Management System to any platform.
 ```bash
 ssh root@droplet-ip
 curl -fsSL https://get.docker.com | sh
-git clone https://github.com/yourusername/AssetTrackr.git
-cd AssetTrackr
+git clone https://github.com/yourusername/AssetTrack.git
+cd AssetTrack
 cp .env.production.example .env
 nano .env  # Add DATABASE_URL, DOMAIN, etc.
 ./deploy.sh
@@ -73,8 +73,8 @@ nano .env  # Add DATABASE_URL, DOMAIN, etc.
 ```bash
 ssh -i key.pem ubuntu@elastic-ip
 curl -fsSL https://get.docker.com | sh
-git clone https://github.com/yourusername/AssetTrackr.git
-cd AssetTrackr
+git clone https://github.com/yourusername/AssetTrack.git
+cd AssetTrack
 cp .env.production.example .env
 # Configure with RDS endpoint
 ./deploy.sh
@@ -163,8 +163,8 @@ gcloud run deploy assettrackr \
 curl -fsSL https://get.docker.com | sudo sh
 
 # Clone & Deploy
-git clone https://github.com/yourusername/AssetTrackr.git
-cd AssetTrackr
+git clone https://github.com/yourusername/AssetTrack.git
+cd AssetTrack
 cp .env.production.example .env
 nano .env  # Configure
 
@@ -185,8 +185,8 @@ curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
 sudo apt install nodejs -y
 
 # Clone & Setup
-git clone https://github.com/yourusername/AssetTrackr.git
-cd AssetTrackr
+git clone https://github.com/yourusername/AssetTrack.git
+cd AssetTrack
 npm install
 npm run build
 npm run db:push

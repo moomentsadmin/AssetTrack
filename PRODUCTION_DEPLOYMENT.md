@@ -135,8 +135,8 @@ sudo sh get-docker.sh
 
 # Clone repository
 cd ~
-git clone https://github.com/yourusername/AssetTrackr.git
-cd AssetTrackr
+git clone https://github.com/yourusername/AssetTrack.git
+cd AssetTrack
 ```
 
 ### Step 2: Configure Environment

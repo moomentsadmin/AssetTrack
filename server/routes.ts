@@ -604,7 +604,6 @@ export function registerRoutes(app: Express): Server {
 
       let success = 0;
       let failed = 0;
-      const errors: string[] = [];
 
       for (const row of parsed.data) {
         try {
@@ -612,7 +611,6 @@ export function registerRoutes(app: Express): Server {
           
           // Validate required fields
           if (!data.fullName || !data.email || !data.username || !data.password || !data.role) {
-            errors.push(`Row missing required fields: ${JSON.stringify(data)}`);
             failed++;
             continue;
           }
@@ -633,7 +631,6 @@ export function registerRoutes(app: Express): Server {
 
           success++;
         } catch (error: any) {
-          errors.push(`Error importing row: ${error.message}`);
           failed++;
         }
       }
@@ -646,7 +643,7 @@ export function registerRoutes(app: Express): Server {
         details: { success, failed, fileName: req.file.originalname },
       });
 
-      res.json({ success, failed, errors });
+      res.json({ success, failed });
     } catch (error: any) {
       res.status(500).send(error.message);
     }
@@ -663,7 +660,6 @@ export function registerRoutes(app: Express): Server {
 
       let success = 0;
       let failed = 0;
-      const errors: string[] = [];
 
       for (const row of parsed.data) {
         try {
@@ -671,7 +667,6 @@ export function registerRoutes(app: Express): Server {
           
           // Validate required fields
           if (!data.name || !data.assetType) {
-            errors.push(`Row missing required fields: ${JSON.stringify(data)}`);
             failed++;
             continue;
           }
@@ -688,7 +683,7 @@ export function registerRoutes(app: Express): Server {
             purchaseCost: data.purchaseCost || null,
             warrantyExpiry: data.warrantyExpiry ? new Date(data.warrantyExpiry) : null,
             condition: data.condition || null,
-            location: data.location || null,
+            locationId: data.locationId || null,
             departmentId: data.departmentId || null,
             customFields: null,
             depreciationMethod: data.depreciationMethod || null,
@@ -697,7 +692,6 @@ export function registerRoutes(app: Express): Server {
 
           success++;
         } catch (error: any) {
-          errors.push(`Error importing row: ${error.message}`);
           failed++;
         }
       }
@@ -710,7 +704,7 @@ export function registerRoutes(app: Express): Server {
         details: { success, failed, fileName: req.file.originalname },
       });
 
-      res.json({ success, failed, errors });
+      res.json({ success, failed });
     } catch (error: any) {
       res.status(500).send(error.message);
     }

@@ -127,6 +127,7 @@ services:
     
     labels:
       - "traefik.enable=true"
+      - "traefik.docker.network=asset-network"
       - "traefik.http.routers.assetapp.rule=Host(`${DOMAIN}`)"
       - "traefik.http.routers.assetapp.entrypoints=websecure"
       - "traefik.http.routers.assetapp.tls.certresolver=letsencrypt"

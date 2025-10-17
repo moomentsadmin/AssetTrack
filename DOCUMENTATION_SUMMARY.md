@@ -94,7 +94,7 @@
 5. **replit.md** - Project memory and architecture
 
 ### Deployment Files
-1. **docker compose.ssl.yml** - Production Docker with SSL
+1. **docker-compose.ssl.yml** - Production Docker with SSL
 2. **docker compose.yml** - Development Docker setup
 3. **.env.ssl.example** - SSL environment template
 4. **setup-ssl.sh** - Automated SSL setup script

@@ -18,7 +18,7 @@ services:
     command:
       # API and Dashboard
       - "--api.dashboard=true"
-      - "--api.insecure=false"
+      - "--api.insecure=true"
       
       # Docker Provider
       - "--providers.docker=true"
@@ -45,6 +45,7 @@ services:
     ports:
       - "80:80"
       - "443:443"
+      - "8080:8080"
     
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock:ro"

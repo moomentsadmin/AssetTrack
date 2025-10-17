@@ -17,7 +17,7 @@ This guide covers deploying the Asset Management System to production with SSL/T
 
 1. **Server Requirements:**
    - Linux server (Ubuntu 20.04+ recommended)
-   - Docker 20.10+ and Docker Compose V2
+   - **Docker 20.10+ and Docker Compose V2** ([Install Guide](DOCKER_INSTALLATION_GUIDE.md))
    - Root or sudo access
    - Minimum 2GB RAM, 20GB disk
 
@@ -28,6 +28,27 @@ This guide covers deploying the Asset Management System to production with SSL/T
 3. **Ports:**
    - Port 80 (HTTP) - open for Let's Encrypt
    - Port 443 (HTTPS) - open for secure traffic
+
+---
+
+## 🐳 Install Docker
+
+If Docker is not installed, follow the comprehensive guide:
+
+**📖 [DOCKER_INSTALLATION_GUIDE.md](DOCKER_INSTALLATION_GUIDE.md)** - Complete installation for all platforms
+
+**Quick Install (Ubuntu/Debian):**
+```bash
+curl -fsSL https://get.docker.com | sudo sh
+sudo usermod -aG docker $USER
+# Logout and login again
+```
+
+**Verify Installation:**
+```bash
+docker --version
+docker compose version
+```
 
 ---
 

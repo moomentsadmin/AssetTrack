@@ -6,26 +6,75 @@ Complete deployment instructions for AWS, Azure, Google Cloud, DigitalOcean, and
 
 ## 📋 Table of Contents
 
-1. [AWS Deployment](#aws-deployment)
+1. [Docker Installation](#docker-installation) ⭐
+2. [AWS Deployment](#aws-deployment)
    - EC2 + RDS PostgreSQL
    - Elastic Beanstalk
    - ECS with Fargate
-2. [Azure Deployment](#azure-deployment)
+3. [Azure Deployment](#azure-deployment)
    - App Service + Azure Database
    - Container Instances
    - Azure Kubernetes Service (AKS)
-3. [Google Cloud Deployment](#google-cloud-deployment)
+4. [Google Cloud Deployment](#google-cloud-deployment)
    - Cloud Run + Cloud SQL
    - Compute Engine + Cloud SQL
    - Google Kubernetes Engine (GKE)
-4. [DigitalOcean Deployment](#digitalocean-deployment)
+5. [DigitalOcean Deployment](#digitalocean-deployment)
    - Droplet + Managed Database
    - App Platform
    - Kubernetes (DOKS)
-5. [Ubuntu Server Deployment](#ubuntu-server-deployment)
+6. [Ubuntu Server Deployment](#ubuntu-server-deployment)
    - Docker + Local PostgreSQL
    - Docker + External Database
    - Traditional (PM2 + Nginx)
+
+---
+
+## 🐳 Docker Installation
+
+**Before deploying, ensure Docker is installed on your server.**
+
+### Quick Install Commands
+
+**Ubuntu/Debian:**
+```bash
+curl -fsSL https://get.docker.com | sudo sh
+sudo usermod -aG docker $USER
+```
+
+**CentOS/RHEL:**
+```bash
+sudo yum install -y yum-utils
+sudo yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+sudo yum install -y docker-ce docker-compose-plugin
+sudo systemctl start docker && sudo systemctl enable docker
+```
+
+**macOS:**
+- Download Docker Desktop: https://www.docker.com/products/docker-desktop
+
+**Windows:**
+- Download Docker Desktop: https://www.docker.com/products/docker-desktop
+- Enable WSL 2
+
+### Complete Installation Guide
+
+📖 **[DOCKER_INSTALLATION_GUIDE.md](DOCKER_INSTALLATION_GUIDE.md)** - Comprehensive guide for all platforms:
+- Ubuntu/Debian installation
+- CentOS/RHEL/Fedora installation
+- macOS installation (Desktop & Homebrew)
+- Windows installation (Desktop & WSL 2)
+- Post-installation setup
+- Troubleshooting
+- Security best practices
+
+### Verify Installation
+
+```bash
+docker --version
+docker compose version
+docker run hello-world
+```
 
 ---
 
@@ -121,7 +170,7 @@ ssh -i your-key.pem ubuntu@your-elastic-ip
 # Update system
 sudo apt update && sudo apt upgrade -y
 
-# Install Docker
+# Install Docker (see DOCKER_INSTALLATION_GUIDE.md for other methods)
 curl -fsSL https://get.docker.com -o get-docker.sh
 sudo sh get-docker.sh
 sudo usermod -aG docker ubuntu
@@ -129,6 +178,10 @@ sudo usermod -aG docker ubuntu
 # Logout and login again for docker permissions
 exit
 ssh -i your-key.pem ubuntu@your-elastic-ip
+
+# Verify Docker installation
+docker --version
+docker compose version
 
 # Clone repository
 git clone https://github.com/yourusername/AssetTrackr.git

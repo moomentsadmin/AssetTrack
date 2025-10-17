@@ -128,6 +128,7 @@ nano .env  # Configure domain, database, secrets
 ### 📚 Documentation
 
 - **[PRODUCTION_DEPLOYMENT.md](PRODUCTION_DEPLOYMENT.md)** - Complete deployment guide ⭐
+- **[CLOUD_DEPLOYMENT_GUIDE.md](CLOUD_DEPLOYMENT_GUIDE.md)** - AWS, Azure, Google Cloud, DigitalOcean, Ubuntu ⭐
 - **[DEPLOYMENT_SOLUTION.md](DEPLOYMENT_SOLUTION.md)** - Quick start & what's fixed
 - **[DIGITALOCEAN_DATABASE_SETUP.md](DIGITALOCEAN_DATABASE_SETUP.md)** - DigitalOcean database setup
 - **[EXTERNAL_DATABASE_SETUP.md](EXTERNAL_DATABASE_SETUP.md)** - Other external database providers
@@ -151,15 +152,28 @@ DATABASE_URL=postgresql://user:pass@host:port/db?sslmode=require
 NODE_TLS_REJECT_UNAUTHORIZED=0  # For managed databases
 ```
 
-### ☁️ Supported Platforms
-- **DigitalOcean** - Managed Database + Droplet ✅
-- **AWS** - RDS + EC2 ✅
-- **Azure** - Database for PostgreSQL ✅
-- **Google Cloud** - Cloud SQL ✅
-- **Neon** - Serverless PostgreSQL ✅
-- **Supabase** - Managed PostgreSQL ✅
+### ☁️ Cloud Provider Deployments
 
-**See [PRODUCTION_DEPLOYMENT.md](PRODUCTION_DEPLOYMENT.md) for step-by-step instructions.**
+**Complete guides for all major cloud platforms:**
+
+| Platform | Deployment Options | Database Options | Guide |
+|----------|-------------------|------------------|-------|
+| **AWS** | EC2, Elastic Beanstalk, ECS/Fargate | RDS PostgreSQL | [View Guide](CLOUD_DEPLOYMENT_GUIDE.md#aws-deployment) |
+| **Azure** | App Service, Container Instances, AKS | Azure Database for PostgreSQL | [View Guide](CLOUD_DEPLOYMENT_GUIDE.md#azure-deployment) |
+| **Google Cloud** | Cloud Run, Compute Engine, GKE | Cloud SQL PostgreSQL | [View Guide](CLOUD_DEPLOYMENT_GUIDE.md#google-cloud-deployment) |
+| **DigitalOcean** | Droplet, App Platform, DOKS | Managed Database | [View Guide](CLOUD_DEPLOYMENT_GUIDE.md#digitalocean-deployment) |
+| **Ubuntu Server** | Docker, PM2 + Nginx | Local/External PostgreSQL | [View Guide](CLOUD_DEPLOYMENT_GUIDE.md#ubuntu-server-deployment) |
+
+**Managed Database Support:**
+- ✅ AWS RDS PostgreSQL
+- ✅ Azure Database for PostgreSQL
+- ✅ Google Cloud SQL
+- ✅ DigitalOcean Managed Database
+- ✅ Neon (Serverless PostgreSQL)
+- ✅ Supabase
+- ✅ Self-hosted PostgreSQL
+
+**📖 [CLOUD_DEPLOYMENT_GUIDE.md](CLOUD_DEPLOYMENT_GUIDE.md)** - Complete step-by-step instructions for all platforms
 
 ---
 

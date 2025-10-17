@@ -5,7 +5,6 @@ export async function sendEmail(to: string, subject: string, html: string) {
   try {
     const settings = await storage.getEmailSettings();
     if (!settings) {
-      console.log("Email settings not configured");
       return;
     }
 
@@ -33,7 +32,6 @@ export async function sendEmail(to: string, subject: string, html: string) {
         } : undefined,
       });
     } else {
-      console.log("Email provider not configured properly");
       return;
     }
 
@@ -43,10 +41,8 @@ export async function sendEmail(to: string, subject: string, html: string) {
       subject,
       html,
     });
-
-    console.log(`Email sent to ${to}: ${subject}`);
   } catch (error) {
-    console.error("Failed to send email:", error);
+    // Error silently handled
   }
 }
 

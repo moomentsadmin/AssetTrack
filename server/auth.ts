@@ -84,11 +84,8 @@ export function setupAuth(app: Express) {
   // Initial setup - creates admin user with custom credentials
   app.post("/api/setup", async (req, res, next) => {
     try {
-      const clientIp = req.ip || req.socket.remoteAddress || 'unknown';
-      
       const settings = await storage.getSystemSettings();
       if (settings?.setupCompleted) {
-        console.warn(`⚠️ Setup attempt after completion from IP: ${clientIp}`);
         return res.status(400).send("Setup already completed");
       }
 
@@ -96,37 +93,30 @@ export function setupAuth(app: Express) {
       const { username, password, email, fullName } = req.body;
       
       if (!username || !password || !email || !fullName) {
-        console.warn(`⚠️ Invalid setup attempt from IP: ${clientIp} - missing fields`);
         return res.status(400).send("All fields are required: username, password, email, fullName");
       }
 
       // Validate username length
       if (username.length < 3) {
-        console.warn(`⚠️ Invalid setup attempt from IP: ${clientIp} - username too short`);
         return res.status(400).send("Username must be at least 3 characters long");
       }
 
       // Validate password length
       if (password.length < 8) {
-        console.warn(`⚠️ Invalid setup attempt from IP: ${clientIp} - weak password`);
         return res.status(400).send("Password must be at least 8 characters long");
       }
 
       // Validate email format
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(email)) {
-        console.warn(`⚠️ Invalid setup attempt from IP: ${clientIp} - invalid email`);
         return res.status(400).send("Invalid email address");
       }
 
       // Check if username already exists
       const existingUser = await storage.getUserByUsername(username);
       if (existingUser) {
-        console.warn(`⚠️ Invalid setup attempt from IP: ${clientIp} - username exists`);
         return res.status(400).send("Username already exists");
       }
-
-      console.log(`🔧 First-time setup initiated from IP: ${clientIp}`);
 
       // Create admin user with provided credentials
       const adminUser = await storage.createUser({
@@ -145,12 +135,9 @@ export function setupAuth(app: Express) {
       // Log the admin in
       req.login(adminUser, (err) => {
         if (err) return next(err);
-        console.log(`✅ First-time setup completed from IP: ${clientIp}. Admin user created: ${username}`);
         res.status(201).json(adminUser);
       });
     } catch (error: any) {
-      const clientIp = req.ip || req.socket.remoteAddress || 'unknown';
-      console.error(`❌ Setup failed from IP: ${clientIp}:`, error);
       res.status(500).send(error.message);
     }
   });
@@ -161,23 +148,16 @@ export function setupAuth(app: Express) {
   });
 
   app.post("/api/login", (req, res, next) => {
-    console.log("🔐 Login attempt:", { username: req.body.username, hasPassword: !!req.body.password });
-    
     passport.authenticate("local", (err: any, user: any, info: any) => {
-      console.log("🔑 Auth result:", { err, hasUser: !!user, info });
-      
       if (err) return next(err);
       if (!user) {
-        console.log("❌ Authentication failed - Invalid credentials");
         return res.status(401).send("Invalid credentials");
       }
       
       req.login(user, (err) => {
         if (err) {
-          console.log("❌ Session login failed:", err);
           return next(err);
         }
-        console.log("✅ Login successful:", user.username);
         res.status(200).json(user);
       });
     })(req, res, next);

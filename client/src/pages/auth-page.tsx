@@ -51,7 +51,6 @@ export default function AuthPage() {
         const data = await res.json();
         setSetupRequired(!data.setupCompleted);
       } catch (error) {
-        console.error("Failed to check setup status:", error);
         setSetupRequired(false);
       } finally {
         setIsCheckingSetup(false);

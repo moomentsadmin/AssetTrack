@@ -436,7 +436,7 @@ export function registerRoutes(app: Express): Server {
 
       // Send email notification
       if (user && asset) {
-        sendAssignmentNotification(user.email, user.fullName, asset.name).catch(console.error);
+        sendAssignmentNotification(user.email, user.fullName, asset.name).catch(() => {});
       }
 
       res.status(201).json(assignment);

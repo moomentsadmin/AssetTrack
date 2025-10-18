@@ -27,7 +27,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Asset, Department } from "@shared/schema";
+import { Asset, Department, AssetType } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { AssetForm } from "@/components/asset-form";
@@ -70,6 +70,10 @@ export default function AssetsPage() {
     queryKey: ["/api/departments"],
   });
 
+  const { data: assetTypes = [] } = useQuery<AssetType[]>({
+    queryKey: ["/api/asset-types"],
+  });
+
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
       await apiRequest("DELETE", `/api/assets/${id}`);
@@ -92,7 +96,7 @@ export default function AssetsPage() {
       asset.serialNumber?.toLowerCase().includes(search.toLowerCase()) ||
       asset.model?.toLowerCase().includes(search.toLowerCase());
     const matchesStatus = statusFilter === "all" || asset.status === statusFilter;
-    const matchesType = typeFilter === "all" || asset.assetType === typeFilter;
+    const matchesType = typeFilter === "all" || asset.assetTypeId === typeFilter;
     return matchesSearch && matchesStatus && matchesType;
   });
 
@@ -143,12 +147,11 @@ export default function AssetsPage() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Types</SelectItem>
-              <SelectItem value="hardware">Hardware</SelectItem>
-              <SelectItem value="software">Software</SelectItem>
-              <SelectItem value="license">License</SelectItem>
-              <SelectItem value="accessory">Accessory</SelectItem>
-              <SelectItem value="office_equipment">Office Equipment</SelectItem>
-              <SelectItem value="vehicle">Vehicle</SelectItem>
+              {assetTypes.map((type) => (
+                <SelectItem key={type.id} value={type.id}>
+                  {type.name}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
@@ -182,12 +185,13 @@ export default function AssetsPage() {
               ) : (
                 filteredAssets.map((asset) => {
                   const dept = departments.find(d => d.id === asset.departmentId);
+                  const assetType = assetTypes.find(at => at.id === asset.assetTypeId);
                   return (
                     <TableRow key={asset.id} data-testid={`row-asset-${asset.id}`}>
                       <TableCell className="font-medium">{asset.name}</TableCell>
                       <TableCell>
                         <Badge variant="outline" className="capitalize">
-                          {asset.assetType.replace("_", " ")}
+                          {assetType?.name || "Unknown"}
                         </Badge>
                       </TableCell>
                       <TableCell className="font-mono text-xs">

@@ -26,8 +26,12 @@ ENV NODE_ENV=production
 # Copy package files
 COPY package*.json ./
 
-# Install production dependencies only, but keep drizzle-kit and tsx for migrations
-RUN npm ci --omit=dev && npm install -D drizzle-kit tsx
+# Install ALL dependencies (including devDependencies)
+# Required in production for:
+# - vite: imported by server/vite.ts (even though only dev mode uses it)
+# - drizzle-kit: needed for database migrations at runtime
+# - tsx: required by drizzle-kit to read TypeScript schema files
+RUN npm ci
 
 # Copy built application from build stage
 COPY --from=build /app/dist ./dist

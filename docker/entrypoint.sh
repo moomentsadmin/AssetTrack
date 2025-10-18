@@ -11,7 +11,7 @@ sleep 5
 
 # Run database migrations (allow failure)
 echo "Running database migrations..."
-npm run db:push 2>&1 || echo "Migration skipped (may already be up-to-date)"
+npx drizzle-kit push 2>&1 || echo "Migration skipped (may already be up-to-date)"
 
 echo ""
 echo "Starting application server..."

@@ -3,7 +3,7 @@ const path = require('path');
 
 // Load .env file
 const envFile = path.join(__dirname, '.env');
-const env = { NODE_ENV: 'production', PORT: 5000 };
+const env = { NODE_ENV: 'production', PORT: '5000' };
 
 if (fs.existsSync(envFile)) {
   const envContent = fs.readFileSync(envFile, 'utf8');
@@ -20,8 +20,8 @@ if (fs.existsSync(envFile)) {
 module.exports = {
   apps: [{
     name: 'asset-management',
-    script: 'npm',
-    args: 'start',
+    script: './dist/index.js',
+    interpreter: 'node',
     instances: 1,
     exec_mode: 'fork',
     autorestart: true,

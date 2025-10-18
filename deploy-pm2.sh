@@ -30,7 +30,7 @@ echo ""
 
 # Run database migrations
 echo "🗄️  Running database migrations..."
-npm run db:push
+npx drizzle-kit push
 echo "✓ Database migrations complete"
 echo ""
 
@@ -45,15 +45,15 @@ mkdir -p logs
 echo "✓ Logs directory created"
 echo ""
 
-# Start/Restart with PM2
+# Clean up old PM2 processes (in case of name mismatch)
+echo "🧹 Cleaning up old PM2 processes..."
+pm2 delete all 2>/dev/null || true
+echo "✓ Cleanup complete"
+echo ""
+
+# Start with PM2
 echo "🚀 Starting application with PM2..."
-if pm2 list | grep -q asset-management; then
-    echo "Restarting existing application..."
-    pm2 restart ecosystem.config.js
-else
-    echo "Starting new application..."
-    pm2 start ecosystem.config.js
-fi
+pm2 start ecosystem.config.js
 
 # Save PM2 configuration
 pm2 save

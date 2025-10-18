@@ -53,7 +53,7 @@ echo ""
 
 # Start with PM2
 echo "🚀 Starting application with PM2..."
-pm2 start ecosystem.config.js
+pm2 start ecosystem.config.cjs
 
 # Save PM2 configuration
 pm2 save

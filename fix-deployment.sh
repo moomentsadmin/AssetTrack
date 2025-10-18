@@ -44,7 +44,7 @@ echo "✓ Logs directory ready"
 echo ""
 
 echo "🚀 Starting with PM2..."
-pm2 start ecosystem.config.js
+pm2 start ecosystem.config.cjs
 pm2 save
 echo "✓ PM2 started"
 echo ""

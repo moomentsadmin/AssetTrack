@@ -1,7 +1,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { insertAssetSchema, Asset, Department, Location } from "@shared/schema";
+import { insertAssetSchema, Asset, Department, Location, AssetType } from "@shared/schema";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,6 +31,10 @@ export function AssetForm({ asset, onSuccess }: { asset?: Asset; onSuccess: () =
     queryKey: ["/api/locations"],
   });
 
+  const { data: assetTypes = [] } = useQuery<AssetType[]>({
+    queryKey: ["/api/asset-types"],
+  });
+
   const { data: customFields = [] } = useQuery<any[]>({
     queryKey: ["/api/custom-fields"],
   });
@@ -39,7 +43,7 @@ export function AssetForm({ asset, onSuccess }: { asset?: Asset; onSuccess: () =
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: asset?.name || "",
-      assetType: asset?.assetType || "hardware",
+      assetTypeId: asset?.assetTypeId || "",
       status: asset?.status || "available",
       serialNumber: asset?.serialNumber || "",
       model: asset?.model || "",
@@ -90,10 +94,14 @@ export function AssetForm({ asset, onSuccess }: { asset?: Asset; onSuccess: () =
     },
   });
 
-  const selectedAssetType = form.watch("assetType");
+  const selectedAssetTypeId = form.watch("assetTypeId");
+  const selectedAssetType = assetTypes.find((at) => at.id === selectedAssetTypeId);
   const assetTypeCustomFields = customFields.filter(
-    (field) => field.assetType === selectedAssetType
+    (field) => field.assetType === selectedAssetType?.name.toLowerCase()
   );
+  
+  const selectedLocationId = form.watch("locationId");
+  const selectedLocation = locations.find((loc) => loc.id === selectedLocationId);
 
   return (
     <Form {...form}>
@@ -115,23 +123,22 @@ export function AssetForm({ asset, onSuccess }: { asset?: Asset; onSuccess: () =
 
           <FormField
             control={form.control}
-            name="assetType"
+            name="assetTypeId"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Type</FormLabel>
                 <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
                     <SelectTrigger data-testid="select-asset-type">
-                      <SelectValue />
+                      <SelectValue placeholder="Select asset type" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="hardware">Hardware</SelectItem>
-                    <SelectItem value="software">Software</SelectItem>
-                    <SelectItem value="license">License</SelectItem>
-                    <SelectItem value="accessory">Accessory</SelectItem>
-                    <SelectItem value="office_equipment">Office Equipment</SelectItem>
-                    <SelectItem value="vehicle">Vehicle</SelectItem>
+                    {assetTypes.map((type) => (
+                      <SelectItem key={type.id} value={type.id}>
+                        {type.name}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
                 <FormMessage />
@@ -232,7 +239,7 @@ export function AssetForm({ asset, onSuccess }: { asset?: Asset; onSuccess: () =
             name="purchaseCost"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Purchase Cost</FormLabel>
+                <FormLabel>Purchase Cost {selectedLocation && `(${selectedLocation.currency || "USD"})`}</FormLabel>
                 <FormControl>
                   <Input type="number" step="0.01" {...field} value={field.value || ""} data-testid="input-cost" />
                 </FormControl>

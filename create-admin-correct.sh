@@ -27,6 +27,17 @@ fi
 echo ""
 echo "Creating admin user with scrypt password hash..."
 
+# Load database credentials from .env
+if [ -f ~/AssetTrack/.env ]; then
+    source ~/AssetTrack/.env
+    DB_USER=$(echo $DATABASE_URL | sed -n 's/.*:\/\/\([^:]*\):.*/\1/p')
+    DB_NAME=$(echo $DATABASE_URL | sed -n 's/.*\/\([^?]*\).*/\1/p')
+    DB_PASSWORD=$(echo $DATABASE_URL | sed -n 's/.*:\/\/[^:]*:\([^@]*\)@.*/\1/p')
+else
+    echo "❌ .env file not found!"
+    exit 1
+fi
+
 # Hash password using scrypt (matches auth.ts implementation)
 HASHED_PASSWORD=$(node -e "
 const crypto = require('crypto');
@@ -45,7 +56,7 @@ hashPassword(process.argv[1]).then(hash => console.log(hash));
 echo "Password hashed successfully"
 
 # Insert admin user into database
-psql -h localhost -U asset_user -d asset_management <<EOF
+PGPASSWORD="$DB_PASSWORD" psql -h localhost -U "$DB_USER" -d "$DB_NAME" <<EOF
 -- Delete any existing admin user with this username
 DELETE FROM users WHERE username = '$ADMIN_USERNAME';
 
@@ -70,7 +81,7 @@ if [ $? -eq 0 ]; then
     echo "  Username: $ADMIN_USERNAME"
     echo "  Email: $ADMIN_EMAIL"
     echo ""
-    echo "🌐 Now visit: https://asset.digile.com"
+    echo "🌐 Now visit: https://assetmgt.digile.com"
     echo ""
     echo "Login with:"
     echo "  Username: $ADMIN_USERNAME"

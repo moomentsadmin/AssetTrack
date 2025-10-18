@@ -11,7 +11,9 @@ if (fs.existsSync(envFile)) {
     const match = line.match(/^([^=:#]+)=(.*)$/);
     if (match) {
       const key = match[1].trim();
-      const value = match[2].trim();
+      let value = match[2].trim();
+      // Remove surrounding quotes if present
+      value = value.replace(/^["']|["']$/g, '');
       env[key] = value;
     }
   });

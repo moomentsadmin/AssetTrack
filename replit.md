@@ -43,6 +43,25 @@ The application follows a modern SaaS dashboard design with a professional blue 
 - **Data Privacy**: No user credentials, IP addresses, or personal information logged anywhere
 - **GDPR Compliant**: No tracking or logging of user activities
 
+## Known Deployment Issues & Solutions
+
+### Issue: 504 Gateway Timeout on Ubuntu
+**Cause**: Using Neon WebSocket driver with local PostgreSQL  
+**Status**: ✅ RESOLVED - Auto-detection now uses correct driver  
+**GitHub Issue**: See `.github/ISSUE_TEMPLATE/deployment-ubuntu-504-timeout.md`
+
+### Issue: User Cannot Login After Creation
+**Cause**: Old bcrypt hashes vs new scrypt hashes  
+**Status**: ✅ RESOLVED - Always uses scrypt for new users  
+**GitHub Issue**: See `.github/ISSUE_TEMPLATE/user-creation-password.md`
+
+### Issue: Docker Container Exits
+**Cause**: Database not ready before app starts  
+**Status**: ✅ RESOLVED - Docker Compose uses health checks  
+**GitHub Issue**: See `.github/ISSUE_TEMPLATE/deployment-docker.md`
+
+All deployment issues are documented in GitHub issue templates for easy reference and troubleshooting.
+
 ## Testing & Verification Status (October 18, 2025)
 
 **✅ APPLICATION FULLY TESTED AND VERIFIED IN REPLIT**
@@ -58,9 +77,26 @@ Comprehensive end-to-end testing completed:
 - ✅ **Frontend**: React UI rendering correctly, forms working, navigation functional
 
 **Deployment Status:**
-- **Replit**: ✅ Fully functional and tested
-- **Ubuntu (PM2 + Nginx)**: Deployment guide provided in `UBUNTU_DEPLOYMENT_GUIDE.md`
-- **Docker**: Not officially supported (use PM2 deployment instead)
+- **Replit**: ✅ Fully functional and tested with Neon database (auto-detected)
+- **Ubuntu Server**: ✅ Deployment guide in `DEPLOYMENT.md` - uses standard PostgreSQL driver (auto-detected)
+- **Docker**: ✅ Docker Compose support with internal or external PostgreSQL
+- **Cloud Providers**: ✅ Works with AWS, Azure, Digital Ocean, Heroku - see `DEPLOYMENT.md`
+
+## Database Auto-Detection (October 18, 2025)
+
+The application now **automatically detects** which database driver to use:
+
+### Replit / Neon Database
+- **Detection**: Checks for `neon.tech` or `neon.app` in DATABASE_URL, or presence of `REPL_ID` environment variable
+- **Driver**: Uses `@neondatabase/serverless` with WebSocket connections
+- **Configuration**: Works out of the box - no special setup needed
+
+### Self-Hosted PostgreSQL (Ubuntu, Docker, Cloud)
+- **Detection**: Any DATABASE_URL that doesn't match Neon patterns
+- **Driver**: Uses standard `pg` driver with direct connections
+- **Configuration**: Add `?sslmode=disable` for localhost, or `?sslmode=require` for remote servers
+
+This eliminates the 504 timeout errors that occurred when the Neon WebSocket driver tried to connect to local PostgreSQL servers.
 
 ## External Dependencies
 - **Database**: PostgreSQL

@@ -26,8 +26,8 @@ ENV NODE_ENV=production
 # Copy package files
 COPY package*.json ./
 
-# Install production dependencies only, but keep drizzle-kit for migrations
-RUN npm ci --omit=dev && npm install -D drizzle-kit
+# Install production dependencies only, but keep drizzle-kit and tsx for migrations
+RUN npm ci --omit=dev && npm install -D drizzle-kit tsx
 
 # Copy built application from build stage
 COPY --from=build /app/dist ./dist

@@ -2,22 +2,19 @@
 # Entrypoint script for production container
 # Runs database migrations before starting the application
 
-set -e
-
-echo "🚀 Starting Asset Management System..."
+echo "Starting Asset Management System..."
 echo "======================================="
 
-# Run database migrations
-echo "📦 Running database migrations..."
-if npm run db:push; then
-    echo "✅ Database migrations completed successfully"
-else
-    echo "⚠️  Database migration failed, but continuing..."
-    echo "   (This is expected on first run or if schema is already up-to-date)"
-fi
+# Wait for database to be ready
+echo "Waiting for database..."
+sleep 5
+
+# Run database migrations (allow failure)
+echo "Running database migrations..."
+npm run db:push 2>&1 || echo "Migration skipped (may already be up-to-date)"
 
 echo ""
-echo "🎯 Starting application server..."
+echo "Starting application server..."
 echo "======================================="
 
 # Execute the command passed to the container (defaults to "node dist/index.js")

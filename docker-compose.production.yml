@@ -123,7 +123,7 @@ services:
       sh -c "npm run db:push && npm start"
     
     healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://localhost:5000/api/user"]
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:5000/"]
       interval: 30s
       timeout: 10s
       start_period: 60s

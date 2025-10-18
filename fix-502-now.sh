@@ -33,8 +33,8 @@ else
 fi
 echo ""
 
-echo "Step 5: Installing dependencies..."
-npm install --production
+echo "Step 5: Installing ALL dependencies (including build tools)..."
+npm install
 echo ""
 
 echo "Step 6: Building application..."

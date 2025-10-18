@@ -19,27 +19,32 @@ echo ""
 echo "Step 1: Fixing Database Permissions..."
 echo "----------------------------------------"
 
-# Fix database permissions as postgres superuser
-sudo -u postgres psql <<EOF
--- Connect to database
-\c $PGDATABASE
+# Extract database name and user from DATABASE_URL
+DB_USER=$(echo $DATABASE_URL | sed -n 's/.*:\/\/\([^:]*\):.*/\1/p')
+DB_NAME=$(echo $DATABASE_URL | sed -n 's/.*\/\([^?]*\).*/\1/p')
 
+echo "Database: $DB_NAME"
+echo "User: $DB_USER"
+echo ""
+
+# Fix database permissions as postgres superuser
+sudo -u postgres psql -d "$DB_NAME" <<EOF
 -- Grant all privileges on schema public
-GRANT ALL ON SCHEMA public TO $PGUSER;
+GRANT ALL ON SCHEMA public TO "$DB_USER";
 
 -- Grant privileges on all existing tables and sequences
-GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO $PGUSER;
-GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO $PGUSER;
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO "$DB_USER";
+GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO "$DB_USER";
 
 -- Grant default privileges for future objects
-ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO $PGUSER;
-ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO $PGUSER;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO "$DB_USER";
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO "$DB_USER";
 
 -- Make user owner of schema
-ALTER SCHEMA public OWNER TO $PGUSER;
+ALTER SCHEMA public OWNER TO "$DB_USER";
 
--- Verify
-SELECT schemaname, schemaowner FROM pg_catalog.pg_namespace WHERE schemaname = 'public';
+-- Verify permissions
+\dp
 EOF
 
 if [ $? -eq 0 ]; then
@@ -66,7 +71,7 @@ echo ""
 echo "Step 3: Checking if admin user exists..."
 echo "----------------------------------------"
 
-ADMIN_COUNT=$(sudo -u postgres psql -d $PGDATABASE -t -c "SELECT COUNT(*) FROM users WHERE role = 'admin';" 2>/dev/null | xargs)
+ADMIN_COUNT=$(sudo -u postgres psql -d "$DB_NAME" -t -c "SELECT COUNT(*) FROM users WHERE role = 'admin';" 2>/dev/null | xargs)
 
 if [ "$ADMIN_COUNT" = "0" ]; then
     echo "⚠️  No admin user found. You need to create one."

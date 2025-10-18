@@ -26,15 +26,17 @@ ENV NODE_ENV=production
 # Copy package files
 COPY package*.json ./
 
-# Install ALL dependencies (including drizzle-kit from devDependencies)
-# We need drizzle-kit for database migrations on container startup
-# Use --production=false to install devDependencies even with NODE_ENV=production
-RUN npm ci --production=false
+# Install production dependencies only, but keep drizzle-kit for migrations
+RUN npm ci --omit=dev && npm install -D drizzle-kit
 
 # Copy built application from build stage
 COPY --from=build /app/dist ./dist
 COPY --from=build /app/drizzle.config.ts ./drizzle.config.ts
 COPY --from=build /app/shared ./shared
+
+# Copy entrypoint script
+COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
 
 # Create non-root user
 RUN addgroup -g 1001 -S nodejs && \
@@ -49,9 +51,8 @@ USER nodejs
 # Expose port
 EXPOSE 5000
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:5000/api/user', (r) => {if (r.statusCode !== 200 && r.statusCode !== 401) process.exit(1)})"
+# Healthcheck is defined in docker-compose.yml for better control
 
-# Start the application
-CMD ["npm", "start"]
+# Start the application via entrypoint
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+CMD ["node", "dist/index.js"]

@@ -1,15 +1,18 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useBranding } from "@/hooks/use-branding";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Package, Users, AlertTriangle, CheckCircle, Loader2, TrendingDown } from "lucide-react";
-import { Asset, AssetAssignment, User } from "@shared/schema";
+import { Package, Users, AlertTriangle, CheckCircle, Loader2, TrendingDown, MapPin } from "lucide-react";
+import { Asset, AssetAssignment, User, Location } from "@shared/schema";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useLocation } from "wouter";
 
 export default function DashboardPage() {
   const [, setLocation] = useLocation();
   const { companyName, companyLogo } = useBranding();
+  const [selectedLocationId, setSelectedLocationId] = useState<string>("all");
 
   const { data: assets = [], isLoading: assetsLoading } = useQuery<Asset[]>({
     queryKey: ["/api/assets"],
@@ -23,13 +26,22 @@ export default function DashboardPage() {
     queryKey: ["/api/assignments"],
   });
 
-  const isLoading = assetsLoading || usersLoading || assignmentsLoading;
+  const { data: locations = [], isLoading: locationsLoading } = useQuery<Location[]>({
+    queryKey: ["/api/locations"],
+  });
 
-  const availableAssets = assets.filter((a) => a.status === "available").length;
-  const assignedAssets = assets.filter((a) => a.status === "assigned").length;
-  const maintenanceAssets = assets.filter((a) => a.status === "in_maintenance").length;
+  const isLoading = assetsLoading || usersLoading || assignmentsLoading || locationsLoading;
+
+  // Filter assets by location if a location is selected
+  const filteredAssets = selectedLocationId === "all" 
+    ? assets 
+    : assets.filter((a) => a.locationId === selectedLocationId);
+
+  const availableAssets = filteredAssets.filter((a) => a.status === "available").length;
+  const assignedAssets = filteredAssets.filter((a) => a.status === "assigned").length;
+  const maintenanceAssets = filteredAssets.filter((a) => a.status === "in_maintenance").length;
   
-  const warrantyExpiringSoon = assets.filter((a) => {
+  const warrantyExpiringSoon = filteredAssets.filter((a) => {
     if (!a.warrantyExpiry) return false;
     const daysUntilExpiry = Math.floor(
       (new Date(a.warrantyExpiry).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
@@ -37,7 +49,7 @@ export default function DashboardPage() {
     return daysUntilExpiry > 0 && daysUntilExpiry <= 30;
   }).length;
 
-  const totalValue = assets.reduce((sum, asset) => {
+  const totalValue = filteredAssets.reduce((sum, asset) => {
     return sum + Number(asset.currentValue || asset.purchaseCost || 0);
   }, 0);
 
@@ -56,15 +68,33 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        {companyLogo && (
-          <img src={companyLogo} alt={companyName} className="h-12 w-12 object-contain" data-testid="img-dashboard-logo" />
-        )}
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-          <p className="text-muted-foreground mt-1">
-            {companyName} - Asset Management Overview
-          </p>
+      <div className="flex items-center justify-between gap-4 flex-wrap">
+        <div className="flex items-center gap-4">
+          {companyLogo && (
+            <img src={companyLogo} alt={companyName} className="h-12 w-12 object-contain" data-testid="img-dashboard-logo" />
+          )}
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+            <p className="text-muted-foreground mt-1">
+              {companyName} - Asset Management Overview
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <MapPin className="h-4 w-4 text-muted-foreground" />
+          <Select value={selectedLocationId} onValueChange={setSelectedLocationId}>
+            <SelectTrigger className="w-[200px]" data-testid="select-location-filter">
+              <SelectValue placeholder="All Locations" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Locations</SelectItem>
+              {locations.map((location) => (
+                <SelectItem key={location.id} value={location.id}>
+                  {location.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
@@ -75,7 +105,7 @@ export default function DashboardPage() {
             <Package className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold" data-testid="metric-total-assets">{assets.length}</div>
+            <div className="text-2xl font-bold" data-testid="metric-total-assets">{filteredAssets.length}</div>
             <div className="flex gap-3 mt-2 text-xs text-muted-foreground">
               <span className="flex items-center gap-1">
                 <CheckCircle className="h-3 w-3 text-chart-2" />
@@ -160,7 +190,7 @@ export default function DashboardPage() {
                 <span className="text-sm">Other</span>
               </div>
               <span className="text-sm font-medium">
-                {assets.length - availableAssets - assignedAssets - maintenanceAssets}
+                {filteredAssets.length - availableAssets - assignedAssets - maintenanceAssets}
               </span>
             </div>
           </CardContent>

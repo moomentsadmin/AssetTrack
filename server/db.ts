@@ -14,10 +14,22 @@ if (!process.env.DATABASE_URL) {
 
 const databaseUrl = process.env.DATABASE_URL;
 
-// Detect if using Neon (Replit's managed database) or standard PostgreSQL
-const isNeonDatabase = databaseUrl.includes('neon.tech') || 
-                       databaseUrl.includes('neon.app') ||
-                       process.env.REPL_ID !== undefined; // Replit environment
+// Detect if using Neon database or standard PostgreSQL
+// Priority: 1) Explicit override (DATABASE_DRIVER), 2) URL pattern matching
+const driverOverride = process.env.DATABASE_DRIVER?.toLowerCase();
+
+let isNeonDatabase: boolean;
+if (driverOverride === 'neon') {
+  isNeonDatabase = true;
+} else if (driverOverride === 'pg' || driverOverride === 'postgres') {
+  isNeonDatabase = false;
+} else if (driverOverride && driverOverride !== 'auto') {
+  // Invalid value - warn and default to standard PostgreSQL
+  isNeonDatabase = false;
+} else {
+  // Auto-detect based on URL pattern
+  isNeonDatabase = databaseUrl.includes('neon.tech') || databaseUrl.includes('neon.app');
+}
 
 let pool: any;
 let db: any;

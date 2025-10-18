@@ -84,17 +84,48 @@ Comprehensive end-to-end testing completed:
 
 ## Database Auto-Detection (October 18, 2025)
 
-The application now **automatically detects** which database driver to use:
+The application **automatically detects** which database driver to use based on your DATABASE_URL:
 
-### Replit / Neon Database
-- **Detection**: Checks for `neon.tech` or `neon.app` in DATABASE_URL, or presence of `REPL_ID` environment variable
-- **Driver**: Uses `@neondatabase/serverless` with WebSocket connections
-- **Configuration**: Works out of the box - no special setup needed
+### Automatic Detection
+1. **Neon Database**: If DATABASE_URL contains `neon.tech` or `neon.app`, uses `@neondatabase/serverless` with WebSocket connections
+2. **Standard PostgreSQL**: All other DATABASE_URLs use the standard `pg` driver
 
-### Self-Hosted PostgreSQL (Ubuntu, Docker, Cloud)
-- **Detection**: Any DATABASE_URL that doesn't match Neon patterns
-- **Driver**: Uses standard `pg` driver with direct connections
-- **Configuration**: Add `?sslmode=disable` for localhost, or `?sslmode=require` for remote servers
+### Manual Override (Optional)
+You can explicitly set the driver using the `DATABASE_DRIVER` environment variable:
+
+```env
+# Force Neon driver
+DATABASE_DRIVER=neon
+
+# Force standard PostgreSQL driver (accepts 'pg' or 'postgres')
+DATABASE_DRIVER=pg
+DATABASE_DRIVER=postgres
+
+# Auto-detect based on URL (default behavior)
+DATABASE_DRIVER=auto
+```
+
+**Note**: Invalid values default to standard PostgreSQL for safety.
+
+### Configuration Examples
+
+**Replit with Neon (auto-detected)**:
+```env
+DATABASE_URL=postgresql://user:pass@ep-abc-123.us-east-2.aws.neon.tech/dbname
+# No DATABASE_DRIVER needed - auto-detected as Neon
+```
+
+**Replit with External PostgreSQL**:
+```env
+DATABASE_URL=postgresql://user:pass@external-host.com:5432/dbname?sslmode=require
+# No DATABASE_DRIVER needed - auto-detected as standard PostgreSQL
+```
+
+**Ubuntu / Docker / Cloud**:
+```env
+DATABASE_URL=postgresql://user:pass@localhost:5432/dbname?sslmode=disable
+# No DATABASE_DRIVER needed - auto-detected as standard PostgreSQL
+```
 
 This eliminates the 504 timeout errors that occurred when the Neon WebSocket driver tried to connect to local PostgreSQL servers.
 

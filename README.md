@@ -121,13 +121,43 @@ See **[DEPLOYMENT.md](DEPLOYMENT.md)** for comprehensive deployment guides inclu
 
 ## 🗄️ Database Support
 
-### Replit / Neon Database (Auto-Detected)
-The application automatically detects Neon database connections and uses the appropriate WebSocket driver.
+### Automatic Database Driver Detection
 
-### Self-Hosted PostgreSQL (Auto-Detected)
-For Ubuntu, Docker, or cloud deployments with standard PostgreSQL, the application automatically uses the standard `pg` driver.
+The application automatically selects the correct database driver based on your `DATABASE_URL`:
 
-**No configuration needed** - the app auto-detects which driver to use based on your DATABASE_URL!
+- **Neon Database**: URLs containing `neon.tech` or `neon.app` → Uses WebSocket driver
+- **Standard PostgreSQL**: All other URLs → Uses standard `pg` driver
+
+### Manual Override (Optional)
+
+Set `DATABASE_DRIVER` environment variable to explicitly choose:
+```env
+DATABASE_DRIVER=neon      # Force Neon WebSocket driver
+DATABASE_DRIVER=pg        # Force standard PostgreSQL driver
+DATABASE_DRIVER=postgres  # Also works for standard PostgreSQL
+DATABASE_DRIVER=auto      # Auto-detect (default)
+```
+
+Invalid values default to standard PostgreSQL for safety.
+
+### Examples
+
+**Replit with Neon** (auto-detected):
+```env
+DATABASE_URL=postgresql://user:pass@ep-abc-123.us-east-2.aws.neon.tech/dbname
+```
+
+**Replit with External PostgreSQL** (auto-detected):
+```env
+DATABASE_URL=postgresql://user:pass@external-db.com:5432/dbname?sslmode=require
+```
+
+**Ubuntu/Docker/Cloud** (auto-detected):
+```env
+DATABASE_URL=postgresql://user:pass@localhost:5432/dbname?sslmode=disable
+```
+
+**No configuration needed** - the app auto-detects the correct driver!
 
 ### Environment Variables
 

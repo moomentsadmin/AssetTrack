@@ -21,17 +21,19 @@ FROM node:20-alpine AS production
 
 WORKDIR /app
 
-ENV NODE_ENV=production
-
 # Copy package files
 COPY package*.json ./
 
 # Install ALL dependencies (including devDependencies)
+# IMPORTANT: Install BEFORE setting NODE_ENV=production, otherwise npm skips devDependencies
 # Required in production for:
 # - vite: imported by server/vite.ts (even though only dev mode uses it)
 # - drizzle-kit: needed for database migrations at runtime
 # - tsx: required by drizzle-kit to read TypeScript schema files
 RUN npm ci
+
+# Set NODE_ENV after npm install to avoid skipping devDependencies
+ENV NODE_ENV=production
 
 # Copy built application from build stage
 COPY --from=build /app/dist ./dist

@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertLocationSchema } from "@shared/schema";
@@ -37,6 +38,7 @@ export default function LocationsPage() {
     defaultValues: {
       name: dialogState.location?.name || "",
       description: dialogState.location?.description || "",
+      currency: dialogState.location?.currency || "USD",
     },
   });
 
@@ -104,7 +106,7 @@ export default function LocationsPage() {
         </div>
         <Button onClick={() => {
           setDialogState({ type: "create" });
-          form.reset({ name: "", description: "" });
+          form.reset({ name: "", description: "", currency: "USD" });
         }} data-testid="button-add-location">
           <Plus className="mr-2 h-4 w-4" />
           Add Location
@@ -130,7 +132,7 @@ export default function LocationsPage() {
                     className="h-8 w-8"
                     onClick={() => {
                       setDialogState({ type: "edit", location });
-                      form.reset({ name: location.name, description: location.description || "" });
+                      form.reset({ name: location.name, description: location.description || "", currency: location.currency || "USD" });
                     }}
                     data-testid={`button-edit-${location.id}`}
                   >
@@ -152,12 +154,16 @@ export default function LocationsPage() {
               )}
               <div className="pt-4 border-t space-y-2">
                 <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">Currency:</span>
+                  <span className="font-medium">{location.currency || "USD"}</span>
+                </div>
+                <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">Total Assets:</span>
                   <span className="font-medium">{locationAssets.length}</span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">Total Value:</span>
-                  <span className="font-medium">${totalValue.toLocaleString()}</span>
+                  <span className="font-medium">{location.currency || "USD"} {totalValue.toLocaleString()}</span>
                 </div>
               </div>
             </Card>
@@ -203,6 +209,34 @@ export default function LocationsPage() {
                     <FormControl>
                       <Textarea {...field} value={field.value || ""} placeholder="Location details..." data-testid="input-location-description" />
                     </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="currency"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Currency</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger data-testid="select-location-currency">
+                          <SelectValue placeholder="Select currency" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="USD">USD ($)</SelectItem>
+                        <SelectItem value="EUR">EUR (€)</SelectItem>
+                        <SelectItem value="GBP">GBP (£)</SelectItem>
+                        <SelectItem value="JPY">JPY (¥)</SelectItem>
+                        <SelectItem value="AUD">AUD (A$)</SelectItem>
+                        <SelectItem value="CAD">CAD (C$)</SelectItem>
+                        <SelectItem value="CHF">CHF (Fr)</SelectItem>
+                        <SelectItem value="CNY">CNY (¥)</SelectItem>
+                        <SelectItem value="INR">INR (₹)</SelectItem>
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}

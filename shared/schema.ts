@@ -35,6 +35,15 @@ export const locations = pgTable("locations", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   name: text("name").notNull().unique(),
   description: text("description"),
+  currency: text("currency").notNull().default("USD"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// Asset Types table (replaces hardcoded enum for flexibility)
+export const assetTypes = pgTable("asset_types", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull().unique(),
+  description: text("description"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -42,7 +51,7 @@ export const locations = pgTable("locations", {
 export const assets = pgTable("assets", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   name: text("name").notNull(),
-  assetType: assetTypeEnum("asset_type").notNull(),
+  assetTypeId: varchar("asset_type_id").notNull().references(() => assetTypes.id),
   status: assetStatusEnum("status").notNull().default("available"),
   serialNumber: text("serial_number"),
   model: text("model"),
@@ -52,7 +61,7 @@ export const assets = pgTable("assets", {
   warrantyExpiry: timestamp("warranty_expiry"),
   condition: text("condition"),
   photoUrl: text("photo_url"),
-  locationId: varchar("location_id").references(() => locations.id),
+  locationId: varchar("location_id").notNull().references(() => locations.id),
   departmentId: varchar("department_id").references(() => departments.id),
   customFields: jsonb("custom_fields"),
   depreciationMethod: depreciationMethodEnum("depreciation_method"),
@@ -96,7 +105,7 @@ export const auditTrail = pgTable("audit_trail", {
 // Custom Field Definitions table
 export const customFieldDefinitions = pgTable("custom_field_definitions", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  assetType: assetTypeEnum("asset_type").notNull(),
+  assetTypeId: varchar("asset_type_id").notNull().references(() => assetTypes.id),
   fieldName: text("field_name").notNull(),
   fieldType: text("field_type").notNull(), // text, number, date, boolean, select
   fieldOptions: jsonb("field_options"), // for select type
@@ -151,6 +160,11 @@ export const locationsRelations = relations(locations, ({ many }) => ({
   assets: many(assets),
 }));
 
+export const assetTypesRelations = relations(assetTypes, ({ many }) => ({
+  assets: many(assets),
+  customFieldDefinitions: many(customFieldDefinitions),
+}));
+
 export const assetsRelations = relations(assets, ({ one, many }) => ({
   department: one(departments, {
     fields: [assets.departmentId],
@@ -160,9 +174,20 @@ export const assetsRelations = relations(assets, ({ one, many }) => ({
     fields: [assets.locationId],
     references: [locations.id],
   }),
+  assetType: one(assetTypes, {
+    fields: [assets.assetTypeId],
+    references: [assetTypes.id],
+  }),
   assignments: many(assetAssignments),
   notes: many(assetNotes),
   auditTrail: many(auditTrail),
+}));
+
+export const customFieldDefinitionsRelations = relations(customFieldDefinitions, ({ one }) => ({
+  assetType: one(assetTypes, {
+    fields: [customFieldDefinitions.assetTypeId],
+    references: [assetTypes.id],
+  }),
 }));
 
 export const assetAssignmentsRelations = relations(assetAssignments, ({ one }) => ({
@@ -223,6 +248,11 @@ export const insertLocationSchema = createInsertSchema(locations).omit({
   createdAt: true,
 });
 
+export const insertAssetTypeSchema = createInsertSchema(assetTypes).omit({
+  id: true,
+  createdAt: true,
+});
+
 export const insertAssetSchema = createInsertSchema(assets).omit({
   id: true,
   createdAt: true,
@@ -269,6 +299,9 @@ export type Department = typeof departments.$inferSelect;
 
 export type InsertLocation = z.infer<typeof insertLocationSchema>;
 export type Location = typeof locations.$inferSelect;
+
+export type InsertAssetType = z.infer<typeof insertAssetTypeSchema>;
+export type AssetType = typeof assetTypes.$inferSelect;
 
 export type InsertAsset = z.infer<typeof insertAssetSchema>;
 export type Asset = typeof assets.$inferSelect;

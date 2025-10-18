@@ -22,6 +22,7 @@ import SettingsPage from "@/pages/settings-page";
 import UserManagementPage from "@/pages/user-management-page";
 import ProfilePage from "@/pages/profile-page";
 import LocationsPage from "@/pages/locations-page";
+import AssetTypesPage from "@/pages/asset-types-page";
 import SystemHealthPage from "@/pages/system-health-page";
 import BrandingPage from "@/pages/branding-page";
 import PrintLabelPage from "@/pages/print-label-page";
@@ -35,6 +36,7 @@ function Router() {
       <ProtectedRoute path="/employees" component={EmployeesPage} />
       <ProtectedRoute path="/departments" component={DepartmentsPage} />
       <ProtectedRoute path="/locations" component={LocationsPage} allowedRoles={["admin", "manager"]} />
+      <ProtectedRoute path="/asset-types" component={AssetTypesPage} allowedRoles={["admin", "manager"]} />
       <ProtectedRoute path="/audit" component={AuditPage} />
       <ProtectedRoute path="/custom-fields" component={CustomFieldsPage} />
       <ProtectedRoute path="/import" component={ImportPage} />

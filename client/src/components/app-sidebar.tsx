@@ -30,6 +30,7 @@ import {
   Settings,
   Building2,
   MapPin,
+  Tag,
   FileUp,
   ChevronDown,
   LogOut,
@@ -82,6 +83,12 @@ export function AppSidebar() {
       icon: MapPin,
       url: "/locations",
       testId: "nav-locations",
+    },
+    {
+      title: "Asset Types",
+      icon: Tag,
+      url: "/asset-types",
+      testId: "nav-asset-types",
     },
     {
       title: "User Management",

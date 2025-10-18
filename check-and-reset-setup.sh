@@ -21,7 +21,7 @@ if [ "$USER_COUNT" -eq "0" ]; then
     
     # Reset setup status in database
     psql -h localhost -U asset_user -d asset_management <<EOF
-UPDATE system_settings SET "setupCompleted" = false WHERE id IS NOT NULL;
+UPDATE system_settings SET "setup_completed" = false WHERE id IS NOT NULL;
 EOF
     
     if [ $? -eq 0 ]; then
@@ -36,7 +36,7 @@ EOF
         echo ""
         echo "Manual reset: Run this SQL command:"
         echo "  psql -h localhost -U asset_user -d asset_management"
-        echo "  UPDATE system_settings SET \"setupCompleted\" = false;"
+        echo "  UPDATE system_settings SET \"setup_completed\" = false;"
     fi
 else
     echo "✅ Admin user(s) already exist in database"

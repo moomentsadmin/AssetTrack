@@ -1,9 +1,10 @@
 // Storage implementation with database from blueprint:javascript_auth_all_persistance and javascript_database
 import { 
-  users, assets, departments, locations, assetAssignments, assetNotes, auditTrail, 
+  users, assets, departments, locations, assetTypes, assetAssignments, assetNotes, auditTrail, 
   customFieldDefinitions, emailSettings, systemSettings,
   type User, type InsertUser, type Asset, type InsertAsset,
   type Department, type InsertDepartment, type Location, type InsertLocation,
+  type AssetType, type InsertAssetType,
   type AssetAssignment, type InsertAssetAssignment,
   type AssetNote, type InsertAssetNote, type AuditTrail, type InsertAuditTrail,
   type CustomFieldDefinition, type InsertCustomFieldDefinition,
@@ -47,6 +48,13 @@ export interface IStorage {
   createLocation(location: InsertLocation): Promise<Location>;
   updateLocation(id: string, location: Partial<InsertLocation>): Promise<Location | undefined>;
   deleteLocation(id: string): Promise<void>;
+
+  // Asset Type methods
+  getAllAssetTypes(): Promise<AssetType[]>;
+  getAssetType(id: string): Promise<AssetType | undefined>;
+  createAssetType(assetType: InsertAssetType): Promise<AssetType>;
+  updateAssetType(id: string, assetType: Partial<InsertAssetType>): Promise<AssetType | undefined>;
+  deleteAssetType(id: string): Promise<void>;
 
   // Assignment methods
   getAllAssignments(): Promise<AssetAssignment[]>;
@@ -203,6 +211,34 @@ export class DatabaseStorage implements IStorage {
 
   async deleteLocation(id: string): Promise<void> {
     await db.delete(locations).where(eq(locations.id, id));
+  }
+
+  // Asset Type methods
+  async getAllAssetTypes(): Promise<AssetType[]> {
+    return await db.select().from(assetTypes).orderBy(assetTypes.name);
+  }
+
+  async getAssetType(id: string): Promise<AssetType | undefined> {
+    const [assetType] = await db.select().from(assetTypes).where(eq(assetTypes.id, id));
+    return assetType || undefined;
+  }
+
+  async createAssetType(insertAssetType: InsertAssetType): Promise<AssetType> {
+    const [assetType] = await db.insert(assetTypes).values(insertAssetType).returning();
+    return assetType;
+  }
+
+  async updateAssetType(id: string, updateData: Partial<InsertAssetType>): Promise<AssetType | undefined> {
+    const [assetType] = await db
+      .update(assetTypes)
+      .set(updateData)
+      .where(eq(assetTypes.id, id))
+      .returning();
+    return assetType || undefined;
+  }
+
+  async deleteAssetType(id: string): Promise<void> {
+    await db.delete(assetTypes).where(eq(assetTypes.id, id));
   }
 
   // Assignment methods

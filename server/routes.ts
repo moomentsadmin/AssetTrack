@@ -409,6 +409,44 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // Asset Types routes
+  app.get("/api/asset-types", requireAuth, async (req, res) => {
+    try {
+      const assetTypes = await storage.getAllAssetTypes();
+      res.json(assetTypes);
+    } catch (error: any) {
+      res.status(500).send(error.message);
+    }
+  });
+
+  app.post("/api/asset-types", requireAuth, requireAdminOrManager, async (req, res) => {
+    try {
+      const assetType = await storage.createAssetType(req.body);
+      res.status(201).json(assetType);
+    } catch (error: any) {
+      res.status(500).send(error.message);
+    }
+  });
+
+  app.patch("/api/asset-types/:id", requireAuth, requireAdminOrManager, async (req, res) => {
+    try {
+      const assetType = await storage.updateAssetType(req.params.id, req.body);
+      if (!assetType) return res.status(404).send("Asset type not found");
+      res.json(assetType);
+    } catch (error: any) {
+      res.status(500).send(error.message);
+    }
+  });
+
+  app.delete("/api/asset-types/:id", requireAuth, requireAdminOrManager, async (req, res) => {
+    try {
+      await storage.deleteAssetType(req.params.id);
+      res.sendStatus(204);
+    } catch (error: any) {
+      res.status(500).send(error.message);
+    }
+  });
+
   // Assignments routes
   app.get("/api/assignments", requireAuth, async (req, res) => {
     try {

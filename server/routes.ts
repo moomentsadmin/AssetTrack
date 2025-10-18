@@ -38,6 +38,11 @@ export function registerRoutes(app: Express): Server {
   // Setup authentication routes
   setupAuth(app);
 
+  // Health check endpoint for container healthcheck
+  app.get("/health", (req, res) => {
+    res.status(200).json({ status: "healthy", timestamp: new Date().toISOString() });
+  });
+
   // Users routes
   app.get("/api/users", requireAuth, async (req, res) => {
     try {

@@ -119,8 +119,8 @@ services:
     networks:
       - asset-network
     
-    command: >
-      sh -c "npm run db:push && npm start"
+    # Command is handled by entrypoint.sh which runs migrations first
+    # then executes: node dist/index.js
     
     healthcheck:
       test: ["CMD-SHELL", "node -e \"require('http').get('http://127.0.0.1:5000/health',(r)=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))\""]

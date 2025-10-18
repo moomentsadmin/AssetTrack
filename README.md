@@ -14,10 +14,6 @@ A comprehensive IT asset management system for tracking hardware, software, lice
 - **Status Tracking**: Available, assigned, in maintenance, retired, and lost status monitoring
 - **Asset Photos**: Store photo URLs for visual asset documentation
 - **QR Code Labels**: Print professional asset labels with QR codes for physical tracking
-  - Printable 85mm x 54mm labels (standard ID card size)
-  - QR code links to asset details page for quick scanning
-  - Includes company logo, location, date, and asset information
-  - Two labels per page for cutting and backup
 - **Depreciation Calculator**: Automatic asset value tracking using straight-line and declining balance methods
 - **Custom Fields**: Dynamic field definitions for different asset types
 - **Location Management**: Physical location tracking with dropdown selection
@@ -25,9 +21,7 @@ A comprehensive IT asset management system for tracking hardware, software, lice
 
 ### Employee & User Management
 - **Employee Directory**: Comprehensive employee and contractor management
-- **Manual Employee Creation**: Add employees individually with role assignment
 - **Bulk Employee Upload**: CSV import for adding multiple employees at once
-- **CSV Template Download**: Pre-formatted template for bulk uploads
 - **Role-Based Access Control**: Admin, Manager, and Employee roles with granular permissions
 
 ### Assignment & Workflow
@@ -38,23 +32,15 @@ A comprehensive IT asset management system for tracking hardware, software, lice
 
 ### Authentication & Security
 - **First-Time Setup**: Automated admin account creation on first deployment
-- **Username/Password Authentication**: Secure login with bcrypt password hashing
+- **Secure Authentication**: Username/password with scrypt password hashing
 - **Session Management**: Secure session-based authentication with PostgreSQL storage
-- **Personal Profile Management**: Users can update their own information and change passwords
-- **User Management**: Admin CRUD interface for managing user accounts
-- **Self-Deletion Protection**: Prevents accidental admin account deletion
-
-### Organization & Departments
-- **Department Management**: Organize assets and employees by department
-- **Department Statistics**: Track asset distribution and value by department
-- **Location Statistics**: Monitor asset count and total value per location
+- **Role-Based Access Control**: Granular permissions for different user types
 
 ### System Administration
 - **System Health Dashboard**: Real-time monitoring of database and server status
 - **Asset Distribution Analytics**: Visual charts showing assets by status
 - **Audit Trail**: Complete history of all asset-related activities
 - **Recent Activity Feed**: Monitor latest system actions
-- **Resource Overview**: Track departments, locations, and audit entries
 
 ### Branding & Customization
 - **Company Branding**: Configure company name, logo URL, and website
@@ -84,150 +70,75 @@ A comprehensive IT asset management system for tracking hardware, software, lice
 - **Passport.js** for authentication
 - **Nodemailer** for email notifications
 - **Session-based auth** with connect-pg-simple
-- **bcrypt** for password hashing
+- **scrypt** for password hashing
 
 ### DevOps & Deployment
 - **Docker** support with multi-stage builds
 - **PM2** for process management
 - **Nginx** reverse proxy configuration
-- Compatible with **AWS**, **Digital Ocean**, **Azure**, **Heroku**
+- Compatible with **AWS**, **Digital Ocean**, **Azure**, **Heroku**, **Replit**
 
 ## 📋 Prerequisites
 
 - **Node.js** 20.x or higher
 - **PostgreSQL** 15 or higher
-- **npm** or **yarn** package manager
-- **Domain Name** (for SSL/HTTPS deployment)
+- **npm** package manager
+- **Domain Name** (optional, for SSL/HTTPS deployment)
 
-## 🚀 Production Deployment
+## 🚀 Quick Start
 
-### Quick Production Deploy (5 minutes)
-
-```bash
-# Clone repository
-git clone https://github.com/yourusername/AssetTrack.git
-cd AssetTrack
-
-# Configure environment
-cp .env.production.example .env
-nano .env  # Configure domain, database, secrets
-
-# Deploy with automated script
-./deploy.sh
-
-# Access: https://yourdomain.com
-```
-
-**What you get:**
-- ✅ Automatic HTTPS with Let's Encrypt
-- ✅ Auto-renewal every 60 days
-- ✅ Traefik reverse proxy
-- ✅ Supports local or external databases
-- ✅ Production-ready security
-
-### 📚 Documentation
-
-- **[FIRST_TIME_SETUP.md](FIRST_TIME_SETUP.md)** - First-time setup guide (port 5000) ⭐
-- **[DATABASE_STATUS_AND_RESET.md](DATABASE_STATUS_AND_RESET.md)** - Database status check & reset options ⭐
-- **[PRODUCTION_DEPLOYMENT.md](PRODUCTION_DEPLOYMENT.md)** - Complete deployment guide ⭐
-- **[CLOUD_DEPLOYMENT_GUIDE.md](CLOUD_DEPLOYMENT_GUIDE.md)** - AWS, Azure, Google Cloud, DigitalOcean, Ubuntu ⭐
-- **[DOCKER_INSTALLATION_GUIDE.md](DOCKER_INSTALLATION_GUIDE.md)** - Docker installation for all platforms
-- **[DEPLOYMENT_QUICK_REFERENCE.md](DEPLOYMENT_QUICK_REFERENCE.md)** - Quick deployment reference
-- **[DEPLOYMENT_SOLUTION.md](DEPLOYMENT_SOLUTION.md)** - Quick start & what's fixed
-- **[DIGITALOCEAN_DATABASE_SETUP.md](DIGITALOCEAN_DATABASE_SETUP.md)** - DigitalOcean database setup
-- **[EXTERNAL_DATABASE_SETUP.md](EXTERNAL_DATABASE_SETUP.md)** - Other external database providers
-
-### 🗄️ Database Options
-
-#### Local PostgreSQL (Containerized)
-```env
-USE_EXTERNAL_DB=false
-PGUSER=asset_user
-PGPASSWORD=secure_password
-PGDATABASE=asset_management
-```
-
-#### External Managed Database (Recommended)
-Supports: DigitalOcean, AWS RDS, Azure, Google Cloud SQL, Neon, Supabase
-
-```env
-USE_EXTERNAL_DB=true
-DATABASE_URL=postgresql://user:pass@host:port/db?sslmode=require
-NODE_TLS_REJECT_UNAUTHORIZED=0  # For managed databases
-```
-
-### ☁️ Cloud Provider Deployments
-
-**Complete guides for all major cloud platforms:**
-
-| Platform | Deployment Options | Database Options | Guide |
-|----------|-------------------|------------------|-------|
-| **AWS** | EC2, Elastic Beanstalk, ECS/Fargate | RDS PostgreSQL | [View Guide](CLOUD_DEPLOYMENT_GUIDE.md#aws-deployment) |
-| **Azure** | App Service, Container Instances, AKS | Azure Database for PostgreSQL | [View Guide](CLOUD_DEPLOYMENT_GUIDE.md#azure-deployment) |
-| **Google Cloud** | Cloud Run, Compute Engine, GKE | Cloud SQL PostgreSQL | [View Guide](CLOUD_DEPLOYMENT_GUIDE.md#google-cloud-deployment) |
-| **DigitalOcean** | Droplet, App Platform, DOKS | Managed Database | [View Guide](CLOUD_DEPLOYMENT_GUIDE.md#digitalocean-deployment) |
-| **Ubuntu Server** | Docker, PM2 + Nginx | Local/External PostgreSQL | [View Guide](CLOUD_DEPLOYMENT_GUIDE.md#ubuntu-server-deployment) |
-
-**Managed Database Support:**
-- ✅ AWS RDS PostgreSQL
-- ✅ Azure Database for PostgreSQL
-- ✅ Google Cloud SQL
-- ✅ DigitalOcean Managed Database
-- ✅ Neon (Serverless PostgreSQL)
-- ✅ Supabase
-- ✅ Self-hosted PostgreSQL
-
-**📖 [CLOUD_DEPLOYMENT_GUIDE.md](CLOUD_DEPLOYMENT_GUIDE.md)** - Complete step-by-step instructions for all platforms
-
----
-
-## 🚀 Development Deployment (Port 5000)
-
-### Option 1: Docker (Recommended - 5 Minutes)
+### Development (Replit or Local)
 
 ```bash
 # Clone repository
 git clone https://github.com/moomentsadmin/AssetTrack.git
 cd AssetTrack
 
-# Create environment file
-cp .env.example .env
-nano .env  # Update PGPASSWORD and SESSION_SECRET
-
-# Start with Docker Compose
-docker compose up -d
-
-# Access application
-# http://localhost:5000
-```
-
-See [DOCKER_QUICKSTART.md](DOCKER_QUICKSTART.md) for detailed Docker deployment guide.
-
-### Option 2: Manual Setup
-
-### 1. Clone the Repository
-
-```bash
-git clone https://github.com/moomentsadmin/AssetTrack.git
-cd AssetTrack
-```
-
-### 2. Install Dependencies
-
-```bash
+# Install dependencies
 npm install
+
+# Set up environment variables
+cp .env.example .env
+# Edit .env with your database credentials
+
+# Run database migrations
+npm run db:push
+
+# Start development server
+npm run dev
+
+# Access application at http://localhost:5000
 ```
 
-### 3. Set Up Environment Variables
+### Production Deployment
 
-Create a `.env` file:
+See **[DEPLOYMENT.md](DEPLOYMENT.md)** for comprehensive deployment guides including:
+- Ubuntu Server (PM2 + Nginx)
+- Docker / Docker Compose
+- AWS (EC2, RDS, Elastic Beanstalk)
+- Digital Ocean (Droplets, App Platform, Managed Database)
+- Azure (App Service, Azure Database for PostgreSQL)
+
+## 🗄️ Database Support
+
+### Replit / Neon Database (Auto-Detected)
+The application automatically detects Neon database connections and uses the appropriate WebSocket driver.
+
+### Self-Hosted PostgreSQL (Auto-Detected)
+For Ubuntu, Docker, or cloud deployments with standard PostgreSQL, the application automatically uses the standard `pg` driver.
+
+**No configuration needed** - the app auto-detects which driver to use based on your DATABASE_URL!
+
+### Environment Variables
 
 ```env
-NODE_ENV=development
+NODE_ENV=production
 PORT=5000
 
-# Database
-DATABASE_URL=postgresql://user:password@localhost:5432/asset_management
+# Database (choose one format)
+DATABASE_URL=postgresql://user:password@host:5432/database
+
+# OR use separate variables
 PGHOST=localhost
 PGPORT=5432
 PGDATABASE=asset_management
@@ -237,21 +148,6 @@ PGPASSWORD=your_password
 # Security
 SESSION_SECRET=your_secure_session_secret_min_32_chars
 ```
-
-### 4. Set Up Database
-
-```bash
-# Run database migrations
-npm run db:push
-```
-
-### 5. Start Development Server
-
-```bash
-npm run dev
-```
-
-The application will be available at `http://localhost:5000`
 
 ## 🎯 First-Time Setup
 
@@ -282,18 +178,33 @@ On first deployment or when the database is empty:
 
 ### Manager
 - All Employee features
-- Create and manage employees (manual and CSV)
-- Manage locations
-- Configure custom fields
+- Create and manage employees
+- Manage locations and custom fields
 - Import data
 - Configure company branding
-- Access settings
 
 ### Admin (Full Control)
 - All Manager features
 - System health monitoring
 - User management (create, edit, delete users)
 - Full system configuration
+
+## 🔧 Common Deployment Issues
+
+### 504 Gateway Timeout on Ubuntu
+**Cause**: Database connection issues  
+**Solution**: Ensure `?sslmode=disable` is in DATABASE_URL for localhost  
+**Details**: See `.github/ISSUE_TEMPLATE/deployment-ubuntu-504-timeout.md`
+
+### User Cannot Login After Creation
+**Cause**: Password hash incompatibility  
+**Solution**: Delete user and recreate through first-time setup  
+**Details**: See `.github/ISSUE_TEMPLATE/user-creation-password.md`
+
+### Docker Container Exits Immediately
+**Cause**: Database not ready  
+**Solution**: Use Docker Compose with health checks  
+**Details**: See `.github/ISSUE_TEMPLATE/deployment-docker.md`
 
 ## 📊 API Endpoints
 
@@ -315,13 +226,6 @@ On first deployment or when the database is empty:
 - `POST /api/assets` - Create asset
 - `PATCH /api/assets/:id` - Update asset
 - `DELETE /api/assets/:id` - Delete asset
-- `PATCH /api/assets/:id/depreciation` - Update depreciation
-- `POST /api/assets/:id/calculate-depreciation` - Auto-calculate depreciation
-
-### Assignments
-- `GET /api/assignments` - List assignments
-- `POST /api/assignments` - Create assignment
-- `PATCH /api/assignments/:id/return` - Return asset
 
 ### Other Endpoints
 - Departments: `GET/POST/PATCH/DELETE /api/departments`
@@ -331,91 +235,16 @@ On first deployment or when the database is empty:
 - Import: `POST /api/import/csv`, `POST /api/import/users`
 - Settings: `GET/POST /api/settings/email`, `GET/POST /api/settings/system`
 
-## 🛠️ Production Management
-
-### Common Commands
-
-```bash
-# Start application
-docker compose -f docker-compose.production.yml up -d
-
-# Stop application
-docker compose -f docker-compose.production.yml down
-
-# View logs
-docker compose -f docker-compose.production.yml logs -f app
-
-# Restart application
-docker compose -f docker-compose.production.yml restart app
-
-# Rebuild after code changes
-docker compose -f docker-compose.production.yml up -d --build
-
-# Run database migrations
-docker compose -f docker-compose.production.yml exec app npm run db:push
-```
-
-### Deployment Modes
-
-**Local Database:**
-```bash
-docker compose -f docker-compose.production.yml --profile local-db up -d --build
-```
-
-**External Database:**
-```bash
-docker compose -f docker-compose.production.yml up -d --build
-```
-
 ## 🔐 Security Features
 
-- **Bcrypt Password Hashing**: All passwords encrypted with industry-standard hashing
+- **scrypt Password Hashing**: All passwords encrypted with modern cryptographic hashing
 - **Session-Based Authentication**: Secure session management with PostgreSQL storage
 - **Role-Based Access Control**: Granular permissions for different user types
 - **Environment Variables**: Sensitive data stored securely
 - **SQL Injection Protection**: Parameterized queries via Drizzle ORM
-- **CSRF Protection**: Built-in protection against cross-site attacks
 - **Input Validation**: Zod schema validation on all inputs
 - **Audit Trail**: Complete logging of all asset activities
-
-## 📈 Usage Examples
-
-### Creating Assets
-
-1. Navigate to "Assets" page
-2. Click "Add Asset"
-3. Fill in asset details:
-   - Name, type, serial number
-   - Purchase date and cost
-   - Status and location
-   - Optional photo URL
-4. Add custom fields as needed
-5. Click "Add Asset"
-
-### Bulk Employee Import
-
-1. Navigate to "Employees" page
-2. Click "Bulk Upload"
-3. Download CSV template
-4. Fill template with employee data
-5. Upload completed CSV
-6. Review and confirm import
-
-### Assigning Assets
-
-1. Go to asset details
-2. Click "Assign"
-3. Select employee
-4. Add assignment notes
-5. Confirm assignment
-
-### Monitoring System Health
-
-1. Navigate to "System Health" (Admin only)
-2. View database and server status
-3. Check asset distribution charts
-4. Monitor recent activity
-5. Review system resources
+- **GDPR Compliant**: No unnecessary logging of user activities
 
 ## 🛠️ Development
 
@@ -453,9 +282,20 @@ asset-management/
 │   └── db.ts             # Database connection
 ├── shared/               # Shared types and schemas
 │   └── schema.ts         # Drizzle schema definitions
-├── DEPLOYMENT.md         # Deployment documentation
-└── package.json          # Dependencies and scripts
+├── .github/              # GitHub issue templates
+│   └── ISSUE_TEMPLATE/   # Deployment troubleshooting guides
+├── DEPLOYMENT.md         # Comprehensive deployment guide
+├── design_guidelines.md  # Frontend design guidelines
+├── replit.md            # Technical architecture docs
+└── package.json         # Dependencies and scripts
 ```
+
+## 📚 Documentation
+
+- **[DEPLOYMENT.md](DEPLOYMENT.md)** - Complete deployment guide for all platforms
+- **[replit.md](replit.md)** - Technical architecture and feature documentation
+- **[design_guidelines.md](design_guidelines.md)** - Frontend design system
+- **[.github/ISSUE_TEMPLATE/](.github/ISSUE_TEMPLATE/)** - Common deployment issue solutions
 
 ## 🤝 Contributing
 
@@ -469,7 +309,7 @@ Contributions are welcome! Please follow these steps:
 
 ## 📝 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License.
 
 ## 🙏 Acknowledgments
 
@@ -482,12 +322,16 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 For issues, questions, or contributions:
 - Open an issue on GitHub
-- Check the [DEPLOYMENT.md](DEPLOYMENT.md) for deployment help
-- Review the [replit.md](replit.md) for technical architecture details
+- Check [DEPLOYMENT.md](DEPLOYMENT.md) for deployment help
+- Review [.github/ISSUE_TEMPLATE/](.github/ISSUE_TEMPLATE/) for common issues
+- See [replit.md](replit.md) for technical architecture details
 
 ## 🗺️ Roadmap
 
 - [x] Asset QR code label generation
+- [x] Database auto-detection (Neon vs PostgreSQL)
+- [x] Docker deployment support
+- [x] Comprehensive deployment documentation
 - [ ] Mobile responsive enhancements
 - [ ] Advanced reporting and analytics
 - [ ] Multi-language support

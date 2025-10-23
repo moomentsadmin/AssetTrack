@@ -26,6 +26,7 @@ import AssetTypesPage from "@/pages/asset-types-page";
 import SystemHealthPage from "@/pages/system-health-page";
 import BrandingPage from "@/pages/branding-page";
 import PrintLabelPage from "@/pages/print-label-page";
+import DeviceTrackingPage from "@/pages/device-tracking-page";
 
 function Router() {
   return (
@@ -45,6 +46,7 @@ function Router() {
       <ProtectedRoute path="/profile" component={ProfilePage} />
       <ProtectedRoute path="/system-health" component={SystemHealthPage} allowedRoles={["admin"]} />
       <ProtectedRoute path="/branding" component={BrandingPage} allowedRoles={["admin", "manager"]} />
+      <ProtectedRoute path="/device-tracking" component={DeviceTrackingPage} allowedRoles={["admin", "manager"]} />
       <Route path="/auth" component={AuthPage} />
       <Route component={NotFound} />
     </Switch>

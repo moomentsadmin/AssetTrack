@@ -1,7 +1,7 @@
 // Storage implementation with database from blueprint:javascript_auth_all_persistance and javascript_database
 import { 
   users, assets, departments, locations, assetTypes, assetAssignments, assetNotes, auditTrail, 
-  customFieldDefinitions, emailSettings, systemSettings,
+  customFieldDefinitions, emailSettings, systemSettings, deviceTracking, deviceTrackingHistory,
   type User, type InsertUser, type Asset, type InsertAsset,
   type Department, type InsertDepartment, type Location, type InsertLocation,
   type AssetType, type InsertAssetType,
@@ -9,7 +9,9 @@ import {
   type AssetNote, type InsertAssetNote, type AuditTrail, type InsertAuditTrail,
   type CustomFieldDefinition, type InsertCustomFieldDefinition,
   type EmailSettings, type InsertEmailSettings,
-  type SystemSettings, type InsertSystemSettings
+  type SystemSettings, type InsertSystemSettings,
+  type DeviceTracking, type InsertDeviceTracking,
+  type DeviceTrackingHistory, type InsertDeviceTrackingHistory
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc } from "drizzle-orm";
@@ -82,6 +84,17 @@ export interface IStorage {
   // System settings methods
   getSystemSettings(): Promise<SystemSettings | undefined>;
   saveSystemSettings(settings: InsertSystemSettings): Promise<SystemSettings>;
+
+  // Device tracking methods
+  getAllDeviceTracking(): Promise<DeviceTracking[]>;
+  getDeviceTracking(id: string): Promise<DeviceTracking | undefined>;
+  getDeviceTrackingByAssetId(assetId: string): Promise<DeviceTracking | undefined>;
+  getDeviceTrackingByToken(token: string): Promise<DeviceTracking | undefined>;
+  createDeviceTracking(tracking: InsertDeviceTracking): Promise<DeviceTracking>;
+  updateDeviceTracking(id: string, tracking: Partial<InsertDeviceTracking>): Promise<DeviceTracking | undefined>;
+  deleteDeviceTracking(id: string): Promise<void>;
+  getDeviceTrackingHistory(deviceTrackingId: string): Promise<DeviceTrackingHistory[]>;
+  createDeviceTrackingHistory(history: InsertDeviceTrackingHistory): Promise<DeviceTrackingHistory>;
 
   sessionStore: session.SessionStore;
 }
@@ -339,6 +352,58 @@ export class DatabaseStorage implements IStorage {
       const [settings] = await db.insert(systemSettings).values(insertSettings).returning();
       return settings;
     }
+  }
+
+  // Device tracking methods
+  async getAllDeviceTracking(): Promise<DeviceTracking[]> {
+    return await db.select().from(deviceTracking).orderBy(desc(deviceTracking.lastHeartbeat));
+  }
+
+  async getDeviceTracking(id: string): Promise<DeviceTracking | undefined> {
+    const [tracking] = await db.select().from(deviceTracking).where(eq(deviceTracking.id, id));
+    return tracking || undefined;
+  }
+
+  async getDeviceTrackingByAssetId(assetId: string): Promise<DeviceTracking | undefined> {
+    const [tracking] = await db.select().from(deviceTracking).where(eq(deviceTracking.assetId, assetId));
+    return tracking || undefined;
+  }
+
+  async getDeviceTrackingByToken(token: string): Promise<DeviceTracking | undefined> {
+    const [tracking] = await db.select().from(deviceTracking).where(eq(deviceTracking.trackingToken, token));
+    return tracking || undefined;
+  }
+
+  async createDeviceTracking(insertTracking: InsertDeviceTracking): Promise<DeviceTracking> {
+    const [tracking] = await db.insert(deviceTracking).values(insertTracking).returning();
+    return tracking;
+  }
+
+  async updateDeviceTracking(id: string, updateData: Partial<InsertDeviceTracking>): Promise<DeviceTracking | undefined> {
+    const [tracking] = await db
+      .update(deviceTracking)
+      .set({ ...updateData, updatedAt: new Date(), lastHeartbeat: new Date() })
+      .where(eq(deviceTracking.id, id))
+      .returning();
+    return tracking || undefined;
+  }
+
+  async deleteDeviceTracking(id: string): Promise<void> {
+    await db.delete(deviceTracking).where(eq(deviceTracking.id, id));
+  }
+
+  async getDeviceTrackingHistory(deviceTrackingId: string): Promise<DeviceTrackingHistory[]> {
+    return await db
+      .select()
+      .from(deviceTrackingHistory)
+      .where(eq(deviceTrackingHistory.deviceTrackingId, deviceTrackingId))
+      .orderBy(desc(deviceTrackingHistory.createdAt))
+      .limit(100);
+  }
+
+  async createDeviceTrackingHistory(insertHistory: InsertDeviceTrackingHistory): Promise<DeviceTrackingHistory> {
+    const [history] = await db.insert(deviceTrackingHistory).values(insertHistory).returning();
+    return history;
   }
 }
 

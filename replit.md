@@ -26,14 +26,15 @@ The application follows a modern SaaS dashboard design with a professional blue 
 - **Authentication**: Username/password with role-based access (Admin, Manager, Employee); first-time setup creates an admin account.
 - **User Management**: Admin CRUD for users, personal profile updates for all users.
 - **Asset Management**: Full CRUD for assets, status tracking, photo URLs, QR code labels, assignment workflow, notes, and depreciation calculation.
+- **Device Tracking**: Real-time monitoring of laptop devices with location tracking and system resource monitoring (CPU, memory, disk). Includes a lightweight tracking agent that can be installed on devices to send periodic heartbeats to the server.
 - **Organization**: Employee and department management, including bulk upload via CSV.
 - **Audit Trail**: Comprehensive logging of all asset-related activities.
 - **System Health**: Admin dashboard for monitoring system status and statistics.
 - **Customization**: Configurable company branding (name, logo, website, currency, header/footer text).
 - **Role-Based Access Control (RBAC)**: Strict authorization implemented in both frontend (ProtectedRoute, dynamic sidebar) and backend (middleware like `requireAdmin`).
     - **Employee**: Dashboard, Assets, Employees, Departments, Audit Trail, Profile.
-    - **Manager**: All Employee features + Locations, Custom Fields, Import Data, Branding, Settings.
-    - **Admin**: Full control including System Health and User Management.
+    - **Manager**: All Employee features + Locations, Custom Fields, Import Data, Branding, Settings, Device Tracking.
+    - **Admin**: Full control including System Health, User Management, and Device Tracking.
 - **Custom Fields**: Stored as JSONB for flexibility, allowing dynamic field definitions per asset type.
 - **Email Notifications**: Configurable for asset assignments, warranty expiry, and return reminders, supporting SendGrid and generic SMTP.
 

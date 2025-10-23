@@ -38,6 +38,7 @@ import {
   UserCog,
   User as UserIcon,
   Activity,
+  Radio,
 } from "lucide-react";
 
 export function AppSidebar() {
@@ -89,6 +90,12 @@ export function AppSidebar() {
       icon: Tag,
       url: "/asset-types",
       testId: "nav-asset-types",
+    },
+    {
+      title: "Device Tracking",
+      icon: Radio,
+      url: "/device-tracking",
+      testId: "nav-device-tracking",
     },
     {
       title: "User Management",

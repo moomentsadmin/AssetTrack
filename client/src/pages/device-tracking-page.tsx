@@ -11,7 +11,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Plus, Trash2, MapPin, Activity, HardDrive, Cpu, Copy, Check, Eye, EyeOff } from "lucide-react";
+import { Loader2, Plus, Trash2, MapPin, Activity, HardDrive, Cpu, Copy, Check, Eye, EyeOff, Download } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { DeviceTracking, Asset } from "@shared/schema";
@@ -146,13 +146,23 @@ export default function DeviceTrackingPage() {
             Monitor real-time location and system resources of tracked devices
           </p>
         </div>
-        <Button
-          onClick={() => setDialogState({ type: "enable" })}
-          data-testid="button-enable-tracking"
-        >
-          <Plus className="mr-2 h-4 w-4" />
-          Enable Tracking
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={() => window.open('/tracking-agent/DOWNLOAD-INSTRUCTIONS.md', '_blank')}
+            data-testid="button-download-agent"
+          >
+            <Download className="mr-2 h-4 w-4" />
+            Download Agent
+          </Button>
+          <Button
+            onClick={() => setDialogState({ type: "enable" })}
+            data-testid="button-enable-tracking"
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            Enable Tracking
+          </Button>
+        </div>
       </div>
 
       {isLoading ? (
@@ -354,17 +364,21 @@ export default function DeviceTrackingPage() {
                 </Button>
               </div>
             </div>
-            <div className="rounded-md bg-muted p-4 text-sm space-y-2">
+            <div className="rounded-md bg-muted p-4 text-sm space-y-3">
               <p className="font-medium">Installation Instructions:</p>
               <ol className="list-decimal list-inside space-y-1 text-muted-foreground">
-                <li>Download the tracking agent from the tracking-agent folder</li>
-                <li>Install dependencies: npm install</li>
-                <li>Set the tracking token as an environment variable</li>
-                <li>Run the agent: npm start</li>
+                <li>Click "Download Agent" button above to access installers</li>
+                <li>Choose the installer for your OS (Windows/Linux/macOS)</li>
+                <li>Run the installer with your server URL and this token</li>
+                <li>Agent will start automatically as a system service</li>
               </ol>
-              <p className="text-xs text-muted-foreground mt-2">
-                See tracking-agent/README.md for detailed instructions
-              </p>
+              <div className="mt-3 pt-3 border-t border-border">
+                <p className="text-xs font-medium mb-1">Quick Install Examples:</p>
+                <div className="space-y-1 text-xs text-muted-foreground font-mono">
+                  <p><strong>Windows:</strong> .\install.ps1 -ServerUrl "..." -TrackingToken "..."</p>
+                  <p><strong>Linux/macOS:</strong> sudo ./install.sh --server-url "..." --tracking-token "..."</p>
+                </div>
+              </div>
             </div>
           </div>
           <div className="flex justify-end">

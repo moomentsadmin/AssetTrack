@@ -1,5 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
+import express from "express";
+import path from "path";
 import { setupAuth } from "./auth";
 import { storage } from "./storage";
 import multer from "multer";
@@ -42,6 +44,10 @@ export function registerRoutes(app: Express): Server {
   app.get("/health", (req, res) => {
     res.status(200).json({ status: "healthy", timestamp: new Date().toISOString() });
   });
+
+  // Serve tracking agent files and documentation
+  const trackingAgentPath = path.join(process.cwd(), "tracking-agent");
+  app.use("/tracking-agent", express.static(trackingAgentPath));
 
   // Users routes
   app.get("/api/users", requireAuth, async (req, res) => {

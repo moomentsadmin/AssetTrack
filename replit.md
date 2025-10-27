@@ -63,6 +63,14 @@ The application follows a modern SaaS dashboard design with a professional blue 
 
 All deployment issues are documented in GitHub issue templates for easy reference and troubleshooting.
 
+## Recent Updates (October 27, 2025)
+
+### Device Tracking Download Fix
+**Issue**: Download Agent button on Device Tracking page returned 404 error  
+**Cause**: Missing static file route for tracking-agent directory  
+**Solution**: Added `express.static` route in server/routes.ts to serve tracking-agent files  
+**Status**: ✅ RESOLVED - All tracking agent files now accessible at `/tracking-agent/*`
+
 ## Testing & Verification Status (October 18, 2025)
 
 **✅ APPLICATION FULLY TESTED AND VERIFIED IN REPLIT**

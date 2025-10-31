@@ -77,13 +77,19 @@ export default function AuditPage() {
                     <p className="text-sm text-muted-foreground">
                       By {user?.fullName || "Unknown"}
                     </p>
-                    {entry.details && typeof entry.details === 'object' && (
-                      <div className="mt-2 p-3 bg-muted/50 rounded-md">
-                        <pre className="text-xs text-muted-foreground overflow-x-auto">
-                          {JSON.stringify(entry.details, null, 2)}
-                        </pre>
-                      </div>
-                    )}
+                    {(() => {
+                      const details = entry.details as Record<string, unknown> | null;
+                      if (details && typeof details === 'object') {
+                        return (
+                          <div className="mt-2 p-3 bg-muted/50 rounded-md">
+                            <pre className="text-xs text-muted-foreground overflow-x-auto">
+                              {JSON.stringify(details, null, 2)}
+                            </pre>
+                          </div>
+                        );
+                      }
+                      return null;
+                    })()}
                   </div>
                 </div>
               );

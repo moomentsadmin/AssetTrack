@@ -96,11 +96,11 @@ export interface IStorage {
   getDeviceTrackingHistory(deviceTrackingId: string): Promise<DeviceTrackingHistory[]>;
   createDeviceTrackingHistory(history: InsertDeviceTrackingHistory): Promise<DeviceTrackingHistory>;
 
-  sessionStore: session.SessionStore;
+  sessionStore: session.Store;
 }
 
 export class DatabaseStorage implements IStorage {
-  sessionStore: session.SessionStore;
+  sessionStore: session.Store;
 
   constructor() {
     this.sessionStore = new PostgresSessionStore({ pool, createTableIfMissing: true });

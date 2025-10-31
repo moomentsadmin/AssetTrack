@@ -189,7 +189,7 @@ export function registerRoutes(app: Express): Server {
         assetId: asset.id,
         userId: req.user!.id,
         action: "Asset created",
-        details: { assetName: asset.name, assetType: asset.assetType },
+        details: { assetName: asset.name, assetTypeId: asset.assetTypeId },
       });
 
       res.status(201).json(asset);
@@ -715,7 +715,7 @@ export function registerRoutes(app: Express): Server {
           const data: any = row;
           
           // Validate required fields
-          if (!data.name || !data.assetType) {
+          if (!data.name || !data.assetTypeId) {
             failed++;
             continue;
           }
@@ -723,7 +723,7 @@ export function registerRoutes(app: Express): Server {
           // Create asset
           await storage.createAsset({
             name: data.name,
-            assetType: data.assetType,
+            assetTypeId: data.assetTypeId,
             status: data.status || "available",
             serialNumber: data.serialNumber || null,
             model: data.model || null,

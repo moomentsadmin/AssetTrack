@@ -108,8 +108,8 @@ services:
       DATABASE_URL: ${DATABASE_URL:-postgresql://${PGUSER:-asset_user}:${PGPASSWORD:-change_this_password}@db:5432/${PGDATABASE:-asset_management}}
       
       # SSL Configuration for External Databases (DigitalOcean, AWS RDS, etc.)
-      # Disables certificate validation for managed databases with self-signed certs
-      NODE_TLS_REJECT_UNAUTHORIZED: ${NODE_TLS_REJECT_UNAUTHORIZED:-0}
+      # TLS certificate validation (1 recommended; set 0 only for self-signed)
+      NODE_TLS_REJECT_UNAUTHORIZED: ${NODE_TLS_REJECT_UNAUTHORIZED:-1}
       
       # Session Secret
       SESSION_SECRET: ${SESSION_SECRET:-change_this_to_secure_random_string}

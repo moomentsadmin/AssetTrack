@@ -35,6 +35,9 @@ RUN npm ci
 # Set NODE_ENV after npm install to avoid skipping devDependencies
 ENV NODE_ENV=production
 
+# Install PostgreSQL client utilities for entrypoint DB readiness checks
+RUN apk add --no-cache postgresql-client
+
 # Copy built application from build stage
 COPY --from=build /app/dist ./dist
 COPY --from=build /app/drizzle.config.ts ./drizzle.config.ts

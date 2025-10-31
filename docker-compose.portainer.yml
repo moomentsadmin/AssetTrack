@@ -1,7 +1,9 @@
 version: '3.8'
 
+# Portainer-friendly compose: avoids build steps by using a prebuilt image.
+# Set APP_IMAGE to your registry image (e.g., ghcr.io/yourorg/asset-app:latest)
+
 services:
-  # PostgreSQL Database
   db:
     image: postgres:15-alpine
     container_name: asset-db
@@ -10,8 +12,6 @@ services:
       POSTGRES_USER: ${PGUSER:-asset_user}
       POSTGRES_PASSWORD: ${PGPASSWORD:-your_secure_password}
       POSTGRES_DB: ${PGDATABASE:-asset_management}
-    ports:
-      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -22,11 +22,8 @@ services:
     networks:
       - asset-network
 
-  # Application Server
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: ${APP_IMAGE:-yourrepo/asset-app:latest}
     container_name: asset-app
     restart: unless-stopped
     depends_on:
@@ -48,7 +45,6 @@ services:
       - ./logs:/app/logs
     networks:
       - asset-network
-    # Entrypoint runs migrations and starts the app; no custom command needed
     healthcheck:
       test: ["CMD-SHELL", "node -e \"require('http').get('http://127.0.0.1:5000/health',(r)=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))\""]
       interval: 30s

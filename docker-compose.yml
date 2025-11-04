@@ -33,7 +33,7 @@ services:
       db:
         condition: service_healthy
     environment:
-      NODE_ENV: production
+      NODE_ENV: development
       PORT: 5000
       DATABASE_URL: postgresql://${PGUSER:-asset_user}:${PGPASSWORD:-your_secure_password}@db:5432/${PGDATABASE:-asset_management}
       PGHOST: db

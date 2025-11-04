@@ -31,6 +31,9 @@ async function comparePasswords(supplied: string, stored: string) {
 
 export function setupAuth(router: import("express").Router) {
   const isProduction = process.env.NODE_ENV === 'production';
+  const envSecure = process.env.SESSION_COOKIE_SECURE;
+  const secureCookie = envSecure !== undefined ? envSecure === 'true' : isProduction;
+  const sameSite: session.CookieOptions['sameSite'] = secureCookie ? 'none' : 'lax';
   
   const sessionSettings: session.SessionOptions = {
     secret: process.env.SESSION_SECRET!,
@@ -39,8 +42,8 @@ export function setupAuth(router: import("express").Router) {
     store: storage.sessionStore,
     cookie: {
       httpOnly: true,
-      secure: isProduction,
-      sameSite: isProduction ? 'none' : 'lax',
+      secure: secureCookie,
+      sameSite,
       maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
     },
   };

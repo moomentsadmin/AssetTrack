@@ -20,18 +20,24 @@ while [ $attempt -le $max_attempts ]; do
     echo "Warning: Max attempts reached. Will try to continue anyway..."
   fi
   
-  echo "Database not ready yet. Waiting 2 seconds..."
+  echo "Database not ready, waiting 2 seconds..."
   sleep 2
-  attempt=$((attempt+1))
+  attempt=$((attempt + 1))
 done
 
-# Run database migrations (allow failure)
+# Run database migrations
 echo "Running database migrations..."
-npx drizzle-kit push 2>&1 || echo "Migration skipped (may already be up-to-date)"
+cd /app
+npm run db:push
 
-echo ""
-echo "Starting application server..."
+if [ $? -eq 0 ]; then
+  echo "Database migrations completed successfully"
+else
+  echo "Database migrations failed"
+  exit 1
+fi
+
+# Start the application
+echo "Starting the application..."
 echo "======================================="
-
-# Execute the command passed to the container (defaults to "node dist/index.js")
-exec "$@"
+exec npm start

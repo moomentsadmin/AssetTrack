@@ -36,7 +36,7 @@ RUN npm ci
 ENV NODE_ENV=production
 
 # Install PostgreSQL client utilities for entrypoint DB readiness checks
-RUN apk add --no-cache postgresql-client
+RUN apk add --no-cache postgresql-client dos2unix
 
 # Copy built application from build stage
 COPY --from=build /app/dist ./dist
@@ -45,6 +45,7 @@ COPY --from=build /app/shared ./shared
 
 # Copy entrypoint script
 COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN dos2unix /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
 # Create non-root user

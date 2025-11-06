@@ -1,68 +1,48 @@
-# Multi-stage Dockerfile for Asset Management System
-# Stage 1: Build
+# Stage 1: Build Frontend & Backend
 FROM node:20-alpine AS build
-
 WORKDIR /app
 
-# Copy package files
 COPY package*.json ./
-
-# Install ALL dependencies (including devDependencies needed for build)
 RUN npm ci
 
-# Copy source code
 COPY . .
-
-# Build the application (compiles TypeScript)
 RUN npm run build
 
-# Stage 2: Production
-FROM node:20-alpine AS production
-
+# Stage 2: Production Dependencies
+FROM node:20-alpine AS deps
 WORKDIR /app
 
-# Copy package files
 COPY package*.json ./
+RUN npm ci --omit=dev
 
-# Install ALL dependencies (including devDependencies)
-# IMPORTANT: Install BEFORE setting NODE_ENV=production, otherwise npm skips devDependencies
-# Required in production for:
-# - vite: imported by server/vite.ts (even though only dev mode uses it)
-# - drizzle-kit: needed for database migrations at runtime
-# - tsx: required by drizzle-kit to read TypeScript schema files
-RUN npm ci
+# Stage 3: Production Image
+FROM node:20-alpine AS production
+WORKDIR /app
 
-# Set NODE_ENV after npm install to avoid skipping devDependencies
 ENV NODE_ENV=production
 
-# Install PostgreSQL client utilities for entrypoint DB readiness checks
-RUN apk add --no-cache postgresql-client dos2unix
+# Install PostgreSQL client for health checks
+RUN apk add --no-cache postgresql-client
 
-# Copy built application from build stage
+# Copy dependencies from the deps stage
+COPY --from=deps /app/node_modules ./node_modules
+
+# Copy built application from the build stage
 COPY --from=build /app/dist ./dist
-COPY --from=build /app/drizzle.config.ts ./drizzle.config.ts
-COPY --from=build /app/shared ./shared
+COPY --from=build /app/package.json ./
 
-# Copy entrypoint script
-COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
-RUN dos2unix /usr/local/bin/entrypoint.sh
-RUN chmod +x /usr/local/bin/entrypoint.sh
+# Create a non-root user for security
+RUN addgroup -g 1001 -S appgroup && \
+    adduser -S appuser -u 1001 -G appgroup
 
-# Create non-root user
-RUN addgroup -g 1001 -S nodejs && \
-    adduser -S nodejs -u 1001
+RUN chown -R appuser:appgroup /app
 
-# Change ownership
-RUN chown -R nodejs:nodejs /app
+USER appuser
 
-# Switch to non-root user
-USER nodejs
-
-# Expose port
 EXPOSE 5000
 
-# Healthcheck is defined in docker-compose.yml for better control
+# Healthcheck to ensure the application is running and the database is reachable
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD wget -q --spider http://localhost:5000/api/health || exit 1
 
-# Start the application via entrypoint
-ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 CMD ["node", "dist/index.js"]

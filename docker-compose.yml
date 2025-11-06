@@ -42,6 +42,7 @@ services:
       PGUSER: ${PGUSER:-asset_user}
       PGPASSWORD: ${PGPASSWORD:-your_secure_password}
       SESSION_SECRET: ${SESSION_SECRET:-your_secure_random_session_secret_min_32_characters}
+      SESSION_COOKIE_SECURE: "false"
     ports:
       - "5000:5000"
     volumes:

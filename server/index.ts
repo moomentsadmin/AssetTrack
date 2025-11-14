@@ -1,8 +1,19 @@
 import 'dotenv/config';
 import express, { type Request, Response, NextFunction } from "express";
 import { createApiRouter } from "./routes";
-import { setupVite, serveStatic, log } from "./vite";
+import { storage } from "./storage";
+import { hashPassword } from "./auth";
 import http from "http";
+
+function log(message: string, source = "server") {
+  const formattedTime = new Date().toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: true,
+  });
+  console.log(`${formattedTime} [${source}] ${message}`);
+}
 
 const app = express();
 
@@ -46,6 +57,53 @@ app.use((req, res, next) => {
   const apiRouter = createApiRouter();
   app.use("/", apiRouter);
 
+  // Seed a default admin account on first run when the DB is empty
+  try {
+    const settings = await storage.getSystemSettings();
+    const users = await storage.getAllUsers();
+
+    // Only seed default admin if explicitly enabled via env var.
+    // This prevents accidental creation of default credentials in production.
+    const enableSeed = (process.env.ENABLE_DEFAULT_ADMIN || "false").toLowerCase() === "true";
+    const shouldSeed = enableSeed && (!settings || !settings.setupCompleted) && users.length === 0;
+    if (shouldSeed) {
+      const defaultUsername = process.env.DEFAULT_ADMIN_USERNAME ?? "admin";
+      const defaultPassword = process.env.DEFAULT_ADMIN_PASSWORD;
+      const defaultEmail = process.env.DEFAULT_ADMIN_EMAIL ?? "admin@example.com";
+      const defaultFullName = process.env.DEFAULT_ADMIN_FULLNAME ?? "Administrator";
+
+      if (!defaultPassword) {
+        log('ENABLE_DEFAULT_ADMIN is set but DEFAULT_ADMIN_PASSWORD is not provided. Skipping seeding for safety.', 'server');
+      } else {
+        const existing = await storage.getUserByUsername(defaultUsername);
+        if (!existing) {
+          await storage.createUser({
+            username: defaultUsername,
+            password: await hashPassword(defaultPassword),
+            email: defaultEmail,
+            fullName: defaultFullName,
+            role: "admin",
+            department: null,
+            isContractor: false,
+          });
+
+          await storage.saveSystemSettings({ setupCompleted: true });
+          log(`Default admin created: ${defaultUsername}`);
+        } else {
+          log(`Default admin not created; user already exists: ${defaultUsername}`);
+        }
+      }
+    }
+  } catch (err: any) {
+    log(`Error checking/creating default admin: ${err?.message || err}`);
+  }
+
+  // Enforce SESSION_SECRET in production
+  if (process.env.NODE_ENV === 'production' && !process.env.SESSION_SECRET) {
+    log('FATAL: SESSION_SECRET is not set. Aborting startup.', 'server');
+    process.exit(1);
+  }
+
   const server = http.createServer(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
@@ -60,9 +118,11 @@ app.use((req, res, next) => {
   // setting up all the other routes so the catch-all route
   // doesn't interfere with the other routes
   if (app.get("env") === "development") {
-    await setupVite(app, server);
+    const mod = await import("./" + "vite");
+    await mod.setupVite(app, server);
   } else {
-    serveStatic(app);
+    const mod = await import("./" + "vite");
+    mod.serveStatic(app);
   }
 
   // ALWAYS serve the app on the port specified in the environment variable PORT

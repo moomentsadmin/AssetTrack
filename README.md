@@ -31,7 +31,7 @@ A comprehensive IT asset management system for tracking hardware, software, lice
 - **Return Tracking**: Monitor asset returns and condition
 
 ### Authentication & Security
-- **First-Time Setup**: Automated admin account creation on first deployment
+- **First-Time Setup**: The setup page appears when the database is empty. Automated admin account seeding is disabled by default and must be explicitly enabled via `ENABLE_DEFAULT_ADMIN=true` (opt-in only; do not enable in public production).
 - **Secure Authentication**: Username/password with scrypt password hashing
 - **Session Management**: Secure session-based authentication with PostgreSQL storage
 - **Role-Based Access Control**: Granular permissions for different user types
@@ -179,6 +179,8 @@ PGPASSWORD=your_password
 SESSION_SECRET=your_secure_session_secret_min_32_chars
 ```
 
+Note: When running with `NODE_ENV=production` the server will refuse to start if `SESSION_SECRET` is not set or is too weak. Provide a strong secret (recommended: >=32 random characters).
+
 ## 🎯 First-Time Setup
 
 On first deployment or when the database is empty:
@@ -197,6 +199,23 @@ On first deployment or when the database is empty:
 - Setup requires custom credentials - no hard-coded defaults
 - Setup can only be run once per deployment
 - Public registration is disabled - only admins can create new accounts
+
+### **Default Admin (Optional seed)**
+
+- **Username:** `admin`
+- **Password:** `admin@123`
+- **Email:** `admin@example.com`
+
+The repository includes an optional convenience seeding mechanism that can create a default admin account when the database is empty. This is strictly opt-in: set `ENABLE_DEFAULT_ADMIN=true` in your environment to enable it. By default the seeding is disabled and will not run.
+
+Environment variables that control the seeded admin (optional):
+
+- `DEFAULT_ADMIN_USERNAME` (default: `admin`)
+- `DEFAULT_ADMIN_PASSWORD` (default: `admin@123`)
+- `DEFAULT_ADMIN_EMAIL` (default: `admin@example.com`)
+- `DEFAULT_ADMIN_FULLNAME` (default: `Administrator`)
+
+Security reminder: Never enable `ENABLE_DEFAULT_ADMIN` in public production. If you use the seeding feature for testing, immediately change the seeded password or disable the behavior before exposing the service.
 
 ## 📱 User Roles & Permissions
 

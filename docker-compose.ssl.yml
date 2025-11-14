@@ -107,14 +107,14 @@ services:
       PGDATABASE: ${PGDATABASE:-asset_management}
       PGUSER: ${PGUSER:-asset_user}
       PGPASSWORD: ${PGPASSWORD:-your_secure_password}
-      SESSION_SECRET: ${SESSION_SECRET:-your_secure_random_session_secret_min_32_characters}
+      SESSION_SECRET: ${SESSION_SECRET}
     volumes:
       - ./logs:/app/logs
     networks:
       - asset-network
     # Entrypoint runs migrations and starts the app; no custom command needed
     healthcheck:
-      test: ["CMD-SHELL", "node -e \"require('http').get('http://127.0.0.1:5000/health',(r)=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))\""]
+      test: ["CMD-SHELL", "node -e \"require('http').get('http://127.0.0.1:5000/api/health',(r)=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))\""]
       interval: 30s
       timeout: 10s
       start_period: 90s

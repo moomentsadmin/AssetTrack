@@ -16,7 +16,7 @@ declare global {
 
 const scryptAsync = promisify(scrypt);
 
-async function hashPassword(password: string) {
+export async function hashPassword(password: string) {
   const salt = randomBytes(16).toString("hex");
   const buf = (await scryptAsync(password, salt, 64)) as Buffer;
   return `${buf.toString("hex")}.${salt}`;
@@ -136,7 +136,8 @@ export function setupAuth(router: import("express").Router) {
       // Log the admin in
       req.login(adminUser, (err) => {
         if (err) return next(err);
-        res.status(201).json(adminUser);
+        const { password: _pw, ...safeUser } = adminUser as any;
+        res.status(201).json(safeUser);
       });
     } catch (error: any) {
       res.status(500).send(error.message);
@@ -159,7 +160,8 @@ export function setupAuth(router: import("express").Router) {
         if (err) {
           return next(err);
         }
-        res.status(200).json(user);
+        const { password: _pw, ...safeUser } = user as any;
+        res.status(200).json(safeUser);
       });
     })(req, res, next);
   });
@@ -173,6 +175,9 @@ export function setupAuth(router: import("express").Router) {
 
   router.get("/api/user", (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
-    res.json(req.user);
+    const user = req.user as any;
+    if (!user) return res.sendStatus(401);
+    const { password: _pw, ...safeUser } = user;
+    res.json(safeUser);
   });
 }

@@ -90,7 +90,7 @@ services:
       - asset-network
     # Entrypoint runs migrations and starts the app; no custom command needed
     healthcheck:
-      test: ["CMD-SHELL", "node -e \"require('http').get('http://127.0.0.1:5000/health',(r)=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))\""]
+      test: ["CMD-SHELL", "node -e \"require('http').get('http://127.0.0.1:5000/api/health',(r)=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))\""]
       interval: 30s
       timeout: 10s
       start_period: 90s
@@ -101,14 +101,11 @@ services:
       - "traefik.enable=true"
       
       # Main Application Router
-      - "traefik.http.routers.assettrackr.rule=Host(`${DOMAIN}`) || Host(`www.${DOMAIN}`)"
-      - "traefik.http.routers.assettrackr.entrypoints=websecure"
-      - "traefik.http.routers.assettrackr.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.assettrackr.tls.domains[0].main=${DOMAIN}"
-      - "traefik.http.routers.assettrackr.tls.domains[0].sans=www.${DOMAIN}"
-      
-      # Load Balancer
-      - "traefik.http.services.assettrackr.loadbalancer.server.port=5000"
+      - "traefik.http.routers.asset-app.rule=Host(`${DOMAIN}`) || Host(`www.${DOMAIN}`)"
+      - "traefik.http.routers.asset-app.entrypoints=websecure"
+      - "traefik.http.routers.asset-app.tls.certresolver=letsencrypt"
+      - "traefik.http.services.asset-app.loadbalancer.server.port=5000"
+      - "traefik.http.routers.asset-app.middlewares=security-headers"
 
 networks:
   asset-network:

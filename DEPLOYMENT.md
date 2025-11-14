@@ -367,6 +367,21 @@ DB_PASSWORD=your_secure_password
 SESSION_SECRET=your_session_secret_min_32_chars
 ```
 
+Traefik / Let's Encrypt notes (optional)
+-------------------------
+
+If you plan to use the provided `docker-compose.ssl.yml` (Traefik + Let's Encrypt), set the following variables in your `.env` or `.env.production` file:
+
+- `DOMAIN` - the primary domain name for the application (e.g. `example.com`). Traefik will request certificates for `DOMAIN` and `www.DOMAIN`.
+- `LETSENCRYPT_EMAIL` - email used for Let's Encrypt account registration and recovery.
+- `TRAEFIK_DASHBOARD_AUTH` - optional basic auth string for Traefik dashboard (use `htpasswd -nB user` to generate). Example: `admin:$2y$05$...`
+- `ENABLE_DEFAULT_ADMIN` - by default the app will NOT seed credentials. Set this to `true` to permit automatic creation of a default admin on first startup (only use for testing).
+
+Notes:
+- Traefik needs ports `80` and `443` available on the host for ACME to complete.
+- For testing, consider using the ACME staging server (to avoid rate limits) by setting the `--certificatesresolvers...acme.caserver` option in the Traefik service to `https://acme-staging-v02.api.letsencrypt.org/directory`.
+
+
 ### Option 2: Docker with External Database
 
 **`docker-compose.production.yml`:** (Use this for external DB)
@@ -399,6 +414,8 @@ services:
 DATABASE_URL=postgresql://user:password@host:5432/database
 SESSION_SECRET=your_session_secret
 ```
+
+> **Production enforcement:** The server will refuse to start when `NODE_ENV=production` if `SESSION_SECRET` is missing or too short. Automatic creation of a default admin account is disabled by default — enable it only for testing by setting `ENABLE_DEFAULT_ADMIN=true` in your environment (do not enable in public production).
 
 ```bash
 # Run with external DB

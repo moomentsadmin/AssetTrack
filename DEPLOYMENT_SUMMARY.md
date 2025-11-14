@@ -60,6 +60,8 @@ SESSION_SECRET=your_secure_random_session_secret_min_32_characters
 DATABASE_URL=postgresql://user:password@host:port/database?sslmode=require
 ```
 
+**Important:** The server enforces a `SESSION_SECRET` in production — it will refuse to start without a strong secret (recommended: at least 32 random characters). For safety, the application will not auto-create an admin account unless `ENABLE_DEFAULT_ADMIN=true` is explicitly set (only use for testing).
+
 ### Generating a Secure Session Secret
 ```bash
 npm i -g crypto-cli

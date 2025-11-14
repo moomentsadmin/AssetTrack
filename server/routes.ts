@@ -4,7 +4,7 @@ import { setupAuth } from "./auth";
 import { storage } from "./storage";
 import multer from "multer";
 import Papa from "papaparse";
-import bcrypt from "bcrypt";
+import { hashPassword } from "./auth";
 import { sendAssignmentNotification } from "./email";
 import { insertUserSchema } from "@shared/schema";
 import path from "path";
@@ -43,9 +43,10 @@ export function createApiRouter(): Router {
   setupAuth(router);
 
   // Health check endpoint for container healthcheck
-  router.get("/health", (req, res) => {
-    res.status(200).json({ status: "healthy", timestamp: new Date().toISOString() });
-  });
+  // Health check endpoints (both `/health` and `/api/health` supported for compatibility)
+  const healthHandler = (_req: any, res: any) => res.status(200).json({ status: "healthy", timestamp: new Date().toISOString() });
+  router.get("/health", healthHandler);
+  router.get("/api/health", healthHandler);
 
   // Serve tracking agent files and documentation
   const trackingAgentPath = path.join(process.cwd(), "tracking-agent");
@@ -69,8 +70,8 @@ export function createApiRouter(): Router {
       const validatedData = insertUserSchema.parse(req.body);
       const { password, ...userData } = validatedData;
       
-      // Hash password before storing
-      const hashedPassword = await bcrypt.hash(password, 10);
+      // Hash password (scrypt) before storing
+      const hashedPassword = await hashPassword(password);
       const user = await storage.createUser({ ...userData, password: hashedPassword });
       
       // Don't send password back
@@ -117,7 +118,7 @@ export function createApiRouter(): Router {
       
       // If password is being updated, hash it and add to update data
       if (password) {
-        const hashedPassword = await bcrypt.hash(password, 10);
+        const hashedPassword = await hashPassword(password);
         const finalUpdateData = { ...updateData, password: hashedPassword };
         const user = await storage.updateUser(req.params.id, finalUpdateData);
         if (!user) return res.status(404).send("User not found");
@@ -667,7 +668,7 @@ export function createApiRouter(): Router {
           }
 
           // Hash password
-          const hashedPassword = await bcrypt.hash(data.password, 10);
+          const hashedPassword = await hashPassword(data.password);
 
           // Create user
           await storage.createUser({

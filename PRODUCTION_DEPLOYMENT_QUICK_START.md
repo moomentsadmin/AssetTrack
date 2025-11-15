@@ -187,6 +187,33 @@ curl http://localhost:5000/api/health
 
 ## Troubleshooting
 
+### Container Auto-Restarts (Most Common Issue)
+
+**If your container keeps restarting after deployment on Ubuntu:**
+
+This is typically caused by missing `DATABASE_URL` or `SESSION_SECRET` environment variables.
+
+**Quick Fix:**
+```bash
+# 1. Check your .env file
+cat .env | grep DATABASE_URL
+
+# 2. If missing, add it:
+echo "DATABASE_URL=postgresql://username:password@db:5432/assettrack" >> .env
+
+# 3. Also ensure SESSION_SECRET is set:
+echo "SESSION_SECRET=$(openssl rand -base64 32)" >> .env
+
+# 4. Restart containers
+docker-compose down
+docker-compose up -d
+
+# 5. Check logs
+docker-compose logs -f app
+```
+
+**Full troubleshooting guide:** See `UBUNTU-DEPLOYMENT-TROUBLESHOOTING.md`
+
 ### Container Fails to Start
 
 ```bash

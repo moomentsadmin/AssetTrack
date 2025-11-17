@@ -31,6 +31,10 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY --from=build /app/dist ./dist
 COPY --from=build /app/package.json ./
 
+# Copy config files needed for migrations
+COPY --from=build /app/drizzle.config.ts ./
+COPY --from=build /app/shared ./shared
+
 # Create a non-root user for security
 RUN addgroup -g 1001 -S appgroup && \
     adduser -S appuser -u 1001 -G appgroup

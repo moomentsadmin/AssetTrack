@@ -4,6 +4,8 @@ import { createApiRouter } from "./routes";
 import { storage } from "./storage";
 import { hashPassword } from "./auth";
 import http from "http";
+import fs from "fs";
+import path from "path";
 
 function log(message: string, source = "server") {
   const formattedTime = new Date().toLocaleTimeString("en-US", {
@@ -120,8 +122,25 @@ app.use((req, res, next) => {
     const mod = await import("./" + "vite");
     await mod.setupVite(app, server);
   } else {
-    const mod = await import("./" + "vite");
-    mod.serveStatic(app);
+    // Serve static files in production
+    const distPath = path.resolve(import.meta.dirname, "..", "dist", "public");
+
+    if (!fs.existsSync(distPath)) {
+      throw new Error(
+        `Could not find the build directory: ${distPath}, make sure to build the client first`,
+      );
+    }
+
+    app.use(express.static(distPath));
+
+    // fall through to index.html if the file doesn't exist
+    app.use("*", (_req, res) => {
+      // Don't serve index.html for API routes
+      if (_req.path.startsWith("/api")) {
+        return res.status(404).json({ message: "Not Found" });
+      }
+      res.sendFile(path.resolve(distPath, "index.html"));
+    });
   }
 
   // ALWAYS serve the app on the port specified in the environment variable PORT

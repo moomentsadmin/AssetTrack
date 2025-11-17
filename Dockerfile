@@ -13,7 +13,9 @@ FROM node:20-alpine AS deps
 WORKDIR /app
 
 COPY package*.json ./
-RUN npm ci --omit=dev --legacy-peer-deps
+# Include drizzle-kit and tsx for migrations (even though they're devDeps, we need them in production for running migrations)
+RUN npm ci --omit=dev --legacy-peer-deps && \
+    npm install --no-save drizzle-kit tsx
 
 # Stage 3: Production Image
 FROM node:20-alpine AS production

@@ -4,7 +4,6 @@ import path from "path";
 // Note: dynamic import of 'vite' is performed inside `setupVite`
 import { type Server } from "http";
 import viteConfig from "../vite.config";
-import { nanoid } from "nanoid";
 
 // vite logger is created when setupVite runs (development only)
 
@@ -50,6 +49,7 @@ export async function setupVite(app: Express, server: Server) {
     const url = req.originalUrl;
 
     try {
+      const { nanoid } = await import("nanoid");
       const clientTemplate = path.resolve(
         import.meta.dirname,
         "..",

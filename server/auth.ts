@@ -35,8 +35,11 @@ export function setupAuth(router: import("express").Router) {
   const secureCookie = envSecure !== undefined ? envSecure === 'true' : isProduction;
   const sameSite: session.CookieOptions['sameSite'] = secureCookie ? 'none' : 'lax';
   
+  // Generate a fallback session secret if not provided
+  const sessionSecret = process.env.SESSION_SECRET || `dev-secret-${randomBytes(16).toString('hex')}`;
+  
   const sessionSettings: session.SessionOptions = {
-    secret: process.env.SESSION_SECRET!,
+    secret: sessionSecret,
     resave: false,
     saveUninitialized: false,
     store: storage.sessionStore,

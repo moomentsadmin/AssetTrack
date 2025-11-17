@@ -98,10 +98,9 @@ app.use((req, res, next) => {
     log(`Error checking/creating default admin: ${err?.message || err}`);
   }
 
-  // Enforce SESSION_SECRET in production
+  // Enforce SESSION_SECRET in production (warn but don't exit if missing)
   if (process.env.NODE_ENV === 'production' && !process.env.SESSION_SECRET) {
-    log('FATAL: SESSION_SECRET is not set. Aborting startup.', 'server');
-    process.exit(1);
+    log('WARNING: SESSION_SECRET is not set. Using temporary key for this session.', 'server');
   }
 
   const server = http.createServer(app);

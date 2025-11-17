@@ -4,6 +4,8 @@ WORKDIR /app
 
 COPY package*.json ./
 RUN npm ci --legacy-peer-deps
+# Fail build if high/critical vulnerabilities are present after installing dependencies
+RUN npm audit --audit-level=high || (echo 'Audit found high/critical vulnerabilities' && exit 1)
 
 COPY . .
 RUN npm run build

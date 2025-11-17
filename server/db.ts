@@ -57,19 +57,15 @@ function initializeDatabase() {
   initialized = true;
 }
 
-export { pool, db };
+// ESM-friendly getters
+export function getPool() {
+  initializeDatabase();
+  return pool;
+}
 
-// Export a getter that ensures database is initialized
-Object.defineProperty(module.exports, 'pool', {
-  get: () => {
-    initializeDatabase();
-    return pool;
-  }
-});
+export function getDb() {
+  initializeDatabase();
+  return db;
+}
 
-Object.defineProperty(module.exports, 'db', {
-  get: () => {
-    initializeDatabase();
-    return db;
-  }
-});
+export { initializeDatabase };

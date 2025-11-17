@@ -13,11 +13,28 @@ import {
   type DeviceTracking, type InsertDeviceTracking,
   type DeviceTrackingHistory, type InsertDeviceTrackingHistory
 } from "@shared/schema";
-import { db } from "./db";
+import { getDb, getPool } from "./db";
 import { eq, desc } from "drizzle-orm";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
-import { pool } from "./db";
+
+// Create lazy proxies so existing code can continue to use `db` and `pool`
+// while preserving lazy initialization behavior in `server/db.ts`.
+const db = new Proxy({}, {
+  get(_target, prop: string | symbol) {
+    const real = getDb();
+    const value = (real as any)[prop as any];
+    return typeof value === 'function' ? value.bind(real) : value;
+  }
+}) as any;
+
+const pool = new Proxy({}, {
+  get(_target, prop: string | symbol) {
+    const real = getPool();
+    const value = (real as any)[prop as any];
+    return typeof value === 'function' ? value.bind(real) : value;
+  }
+}) as any;
 
 const PostgresSessionStore = connectPg(session);
 

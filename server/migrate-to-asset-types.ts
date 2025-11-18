@@ -26,7 +26,7 @@ async function migrate() {
     ];
 
     for (const type of defaultTypes) {
-      await db.execute(sql`
+      await getDb().execute(sql`
         INSERT INTO asset_types (name, description)
         VALUES (${type.name}, ${type.description})
         ON CONFLICT (name) DO NOTHING
@@ -34,7 +34,7 @@ async function migrate() {
     }
 
     // Step 3: Add currency column to locations table if it doesn't exist
-    await db.execute(sql`
+    await getDb().execute(sql`
       ALTER TABLE locations 
       ADD COLUMN IF NOT EXISTS currency TEXT NOT NULL DEFAULT 'USD'
     `);

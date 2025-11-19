@@ -86,7 +86,7 @@
     "wouter": "^2.12.0",
     "ws": "^8.16.0",
     "zod": "^4.1.12",
-    "zod-validation-error": "^2.0.1"
+    "zod-validation-error": "^5.0.0"
   },
   "devDependencies": {
     "@tailwindcss/typography": "^0.5.10",
@@ -102,7 +102,7 @@
     "@vitejs/plugin-react": "^5.1.1",
     "autoprefixer": "^10.4.19",
     "cross-env": "^7.0.3",
-    "drizzle-kit": "^0.31.7",
+    "drizzle-kit": "^0.18.1",
     "esbuild": "^0.27.0",
     "postcss": "^8.4.38",
     "tailwindcss": "^3.4.3",

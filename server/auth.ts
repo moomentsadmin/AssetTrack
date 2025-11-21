@@ -16,7 +16,7 @@ declare global {
 
 const scryptAsync = promisify(scrypt);
 
-async function hashPassword(password: string) {
+export async function hashPassword(password: string) {
   const salt = randomBytes(16).toString("hex");
   const buf = (await scryptAsync(password, salt, 64)) as Buffer;
   return `${buf.toString("hex")}.${salt}`;
@@ -29,29 +29,33 @@ async function comparePasswords(supplied: string, stored: string) {
   return timingSafeEqual(hashedBuf, suppliedBuf);
 }
 
-export function setupAuth(app: Express) {
+export function setupAuth(router: import("express").Router) {
   const isProduction = process.env.NODE_ENV === 'production';
+  const envSecure = process.env.SESSION_COOKIE_SECURE;
+  const secureCookie = envSecure !== undefined ? envSecure === 'true' : isProduction;
+  const sameSite: session.CookieOptions['sameSite'] = secureCookie ? 'none' : 'lax';
+  
+  // Generate a fallback session secret if not provided
+  const sessionSecret = process.env.SESSION_SECRET || `dev-secret-${randomBytes(16).toString('hex')}`;
   
   const sessionSettings: session.SessionOptions = {
-    secret: process.env.SESSION_SECRET!,
+    secret: sessionSecret,
     resave: false,
     saveUninitialized: false,
     store: storage.sessionStore,
     cookie: {
       httpOnly: true,
-      secure: isProduction,
-      sameSite: isProduction ? 'none' : 'lax',
+      secure: secureCookie,
+      sameSite,
       maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
     },
   };
 
-  if (isProduction) {
-    app.set("trust proxy", 1);
-  }
+
   
-  app.use(session(sessionSettings));
-  app.use(passport.initialize());
-  app.use(passport.session());
+  router.use(session(sessionSettings));
+  router.use(passport.initialize());
+  router.use(passport.session());
 
   passport.use(
     new LocalStrategy(async (username, password, done) => {
@@ -71,7 +75,7 @@ export function setupAuth(app: Express) {
   });
 
   // Check if setup is required
-  app.get("/api/setup/status", async (req, res) => {
+  router.get("/api/setup/status", async (req, res) => {
     try {
       const settings = await storage.getSystemSettings();
       const setupCompleted = settings?.setupCompleted || false;
@@ -82,7 +86,7 @@ export function setupAuth(app: Express) {
   });
 
   // Initial setup - creates admin user with custom credentials
-  app.post("/api/setup", async (req, res, next) => {
+  router.post("/api/setup", async (req, res, next) => {
     try {
       const settings = await storage.getSystemSettings();
       if (settings?.setupCompleted) {
@@ -135,7 +139,8 @@ export function setupAuth(app: Express) {
       // Log the admin in
       req.login(adminUser, (err) => {
         if (err) return next(err);
-        res.status(201).json(adminUser);
+        const { password: _pw, ...safeUser } = adminUser as any;
+        res.status(201).json(safeUser);
       });
     } catch (error: any) {
       res.status(500).send(error.message);
@@ -143,11 +148,11 @@ export function setupAuth(app: Express) {
   });
 
   // Register route (disabled - for admin use only)
-  app.post("/api/register", async (req, res, next) => {
+  router.post("/api/register", async (req, res, next) => {
     return res.status(403).send("Registration is disabled. Please contact an administrator.");
   });
 
-  app.post("/api/login", (req, res, next) => {
+  router.post("/api/login", (req, res, next) => {
     passport.authenticate("local", (err: any, user: any, info: any) => {
       if (err) return next(err);
       if (!user) {
@@ -158,20 +163,24 @@ export function setupAuth(app: Express) {
         if (err) {
           return next(err);
         }
-        res.status(200).json(user);
+        const { password: _pw, ...safeUser } = user as any;
+        res.status(200).json(safeUser);
       });
     })(req, res, next);
   });
 
-  app.post("/api/logout", (req, res, next) => {
+  router.post("/api/logout", (req, res, next) => {
     req.logout((err) => {
       if (err) return next(err);
       res.sendStatus(200);
     });
   });
 
-  app.get("/api/user", (req, res) => {
+  router.get("/api/user", (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
-    res.json(req.user);
+    const user = req.user as any;
+    if (!user) return res.sendStatus(401);
+    const { password: _pw, ...safeUser } = user;
+    res.json(safeUser);
   });
 }

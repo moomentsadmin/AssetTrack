@@ -58,9 +58,10 @@ git clone https://github.com/yourusername/AssetTrack.git
 cd AssetTrack
 
 # Install all dependencies (needed for build)
-npm ci
+npm install
 
 # Create environment file
+cp .env.example .env.production
 nano .env.production
 ```
 
@@ -71,32 +72,47 @@ PORT=5000
 
 # Database
 DATABASE_URL=postgresql://asset_user:your_secure_password@localhost:5432/asset_management_prod
-PGHOST=localhost
-PGPORT=5432
-PGDATABASE=asset_management_prod
-PGUSER=asset_user
-PGPASSWORD=your_secure_password
 
 # Security
 SESSION_SECRET=your_secure_session_secret_min_32_chars
 ```
 
-### Build Application
+### Build Application & Database Migrations
 
-```bash
-# Run database migrations
-npm run db:push
+**Important**: The `drizzle-kit push` command (`npm run db:push`) is not safe for production as it can cause data loss. Use the following migration workflow instead.
 
-# Build the application (compiles TypeScript)
-npm run build
-
-# Optional: Remove dev dependencies to save space
-npm prune --production
+First, add a migration generation script to your `package.json`:
+```json
+"scripts": {
+  "db:generate": "drizzle-kit generate"
+}
 ```
+
+**Migration Workflow:**
+1.  **Generate Migration Files**: After making schema changes, generate SQL migration files.
+    ```bash
+    npm run db:generate
+    ```
+    This creates a new SQL file in the `drizzle` folder. Review this file to ensure it is correct.
+
+2.  **Apply Migrations Manually**: Connect to your production database and run the SQL from the generated migration file.
+    ```bash
+    # Example of applying a migration file with psql
+    sudo -u postgres psql -d asset_management_prod -f drizzle/0001_migration.sql
+    ```
+
+3.  **Build the Application**:
+    ```bash
+    # Build the application (compiles TypeScript)
+    npm run build
+
+    # Optional: Remove dev dependencies to save space
+    npm prune --production
+    ```
 
 ### PM2 Process Management
 
-Create `ecosystem.config.js`:
+Create `ecosystem.config.cjs` (note the `.cjs` extension for modern Node versions):
 
 ```javascript
 module.exports = {
@@ -105,7 +121,6 @@ module.exports = {
     script: 'npm',
     args: 'start',
     instances: 'max',
-    exec_mode: 'cluster',
     env_production: {
       NODE_ENV: 'production',
       PORT: 5000
@@ -153,7 +168,7 @@ sudo nano /etc/nginx/sites-available/asset-management
 ```nginx
 upstream nodejs_backend {
     least_conn;
-    server localhost:5000;
+    server 127.0.0.1:5000;
 }
 
 server {
@@ -262,7 +277,7 @@ sudo crontab -e
 
 The repository includes ready-to-use Docker configuration files:
 - `Dockerfile` - Multi-stage build for production
-- `docker compose.yml` - Complete stack with PostgreSQL
+- `docker-compose.yml` - Complete stack with PostgreSQL
 - `.env.example` - Environment template
 
 **Steps:**
@@ -277,7 +292,7 @@ cp .env.example .env
 
 # 3. Edit .env with your settings (required)
 nano .env
-# Update: PGPASSWORD, SESSION_SECRET (generate with: openssl rand -base64 32)
+# Update: DB_PASSWORD, SESSION_SECRET (generate with: openssl rand -base64 32)
 
 # 4. Start with Docker Compose
 docker compose up -d
@@ -305,65 +320,44 @@ docker compose logs -f
 docker compose up -d --build
 ```
 
-### Option 1: Docker with Internal Database (Manual)
+### Production Migration Workflow with Docker
 
-**`Dockerfile`:** (already included in repository)
+The `drizzle-kit push` command is not safe for production. Use the following workflow to manage database migrations with Docker.
 
-```dockerfile
-# See Dockerfile in repository root
+First, add a migration generation script to your `package.json`:
+```json
+"scripts": {
+  "db:generate": "drizzle-kit generate"
+}
 ```
 
-**`docker compose.yml` (with internal database):**
+**Workflow:**
+1.  **Generate Migration Files**: After making schema changes, generate SQL migration files on your local machine.
+    ```bash
+    npm run db:generate
+    ```
+    This creates a new SQL file in the `drizzle` folder. Review this file to ensure it is correct.
+
+2.  **Apply Migrations in Docker**: Copy the migration file to the running container and apply it using `psql`.
+    ```bash
+    # Copy the migration file to the db container
+    docker cp drizzle/0001_migration.sql asset-db:/tmp/migration.sql
+
+    # Execute the migration inside the container
+    docker compose exec db psql -U asset_user -d asset_management -f /tmp/migration.sql
+    ```
+
+3.  **Build and Deploy**: If the migration is successful, build and deploy the updated application code.
+    ```bash
+    docker compose up -d --build
+    ```
+
+### Option 1: Docker with Internal Database (Manual)
+
+**`docker-compose.yml`:** (already included in repository)
 
 ```yaml
-version: '3.8'
-
-services:
-  db:
-    image: postgres:15-alpine
-    container_name: asset-db
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: asset_user
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_DB: asset_management
-    ports:
-      - "5432:5432"
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U asset_user"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: production
-    container_name: asset-app
-    restart: unless-stopped
-    depends_on:
-      db:
-        condition: service_healthy
-    ports:
-      - "5000:5000"
-    environment:
-      NODE_ENV: production
-      DATABASE_URL: postgresql://asset_user:${DB_PASSWORD}@db:5432/asset_management
-      PGHOST: db
-      PGPORT: 5432
-      PGUSER: asset_user
-      PGPASSWORD: ${DB_PASSWORD}
-      PGDATABASE: asset_management
-      SESSION_SECRET: ${SESSION_SECRET}
-    env_file:
-      - .env
-
-volumes:
-  pgdata:
-    driver: local
+# See docker-compose.yml in repository root
 ```
 
 **`.env` file:**
@@ -373,30 +367,24 @@ DB_PASSWORD=your_secure_password
 SESSION_SECRET=your_session_secret_min_32_chars
 ```
 
-**Commands:**
+Traefik / Let's Encrypt notes (optional)
+-------------------------
 
-```bash
-# Build and run
-docker compose up -d
+If you plan to use the provided `docker-compose.ssl.yml` (Traefik + Let's Encrypt), set the following variables in your `.env` or `.env.production` file:
 
-# Wait for database to be ready, then run migrations
-docker compose exec app npm run db:push
+- `DOMAIN` - the primary domain name for the application (e.g. `example.com`). Traefik will request certificates for `DOMAIN` and `www.DOMAIN`.
+- `LETSENCRYPT_EMAIL` - email used for Let's Encrypt account registration and recovery.
+- `TRAEFIK_DASHBOARD_AUTH` - optional basic auth string for Traefik dashboard (use `htpasswd -nB user` to generate). Example: `admin:$2y$05$...`
+- `ENABLE_DEFAULT_ADMIN` - by default the app will NOT seed credentials. Set this to `true` to permit automatic creation of a default admin on first startup (only use for testing).
 
-# View logs
-docker compose logs -f
+Notes:
+- Traefik needs ports `80` and `443` available on the host for ACME to complete.
+- For testing, consider using the ACME staging server (to avoid rate limits) by setting the `--certificatesresolvers...acme.caserver` option in the Traefik service to `https://acme-staging-v02.api.letsencrypt.org/directory`.
 
-# Stop
-docker compose down
-
-# Stop and remove volumes
-docker compose down -v
-```
-
-> **Important**: Always run `docker compose exec app npm run db:push` after starting the containers to initialize the database schema.
 
 ### Option 2: Docker with External Database
 
-**`docker compose.external-db.yml`:**
+**`docker-compose.production.yml`:** (Use this for external DB)
 
 ```yaml
 version: '3.8'
@@ -414,11 +402,6 @@ services:
     environment:
       NODE_ENV: production
       DATABASE_URL: ${DATABASE_URL}
-      PGHOST: ${PGHOST}
-      PGPORT: ${PGPORT}
-      PGUSER: ${PGUSER}
-      PGPASSWORD: ${PGPASSWORD}
-      PGDATABASE: ${PGDATABASE}
       SESSION_SECRET: ${SESSION_SECRET}
     env_file:
       - .env.production
@@ -429,20 +412,16 @@ services:
 ```env
 # External Database (RDS, Digital Ocean, etc.)
 DATABASE_URL=postgresql://user:password@host:5432/database
-PGHOST=your-db-host.region.provider.com
-PGPORT=5432
-PGUSER=your_db_user
-PGPASSWORD=your_db_password
-PGDATABASE=your_database
 SESSION_SECRET=your_session_secret
 ```
 
+> **Production enforcement:** The server will refuse to start when `NODE_ENV=production` if `SESSION_SECRET` is missing or too short. Automatic creation of a default admin account is disabled by default — enable it only for testing by setting `ENABLE_DEFAULT_ADMIN=true` in your environment (do not enable in public production).
+
 ```bash
 # Run with external DB
-docker compose -f docker compose.external-db.yml up -d
+docker compose -f docker-compose.production.yml up -d
 
-# Run migrations
-docker compose -f docker compose.external-db.yml exec app npm run db:push
+# Apply migrations manually against your external database before deploying
 ```
 
 ---
@@ -465,7 +444,7 @@ docker compose -f docker compose.external-db.yml exec app npm run db:push
 6. Storage: 20GB SSD (with auto-scaling if needed)
 7. Connectivity:
    - VPC: Default or custom
-   - Public access: **Yes** (if connecting from outside VPC)
+   - Public access: **No** (recommended for production, access via EC2)
    - Security group: Create new or use existing
 8. Database options:
    - Initial database name: `asset_management`
@@ -476,7 +455,7 @@ docker compose -f docker compose.external-db.yml exec app npm run db:push
 - Type: PostgreSQL
 - Protocol: TCP
 - Port: 5432
-- Source: EC2 security group ID (or 0.0.0.0/0 for testing - not recommended for production)
+- Source: Your EC2 instance's security group ID.
 
 #### 3. Launch EC2 Instance
 
@@ -491,423 +470,23 @@ docker compose -f docker compose.external-db.yml exec app npm run db:push
 ssh -i keypair.pem ubuntu@<ec2-public-ip>
 ```
 
-4. Follow [Ubuntu Server Deployment](#ubuntu-server-deployment) steps above
+4. Follow [Ubuntu Server Deployment](#ubuntu-server-deployment) steps above.
 5. Update `.env.production` with RDS endpoint:
 
 ```env
-DATABASE_URL=postgresql://postgres:password@your-db.region.rds.amazonaws.com:5432/asset_management
-PGHOST=your-db.region.rds.amazonaws.com
-PGPORT=5432
-PGUSER=postgres
-PGPASSWORD=your_password
-PGDATABASE=asset_management
+DATABASE_URL=postgresql://postgres:YOUR_RDS_PASSWORD@your-db.region.rds.amazonaws.com:5432/asset_management
 ```
-
-### Option 2: AWS Elastic Beanstalk + RDS
-
-```bash
-# Install EB CLI
-pip install awsebcli
-
-# Initialize
-eb init -p node.js asset-management
-
-# Create environment with RDS
-eb create production-env --database.engine postgres --database.username asset_user
-```
-
-Elastic Beanstalk auto-injects RDS variables. Update your database connection:
-
-```javascript
-// server/db.ts
-const pool = new Pool({
-  host: process.env.RDS_HOSTNAME || process.env.PGHOST,
-  port: process.env.RDS_PORT || process.env.PGPORT,
-  user: process.env.RDS_USERNAME || process.env.PGUSER,
-  password: process.env.RDS_PASSWORD || process.env.PGPASSWORD,
-  database: process.env.RDS_DB_NAME || process.env.PGDATABASE,
-});
-```
-
-### Option 3: AWS Lambda (Serverless) + RDS
-
-Use AWS Lambda with RDS Proxy for connection pooling.
 
 ---
 
 ## Digital Ocean Deployment
 
-### Option 1: App Platform + Managed Database
-
-#### 1. Create Managed Database
-
-1. Go to DigitalOcean Console → Databases → Create
-2. Choose **PostgreSQL** (version 16 or 17)
-3. Select datacenter region
-4. Choose plan (starts at $15/month)
-5. Name: `asset-management-db`
-
-#### 2. Deploy App Platform
-
-1. Go to Apps → Create App
-2. Select GitHub repository
-3. DigitalOcean auto-detects Node.js
-4. Click **Add Database** → Select your managed database
-5. Environment variables (auto-injected):
-   - `DATABASE_URL`
-   - App Platform handles SSL automatically
-
-**App Spec (`app.yaml`):**
-
-```yaml
-name: asset-management
-region: nyc
-services:
-  - name: web
-    git:
-      repo_clone_url: https://github.com/yourusername/asset-management.git
-      branch: main
-    build_command: npm run build
-    run_command: npm start
-    envs:
-      - key: NODE_ENV
-        value: production
-        scope: RUN_AND_BUILD_TIME
-      - key: SESSION_SECRET
-        value: your_session_secret
-        scope: RUN_TIME
-    http_port: 5000
-    instance_count: 1
-    instance_size_slug: basic-xs
-databases:
-  - name: asset-db
-    engine: PG
-    version: "16"
-    production: true
-    cluster_name: asset-management-db
-```
-
-Deploy:
-
-```bash
-# Using doctl CLI
-doctl apps create --spec app.yaml
-```
-
-### Option 2: Droplet + Managed Database
-
-1. Create Droplet (Ubuntu 22.04)
-2. Create Managed Database (PostgreSQL)
-3. Follow [Ubuntu Server Deployment](#ubuntu-server-deployment)
-4. Use Managed Database connection string in `.env.production`
+**(Coming Soon)** This section will provide a step-by-step guide for deploying to a Digital Ocean Droplet with a managed PostgreSQL database. The process is similar to the Ubuntu and AWS RDS guides.
 
 ---
 
 ## Azure Deployment
 
-### Option 1: Azure App Service + Azure Database for PostgreSQL
-
-#### 1. Create Azure Database for PostgreSQL
-
-```bash
-# Using Azure CLI
-az postgres flexible-server create \
-  --resource-group myResourceGroup \
-  --name asset-management-db \
-  --location eastus \
-  --admin-user asset_admin \
-  --admin-password <secure_password> \
-  --sku-name Standard_B1ms \
-  --tier Burstable \
-  --version 16 \
-  --storage-size 32
-
-# Create database
-az postgres flexible-server db create \
-  --resource-group myResourceGroup \
-  --server-name asset-management-db \
-  --database-name asset_management
-```
-
-#### 2. Deploy to App Service
-
-```bash
-# Create App Service Plan
-az appservice plan create \
-  --name asset-management-plan \
-  --resource-group myResourceGroup \
-  --is-linux \
-  --sku B1
-
-# Create Web App
-az webapp create \
-  --resource-group myResourceGroup \
-  --plan asset-management-plan \
-  --name asset-management-app \
-  --runtime "NODE:20-lts"
-
-# Configure environment variables
-az webapp config appsettings set \
-  --resource-group myResourceGroup \
-  --name asset-management-app \
-  --settings \
-    NODE_ENV=production \
-    DATABASE_URL="postgresql://asset_admin:<password>@asset-management-db.postgres.database.azure.com:5432/asset_management?sslmode=require"
-
-# Deploy from GitHub
-az webapp deployment source config \
-  --name asset-management-app \
-  --resource-group myResourceGroup \
-  --repo-url https://github.com/yourusername/asset-management \
-  --branch main \
-  --manual-integration
-```
-
-### Option 2: Azure Container Instances + Azure PostgreSQL
-
-Use Docker deployment option with Azure PostgreSQL connection string.
+**(Coming Soon)** This section will provide instructions for deploying to Azure, utilizing services like Azure App Service and Azure Database for PostgreSQL.
 
 ---
-
-## Database Options
-
-### Managed Database Services
-
-| Provider | Service | Minimum Cost | Features |
-|----------|---------|--------------|----------|
-| **AWS** | RDS PostgreSQL | ~$12/month (db.t3.micro) | Auto backups, Multi-AZ, Read replicas |
-| **Digital Ocean** | Managed PostgreSQL | $15/month | Auto backups, Standby nodes, SSL |
-| **Azure** | Azure Database for PostgreSQL | ~$20/month (Burstable B1ms) | Auto backups, HA, Geo-replication |
-| **Heroku** | Heroku Postgres | $5/month (Mini) | Auto backups, Rollback, Dataclips |
-| **Railway** | PostgreSQL | $5/month (500MB) | Auto backups, CLI access |
-
-### Self-Managed PostgreSQL
-
-**Pros:**
-- Full control
-- Lower cost (just server cost)
-
-**Cons:**
-- Manual backups
-- Manual scaling
-- Manual security updates
-
-**Use managed databases for production to ensure:**
-- Automated backups
-- High availability
-- Security patches
-- Easy scaling
-
----
-
-## Environment Variables
-
-### Required Variables
-
-```env
-# Application
-NODE_ENV=production
-PORT=5000
-
-# Database (choose one format)
-# Option 1: Connection string
-DATABASE_URL=postgresql://user:password@host:5432/database
-
-# Option 2: Separate variables
-PGHOST=your-db-host
-PGPORT=5432
-PGUSER=your_user
-PGPASSWORD=your_password
-PGDATABASE=your_database
-
-# Security
-SESSION_SECRET=min_32_character_random_string
-```
-
-### Optional Variables
-
-```env
-# Email (if using email notifications)
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_USER=your-email@gmail.com
-SMTP_PASSWORD=your-app-password
-```
-
-### Generating Secure Secrets
-
-```bash
-# Generate random string for SESSION_SECRET
-node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
-```
-
----
-
-## Security Best Practices
-
-### 1. Environment Variables
-- ✅ Never commit `.env` files to git
-- ✅ Use different secrets for dev/staging/production
-- ✅ Rotate secrets periodically
-- ✅ Use secret management services (AWS Secrets Manager, Azure Key Vault)
-
-### 2. Database Security
-- ✅ Use strong passwords (min 16 characters)
-- ✅ Enable SSL/TLS for database connections
-- ✅ Restrict database access by IP (security groups)
-- ✅ Regular backups with encryption
-- ✅ Use least-privilege database users
-
-### 3. Application Security
-- ✅ Keep dependencies updated: `npm audit fix`
-- ✅ Use Helmet.js for security headers (already included)
-- ✅ Enable rate limiting
-- ✅ Use HTTPS only (Let's Encrypt for free SSL)
-- ✅ Implement CSRF protection
-- ✅ Sanitize user inputs
-
-### 4. Server Security
-- ✅ Enable firewall (UFW on Ubuntu)
-- ✅ Disable root SSH login
-- ✅ Use SSH keys instead of passwords
-- ✅ Keep system packages updated
-- ✅ Monitor logs for suspicious activity
-
----
-
-## Health Checks & Monitoring
-
-### Application Health Endpoint
-
-Already implemented in the app:
-
-```
-GET /api/user - Returns 401 if not authenticated (can be used for health check)
-```
-
-### Monitoring Tools
-
-**Free Options:**
-- **PM2 Plus**: Process monitoring (free tier available)
-- **UptimeRobot**: Uptime monitoring (free for 50 monitors)
-- **AWS CloudWatch**: Included with AWS services
-- **Azure Monitor**: Included with Azure services
-
-**Example PM2 Monitoring:**
-
-```bash
-# Enable PM2 monitoring
-pm2 install pm2-logrotate
-pm2 set pm2-logrotate:max_size 10M
-pm2 set pm2-logrotate:retain 7
-```
-
----
-
-## Deployment Checklist
-
-### Pre-Deployment
-- [ ] Environment variables configured
-- [ ] Database created and accessible
-- [ ] SSL certificates obtained (for custom domains)
-- [ ] Backup strategy in place
-- [ ] Security groups/firewall configured
-- [ ] Domain DNS configured (if applicable)
-
-### Deployment
-- [ ] Application deployed and running
-- [ ] Database migrations executed
-- [ ] Health check endpoint responding
-- [ ] SSL/HTTPS working
-- [ ] Logs accessible and rotating
-
-### Post-Deployment
-- [ ] Monitor application for errors
-- [ ] Verify email notifications (if configured)
-- [ ] Test user login and core features
-- [ ] Set up automated backups
-- [ ] Configure monitoring/alerting
-- [ ] Document deployment process
-
----
-
-## Troubleshooting
-
-### Database Connection Issues
-
-```bash
-# Test PostgreSQL connection
-psql -h <host> -U <user> -d <database> -p 5432
-
-# Check if PostgreSQL is running
-sudo systemctl status postgresql
-
-# View PostgreSQL logs
-sudo tail -f /var/log/postgresql/postgresql-*.log
-```
-
-### Application Issues
-
-```bash
-# PM2 logs
-pm2 logs asset-management
-
-# Nginx logs
-sudo tail -f /var/log/nginx/error.log
-
-# Check if app is running
-pm2 status
-
-# Restart app
-pm2 restart asset-management
-```
-
-### Docker Issues
-
-```bash
-# View container logs
-docker compose logs -f
-
-# Check container status
-docker compose ps
-
-# Rebuild and restart
-docker compose down
-docker compose up --build -d
-```
-
----
-
-## Scaling Considerations
-
-### Horizontal Scaling
-- Use PM2 cluster mode (already configured)
-- Load balancer (Nginx, AWS ALB, Azure Load Balancer)
-- Database read replicas for read-heavy workloads
-
-### Vertical Scaling
-- Increase server resources (CPU, RAM)
-- Upgrade database tier
-- Increase database connection pool size
-
-### Database Optimization
-- Add indexes on frequently queried columns
-- Implement caching (Redis/Valkey)
-- Use database connection pooling (already implemented)
-
----
-
-## Support & Resources
-
-- **Application Docs**: See `replit.md` for feature documentation
-- **Issue Tracker**: Create issues on GitHub
-- **PostgreSQL Docs**: https://www.postgresql.org/docs/
-- **PM2 Docs**: https://pm2.keymetrics.io/docs/
-- **Nginx Docs**: https://nginx.org/en/docs/
-- **AWS Docs**: https://docs.aws.amazon.com/
-- **Digital Ocean Docs**: https://docs.digitalocean.com/
-- **Azure Docs**: https://docs.microsoft.com/azure/
-
----
-
-**Last Updated**: October 2025

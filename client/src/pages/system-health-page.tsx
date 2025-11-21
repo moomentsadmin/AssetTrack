@@ -192,11 +192,17 @@ export default function SystemHealthPage() {
                   <Activity className="h-4 w-4 text-muted-foreground mt-0.5" />
                   <div className="flex-1 space-y-1">
                     <p className="text-sm font-medium">{entry.action}</p>
-                    {entry.details && typeof entry.details === 'object' && 'assetName' in entry.details && (
-                      <p className="text-xs text-muted-foreground">
-                        {String((entry.details as any).assetName)}
-                      </p>
-                    )}
+                    {(() => {
+                      const details = entry.details as Record<string, unknown> | null;
+                      if (details && typeof details === 'object' && 'assetName' in details) {
+                        return (
+                          <p className="text-xs text-muted-foreground">
+                            {String(details.assetName as string)}
+                          </p>
+                        );
+                      }
+                      return null;
+                    })()}
                     <p className="text-xs text-muted-foreground">
                       {new Date(entry.createdAt).toLocaleString()}
                     </p>

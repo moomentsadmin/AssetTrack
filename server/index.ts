@@ -1,8 +1,27 @@
+import 'dotenv/config';
 import express, { type Request, Response, NextFunction } from "express";
-import { registerRoutes } from "./routes";
-import { setupVite, serveStatic, log } from "./vite";
+import { createApiRouter } from "./routes";
+import { storage } from "./storage";
+import { hashPassword } from "./auth";
+import http from "http";
+import fs from "fs";
+import path from "path";
+
+function log(message: string, source = "server") {
+  const formattedTime = new Date().toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: true,
+  });
+  console.log(`${formattedTime} [${source}] ${message}`);
+}
 
 const app = express();
+
+if (process.env.NODE_ENV === "production") {
+  app.set("trust proxy", 1);
+}
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
@@ -37,7 +56,56 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  const server = await registerRoutes(app);
+  const apiRouter = createApiRouter();
+  app.use("/", apiRouter);
+
+  // Seed a default admin account on first run when the DB is empty
+  try {
+    const settings = await storage.getSystemSettings();
+    const users = await storage.getAllUsers();
+
+    // Only seed default admin if explicitly enabled via env var.
+    // This prevents accidental creation of default credentials in production.
+    const enableSeed = (process.env.ENABLE_DEFAULT_ADMIN || "false").toLowerCase() === "true";
+    const shouldSeed = enableSeed && (!settings || !settings.setupCompleted) && users.length === 0;
+    if (shouldSeed) {
+      const defaultUsername = process.env.DEFAULT_ADMIN_USERNAME ?? "admin";
+      const defaultPassword = process.env.DEFAULT_ADMIN_PASSWORD;
+      const defaultEmail = process.env.DEFAULT_ADMIN_EMAIL ?? "admin@example.com";
+      const defaultFullName = process.env.DEFAULT_ADMIN_FULLNAME ?? "Administrator";
+
+      if (!defaultPassword) {
+        log('ENABLE_DEFAULT_ADMIN is set but DEFAULT_ADMIN_PASSWORD is not provided. Skipping seeding for safety.', 'server');
+      } else {
+        const existing = await storage.getUserByUsername(defaultUsername);
+        if (!existing) {
+          await storage.createUser({
+            username: defaultUsername,
+            password: await hashPassword(defaultPassword),
+            email: defaultEmail,
+            fullName: defaultFullName,
+            role: "admin",
+            department: null,
+            isContractor: false,
+          });
+
+          await storage.saveSystemSettings({ setupCompleted: true });
+          log(`Default admin created: ${defaultUsername}`);
+        } else {
+          log(`Default admin not created; user already exists: ${defaultUsername}`);
+        }
+      }
+    }
+  } catch (err: any) {
+    log(`Error checking/creating default admin: ${err?.message || err}`);
+  }
+
+  // Enforce SESSION_SECRET in production (warn but don't exit if missing)
+  if (process.env.NODE_ENV === 'production' && !process.env.SESSION_SECRET) {
+    log('WARNING: SESSION_SECRET is not set. Using temporary key for this session.', 'server');
+  }
+
+  const server = http.createServer(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
@@ -51,9 +119,28 @@ app.use((req, res, next) => {
   // setting up all the other routes so the catch-all route
   // doesn't interfere with the other routes
   if (app.get("env") === "development") {
-    await setupVite(app, server);
+    const mod = await import("./" + "vite");
+    await mod.setupVite(app, server);
   } else {
-    serveStatic(app);
+    // Serve static files in production
+    const distPath = path.resolve(import.meta.dirname, "..", "dist", "public");
+
+    if (!fs.existsSync(distPath)) {
+      throw new Error(
+        `Could not find the build directory: ${distPath}, make sure to build the client first`,
+      );
+    }
+
+    app.use(express.static(distPath));
+
+    // fall through to index.html if the file doesn't exist
+    app.use("*", (_req, res) => {
+      // Don't serve index.html for API routes
+      if (_req.path.startsWith("/api")) {
+        return res.status(404).json({ message: "Not Found" });
+      }
+      res.sendFile(path.resolve(distPath, "index.html"));
+    });
   }
 
   // ALWAYS serve the app on the port specified in the environment variable PORT
@@ -61,11 +148,7 @@ app.use((req, res, next) => {
   // this serves both the API and the client.
   // It is the only port that is not firewalled.
   const port = parseInt(process.env.PORT || '5000', 10);
-  server.listen({
-    port,
-    host: "0.0.0.0",
-    reusePort: true,
-  }, () => {
+  server.listen(port, () => {
     log(`serving on port ${port}`);
   });
 })();

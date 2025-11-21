@@ -1,0 +1,61 @@
+version: '3.8'
+
+# Portainer-friendly compose: avoids build steps by using a prebuilt image.
+# Set APP_IMAGE to your registry image (e.g., ghcr.io/yourorg/asset-app:latest)
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: asset-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${PGUSER:-asset_user}
+      POSTGRES_PASSWORD: ${PGPASSWORD:-your_secure_password}
+      POSTGRES_DB: ${PGDATABASE:-asset_management}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${PGUSER:-asset_user} -d ${PGDATABASE:-asset_management}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - asset-network
+
+  app:
+    image: ${APP_IMAGE:-yourrepo/asset-app:latest}
+    container_name: asset-app
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 5000
+      DATABASE_URL: postgresql://${PGUSER:-asset_user}:${PGPASSWORD:-your_secure_password}@db:5432/${PGDATABASE:-asset_management}
+      PGHOST: db
+      PGPORT: 5432
+      PGDATABASE: ${PGDATABASE:-asset_management}
+      PGUSER: ${PGUSER:-asset_user}
+      PGPASSWORD: ${PGPASSWORD:-your_secure_password}
+      SESSION_SECRET: ${SESSION_SECRET}
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./logs:/app/logs
+    networks:
+      - asset-network
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"require('http').get('http://127.0.0.1:5000/api/health',(r)=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))\""]
+      interval: 30s
+      timeout: 10s
+      start_period: 90s
+      retries: 3
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  asset-network:
+    driver: bridge

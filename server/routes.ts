@@ -1,14 +1,14 @@
-import type { Express } from "express";
-import { createServer, type Server } from "http";
-import express from "express";
-import path from "path";
+import { createServer } from "http";
+import { Router } from "express";
 import { setupAuth } from "./auth";
 import { storage } from "./storage";
 import multer from "multer";
 import Papa from "papaparse";
-import bcrypt from "bcrypt";
+import { hashPassword } from "./auth";
 import { sendAssignmentNotification } from "./email";
 import { insertUserSchema } from "@shared/schema";
+import path from "path";
+import express from "express";
 
 const upload = multer({ storage: multer.memoryStorage() });
 
@@ -36,21 +36,24 @@ function requireAdmin(req: any, res: any, next: any) {
   next();
 }
 
-export function registerRoutes(app: Express): Server {
+export function createApiRouter(): Router {
+  const router = Router();
+
   // Setup authentication routes
-  setupAuth(app);
+  setupAuth(router);
 
   // Health check endpoint for container healthcheck
-  app.get("/health", (req, res) => {
-    res.status(200).json({ status: "healthy", timestamp: new Date().toISOString() });
-  });
+  // Health check endpoints (both `/health` and `/api/health` supported for compatibility)
+  const healthHandler = (_req: any, res: any) => res.status(200).json({ status: "healthy", timestamp: new Date().toISOString() });
+  router.get("/health", healthHandler);
+  router.get("/api/health", healthHandler);
 
   // Serve tracking agent files and documentation
   const trackingAgentPath = path.join(process.cwd(), "tracking-agent");
-  app.use("/tracking-agent", express.static(trackingAgentPath));
+  router.use("/tracking-agent", express.static(trackingAgentPath));
 
   // Users routes
-  app.get("/api/users", requireAuth, async (req, res) => {
+  router.get("/api/users", requireAuth, async (req, res) => {
     try {
       const users = await storage.getAllUsers();
       // Remove passwords from response
@@ -61,14 +64,14 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.post("/api/users", requireAuth, requireAdminOrManager, async (req, res) => {
+  router.post("/api/users", requireAuth, requireAdminOrManager, async (req, res) => {
     try {
       // Validate request body
       const validatedData = insertUserSchema.parse(req.body);
       const { password, ...userData } = validatedData;
       
-      // Hash password before storing
-      const hashedPassword = await bcrypt.hash(password, 10);
+      // Hash password (scrypt) before storing
+      const hashedPassword = await hashPassword(password);
       const user = await storage.createUser({ ...userData, password: hashedPassword });
       
       // Don't send password back
@@ -82,7 +85,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.patch("/api/users/:id", requireAuth, async (req, res) => {
+  router.patch("/api/users/:id", requireAuth, async (req, res) => {
     try {
       // Check if user is updating their own profile or is an admin
       const isOwnProfile = req.user?.id === req.params.id;
@@ -115,7 +118,7 @@ export function registerRoutes(app: Express): Server {
       
       // If password is being updated, hash it and add to update data
       if (password) {
-        const hashedPassword = await bcrypt.hash(password, 10);
+        const hashedPassword = await hashPassword(password);
         const finalUpdateData = { ...updateData, password: hashedPassword };
         const user = await storage.updateUser(req.params.id, finalUpdateData);
         if (!user) return res.status(404).send("User not found");
@@ -139,7 +142,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.delete("/api/users/:id", requireAuth, requireAdmin, async (req, res) => {
+  router.delete("/api/users/:id", requireAuth, requireAdmin, async (req, res) => {
     try {
       // Prevent deleting yourself
       if (req.params.id === req.user?.id) {
@@ -153,7 +156,7 @@ export function registerRoutes(app: Express): Server {
   });
 
   // Assets routes
-  app.get("/api/assets", requireAuth, async (req, res) => {
+  router.get("/api/assets", requireAuth, async (req, res) => {
     try {
       const assets = await storage.getAllAssets();
       res.json(assets);
@@ -162,7 +165,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.get("/api/assets/:id", requireAuth, async (req, res) => {
+  router.get("/api/assets/:id", requireAuth, async (req, res) => {
     try {
       const asset = await storage.getAsset(req.params.id);
       if (!asset) return res.status(404).send("Asset not found");
@@ -172,7 +175,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.post("/api/assets", requireAuth, async (req, res) => {
+  router.post("/api/assets", requireAuth, async (req, res) => {
     try {
       // Convert date strings to Date objects, excluding them from the spread
       const { purchaseDate, warrantyExpiry, ...rest } = req.body;
@@ -189,7 +192,7 @@ export function registerRoutes(app: Express): Server {
         assetId: asset.id,
         userId: req.user!.id,
         action: "Asset created",
-        details: { assetName: asset.name, assetType: asset.assetType },
+        details: { assetName: asset.name, assetTypeId: asset.assetTypeId },
       });
 
       res.status(201).json(asset);
@@ -198,7 +201,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.patch("/api/assets/:id", requireAuth, async (req, res) => {
+  router.patch("/api/assets/:id", requireAuth, async (req, res) => {
     try {
       // Convert date strings to Date objects, excluding them from the spread
       const { purchaseDate, warrantyExpiry, ...rest } = req.body;
@@ -228,7 +231,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.delete("/api/assets/:id", requireAuth, requireAdminOrManager, async (req, res) => {
+  router.delete("/api/assets/:id", requireAuth, requireAdminOrManager, async (req, res) => {
     try {
       const asset = await storage.getAsset(req.params.id);
       if (!asset) return res.status(404).send("Asset not found");
@@ -250,7 +253,7 @@ export function registerRoutes(app: Express): Server {
   });
 
   // Asset depreciation calculation
-  app.patch("/api/assets/:id/depreciation", requireAuth, async (req, res) => {
+  router.patch("/api/assets/:id/depreciation", requireAuth, async (req, res) => {
     try {
       const asset = await storage.getAsset(req.params.id);
       if (!asset) return res.status(404).send("Asset not found");
@@ -296,7 +299,7 @@ export function registerRoutes(app: Express): Server {
   });
 
   // Auto-calculate depreciation based on purchase date
-  app.post("/api/assets/:id/calculate-depreciation", requireAuth, async (req, res) => {
+  router.post("/api/assets/:id/calculate-depreciation", requireAuth, async (req, res) => {
     try {
       const asset = await storage.getAsset(req.params.id);
       if (!asset) return res.status(404).send("Asset not found");
@@ -340,7 +343,7 @@ export function registerRoutes(app: Express): Server {
   });
 
   // Departments routes
-  app.get("/api/departments", requireAuth, async (req, res) => {
+  router.get("/api/departments", requireAuth, async (req, res) => {
     try {
       const departments = await storage.getAllDepartments();
       res.json(departments);
@@ -349,7 +352,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.post("/api/departments", requireAuth, requireAdminOrManager, async (req, res) => {
+  router.post("/api/departments", requireAuth, requireAdminOrManager, async (req, res) => {
     try {
       const department = await storage.createDepartment(req.body);
       res.status(201).json(department);
@@ -358,7 +361,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.patch("/api/departments/:id", requireAuth, requireAdminOrManager, async (req, res) => {
+  router.patch("/api/departments/:id", requireAuth, requireAdminOrManager, async (req, res) => {
     try {
       const department = await storage.updateDepartment(req.params.id, req.body);
       if (!department) return res.status(404).send("Department not found");
@@ -368,7 +371,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.delete("/api/departments/:id", requireAuth, requireAdminOrManager, async (req, res) => {
+  router.delete("/api/departments/:id", requireAuth, requireAdminOrManager, async (req, res) => {
     try {
       await storage.deleteDepartment(req.params.id);
       res.sendStatus(204);
@@ -378,7 +381,7 @@ export function registerRoutes(app: Express): Server {
   });
 
   // Locations routes
-  app.get("/api/locations", requireAuth, async (req, res) => {
+  router.get("/api/locations", requireAuth, async (req, res) => {
     try {
       const locations = await storage.getAllLocations();
       res.json(locations);
@@ -387,7 +390,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.post("/api/locations", requireAuth, requireAdminOrManager, async (req, res) => {
+  router.post("/api/locations", requireAuth, requireAdminOrManager, async (req, res) => {
     try {
       const location = await storage.createLocation(req.body);
       res.status(201).json(location);
@@ -396,7 +399,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.patch("/api/locations/:id", requireAuth, requireAdminOrManager, async (req, res) => {
+  router.patch("/api/locations/:id", requireAuth, requireAdminOrManager, async (req, res) => {
     try {
       const location = await storage.updateLocation(req.params.id, req.body);
       if (!location) return res.status(404).send("Location not found");
@@ -406,7 +409,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.delete("/api/locations/:id", requireAuth, requireAdminOrManager, async (req, res) => {
+  router.delete("/api/locations/:id", requireAuth, requireAdminOrManager, async (req, res) => {
     try {
       await storage.deleteLocation(req.params.id);
       res.sendStatus(204);
@@ -416,7 +419,7 @@ export function registerRoutes(app: Express): Server {
   });
 
   // Asset Types routes
-  app.get("/api/asset-types", requireAuth, async (req, res) => {
+  router.get("/api/asset-types", requireAuth, async (req, res) => {
     try {
       const assetTypes = await storage.getAllAssetTypes();
       res.json(assetTypes);
@@ -425,7 +428,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.post("/api/asset-types", requireAuth, requireAdminOrManager, async (req, res) => {
+  router.post("/api/asset-types", requireAuth, requireAdminOrManager, async (req, res) => {
     try {
       const assetType = await storage.createAssetType(req.body);
       res.status(201).json(assetType);
@@ -434,7 +437,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.patch("/api/asset-types/:id", requireAuth, requireAdminOrManager, async (req, res) => {
+  router.patch("/api/asset-types/:id", requireAuth, requireAdminOrManager, async (req, res) => {
     try {
       const assetType = await storage.updateAssetType(req.params.id, req.body);
       if (!assetType) return res.status(404).send("Asset type not found");
@@ -444,7 +447,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.delete("/api/asset-types/:id", requireAuth, requireAdminOrManager, async (req, res) => {
+  router.delete("/api/asset-types/:id", requireAuth, requireAdminOrManager, async (req, res) => {
     try {
       await storage.deleteAssetType(req.params.id);
       res.sendStatus(204);
@@ -454,7 +457,7 @@ export function registerRoutes(app: Express): Server {
   });
 
   // Assignments routes
-  app.get("/api/assignments", requireAuth, async (req, res) => {
+  router.get("/api/assignments", requireAuth, async (req, res) => {
     try {
       const assignments = await storage.getAllAssignments();
       res.json(assignments);
@@ -463,7 +466,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.post("/api/assignments", requireAuth, async (req, res) => {
+  router.post("/api/assignments", requireAuth, async (req, res) => {
     try {
       const assignment = await storage.createAssignment(req.body);
       
@@ -494,7 +497,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.patch("/api/assignments/:id/return", requireAuth, async (req, res) => {
+  router.patch("/api/assignments/:id/return", requireAuth, async (req, res) => {
     try {
       const assignment = await storage.getAssignment(req.params.id);
       if (!assignment) return res.status(404).send("Assignment not found");
@@ -519,7 +522,7 @@ export function registerRoutes(app: Express): Server {
   });
 
   // Asset notes routes
-  app.get("/api/assets/:id/notes", requireAuth, async (req, res) => {
+  router.get("/api/assets/:id/notes", requireAuth, async (req, res) => {
     try {
       const notes = await storage.getAssetNotes(req.params.id);
       res.json(notes);
@@ -528,7 +531,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.post("/api/assets/:id/notes", requireAuth, async (req, res) => {
+  router.post("/api/assets/:id/notes", requireAuth, async (req, res) => {
     try {
       const note = await storage.createAssetNote({
         ...req.body,
@@ -550,7 +553,7 @@ export function registerRoutes(app: Express): Server {
   });
 
   // Audit trail routes
-  app.get("/api/audit", requireAuth, async (req, res) => {
+  router.get("/api/audit", requireAuth, async (req, res) => {
     try {
       const trail = await storage.getAllAuditTrail();
       res.json(trail);
@@ -560,7 +563,7 @@ export function registerRoutes(app: Express): Server {
   });
 
   // Custom fields routes
-  app.get("/api/custom-fields", requireAuth, async (req, res) => {
+  router.get("/api/custom-fields", requireAuth, async (req, res) => {
     try {
       const fields = await storage.getAllCustomFields();
       res.json(fields);
@@ -569,7 +572,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.post("/api/custom-fields", requireAuth, requireAdminOrManager, async (req, res) => {
+  router.post("/api/custom-fields", requireAuth, requireAdminOrManager, async (req, res) => {
     try {
       const field = await storage.createCustomField(req.body);
       res.status(201).json(field);
@@ -578,7 +581,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.delete("/api/custom-fields/:id", requireAuth, requireAdminOrManager, async (req, res) => {
+  router.delete("/api/custom-fields/:id", requireAuth, requireAdminOrManager, async (req, res) => {
     try {
       await storage.deleteCustomField(req.params.id);
       res.sendStatus(204);
@@ -588,7 +591,7 @@ export function registerRoutes(app: Express): Server {
   });
 
   // Email settings routes
-  app.get("/api/settings/email", requireAuth, async (req, res) => {
+  router.get("/api/settings/email", requireAuth, async (req, res) => {
     try {
       const settings = await storage.getEmailSettings();
       res.json(settings || {
@@ -604,7 +607,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.post("/api/settings/email", requireAuth, requireAdminOrManager, async (req, res) => {
+  router.post("/api/settings/email", requireAuth, requireAdminOrManager, async (req, res) => {
     try {
       const settings = await storage.saveEmailSettings(req.body);
       res.json(settings);
@@ -614,7 +617,7 @@ export function registerRoutes(app: Express): Server {
   });
 
   // System settings routes (public for branding on login page)
-  app.get("/api/settings/system", async (req, res) => {
+  router.get("/api/settings/system", async (req, res) => {
     try {
       const settings = await storage.getSystemSettings();
       res.json(settings || {
@@ -631,7 +634,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.post("/api/settings/system", requireAuth, requireAdminOrManager, async (req, res) => {
+  router.post("/api/settings/system", requireAuth, requireAdminOrManager, async (req, res) => {
     try {
       const settings = await storage.saveSystemSettings(req.body);
       res.json(settings);
@@ -642,7 +645,7 @@ export function registerRoutes(app: Express): Server {
 
   // CSV Import route
   // Bulk import users/employees
-  app.post("/api/import/users", requireAuth, requireAdminOrManager, upload.single("file"), async (req, res) => {
+  router.post("/api/import/users", requireAuth, requireAdminOrManager, upload.single("file"), async (req, res) => {
     try {
       if (!req.file) {
         return res.status(400).send("No file uploaded");
@@ -665,7 +668,7 @@ export function registerRoutes(app: Express): Server {
           }
 
           // Hash password
-          const hashedPassword = await bcrypt.hash(data.password, 10);
+          const hashedPassword = await hashPassword(data.password);
 
           // Create user
           await storage.createUser({
@@ -698,7 +701,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.post("/api/import/assets", requireAuth, requireAdminOrManager, upload.single("file"), async (req, res) => {
+  router.post("/api/import/assets", requireAuth, requireAdminOrManager, upload.single("file"), async (req, res) => {
     try {
       if (!req.file) {
         return res.status(400).send("No file uploaded");
@@ -715,7 +718,7 @@ export function registerRoutes(app: Express): Server {
           const data: any = row;
           
           // Validate required fields
-          if (!data.name || !data.assetType) {
+          if (!data.name || !data.assetTypeId) {
             failed++;
             continue;
           }
@@ -723,7 +726,7 @@ export function registerRoutes(app: Express): Server {
           // Create asset
           await storage.createAsset({
             name: data.name,
-            assetType: data.assetType,
+            assetTypeId: data.assetTypeId,
             status: data.status || "available",
             serialNumber: data.serialNumber || null,
             model: data.model || null,
@@ -760,7 +763,7 @@ export function registerRoutes(app: Express): Server {
   });
 
   // Device Tracking routes
-  app.get("/api/device-tracking", requireAuth, requireAdminOrManager, async (req, res) => {
+  router.get("/api/device-tracking", requireAuth, requireAdminOrManager, async (req, res) => {
     try {
       const trackingData = await storage.getAllDeviceTracking();
       res.json(trackingData);
@@ -769,7 +772,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.get("/api/device-tracking/:id", requireAuth, requireAdminOrManager, async (req, res) => {
+  router.get("/api/device-tracking/:id", requireAuth, requireAdminOrManager, async (req, res) => {
     try {
       const tracking = await storage.getDeviceTracking(req.params.id);
       if (!tracking) return res.status(404).send("Device tracking not found");
@@ -779,7 +782,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.get("/api/device-tracking/:id/history", requireAuth, requireAdminOrManager, async (req, res) => {
+  router.get("/api/device-tracking/:id/history", requireAuth, requireAdminOrManager, async (req, res) => {
     try {
       const history = await storage.getDeviceTrackingHistory(req.params.id);
       res.json(history);
@@ -788,7 +791,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.post("/api/device-tracking", requireAuth, requireAdminOrManager, async (req, res) => {
+  router.post("/api/device-tracking", requireAuth, requireAdminOrManager, async (req, res) => {
     try {
       const { assetId } = req.body;
       if (!assetId) {
@@ -832,7 +835,7 @@ export function registerRoutes(app: Express): Server {
   });
 
   // Heartbeat endpoint - receives tracking data from device agent
-  app.post("/api/device-tracking/heartbeat", async (req, res) => {
+  router.post("/api/device-tracking/heartbeat", async (req, res) => {
     try {
       const { token, latitude, longitude, ipAddress, hostname, cpuUsage, memoryUsage, memoryTotal, diskUsage, diskTotal, osInfo } = req.body;
 
@@ -881,7 +884,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.patch("/api/device-tracking/:id", requireAuth, requireAdminOrManager, async (req, res) => {
+  router.patch("/api/device-tracking/:id", requireAuth, requireAdminOrManager, async (req, res) => {
     try {
       const tracking = await storage.updateDeviceTracking(req.params.id, req.body);
       if (!tracking) return res.status(404).send("Device tracking not found");
@@ -891,7 +894,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.delete("/api/device-tracking/:id", requireAuth, requireAdminOrManager, async (req, res) => {
+  router.delete("/api/device-tracking/:id", requireAuth, requireAdminOrManager, async (req, res) => {
     try {
       const tracking = await storage.getDeviceTracking(req.params.id);
       if (!tracking) return res.status(404).send("Device tracking not found");
@@ -912,7 +915,5 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  const httpServer = createServer(app);
-
-  return httpServer;
+  return router;
 }

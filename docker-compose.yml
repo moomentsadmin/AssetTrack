@@ -1,28 +1,24 @@
 version: '3.8'
 
 services:
-  # PostgreSQL Database
   db:
     image: postgres:15-alpine
     container_name: asset-db
     restart: unless-stopped
     environment:
-      POSTGRES_USER: ${PGUSER:-asset_user}
-      POSTGRES_PASSWORD: ${PGPASSWORD:-your_secure_password}
-      POSTGRES_DB: ${PGDATABASE:-asset_management}
-    ports:
-      - "5432:5432"
+      POSTGRES_DB: ${POSTGRES_DB:-asset_management}
+      POSTGRES_USER: ${POSTGRES_USER:-asset_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-your_secure_password}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${PGUSER:-asset_user} -d ${PGDATABASE:-asset_management}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-asset_user} -d ${POSTGRES_DB:-asset_management}"]
       interval: 10s
       timeout: 5s
       retries: 5
     networks:
       - asset-network
 
-  # Application Server
   app:
     build:
       context: .
@@ -32,24 +28,16 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    env_file: .env
     environment:
-      NODE_ENV: production
-      PORT: 5000
-      DATABASE_URL: postgresql://${PGUSER:-asset_user}:${PGPASSWORD:-your_secure_password}@db:5432/${PGDATABASE:-asset_management}
-      PGHOST: db
-      PGPORT: 5432
-      PGDATABASE: ${PGDATABASE:-asset_management}
-      PGUSER: ${PGUSER:-asset_user}
-      PGPASSWORD: ${PGPASSWORD:-your_secure_password}
-      SESSION_SECRET: ${SESSION_SECRET:-your_secure_random_session_secret_min_32_characters}
+      NODE_ENV: ${NODE_ENV:-production}
+      PORT: ${PORT:-5000}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-asset_user}:${POSTGRES_PASSWORD:-your_secure_password}@db:5432/${POSTGRES_DB:-asset_management}
+      SESSION_SECRET: ${SESSION_SECRET:-change-me-in-production}
     ports:
       - "5000:5000"
-    volumes:
-      - ./logs:/app/logs
     networks:
       - asset-network
-    command: >
-      sh -c "npm run db:push && npm start"
 
 volumes:
   postgres_data:

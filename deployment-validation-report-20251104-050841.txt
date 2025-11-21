@@ -1,0 +1,39 @@
+AssetTrack Deployment Validation Report
+======================================
+Generated: 2025-11-04 05:08:41
+
+Environment Information:
+- Node.js: Not available
+- npm: 10.9.4
+- Docker: Not available
+- Docker Compose: Not available
+- PostgreSQL: Not available
+
+Available Environment Files:
+-rwxrwxrwx 1 bapie bapie  538 Nov  4 05:00 .env
+-rwxrwxrwx 1 bapie bapie 1635 Nov  4 05:06 .env.aws-rds.example
+-rwxrwxrwx 1 bapie bapie 2110 Nov  4 05:06 .env.azure-db.example
+-rwxrwxrwx 1 bapie bapie 2381 Nov  4 05:07 .env.digitalocean-db.example
+-rwxrwxrwx 1 bapie bapie  897 Nov  4 04:42 .env.example
+-rwxrwxrwx 1 bapie bapie 3333 Nov  4 04:42 .env.external-db.example
+-rwxrwxrwx 1 bapie bapie 1794 Nov  4 04:42 .env.pm2.example
+-rwxrwxrwx 1 bapie bapie 4325 Nov  4 04:42 .env.production.example
+-rwxrwxrwx 1 bapie bapie 1375 Nov  4 04:42 .env.production.template
+-rwxrwxrwx 1 bapie bapie 2395 Nov  4 04:42 .env.ssl.example
+
+Docker Compose Files:
+-rwxrwxrwx 1 bapie bapie 1875 Nov  4 04:42 docker-compose.portainer.yml
+-rwxrwxrwx 1 bapie bapie 4931 Nov  4 04:42 docker-compose.production.yml
+-rwxrwxrwx 1 bapie bapie 4076 Nov  4 04:42 docker-compose.ssl-external-db.yml
+-rwxrwxrwx 1 bapie bapie 5845 Nov  4 04:42 docker-compose.ssl.yml
+-rwxrwxrwx 1 bapie bapie 1886 Nov  4 04:42 docker-compose.yml
+
+Configuration Files:
+-rwxrwxrwx 1 bapie bapie  339 Nov  4 04:42 drizzle.config.ts
+-rwxrwxrwx 1 bapie bapie  994 Nov  4 04:42 ecosystem.config.cjs
+-rwxrwxrwx 1 bapie bapie   86 Nov  4 04:42 postcss.config.js
+-rwxrwxrwx 1 bapie bapie 4157 Nov  4 04:42 tailwind.config.ts
+-rwxrwxrwx 1 bapie bapie 1120 Nov  4 04:42 vite.config.ts
+
+Validation Results:
+==================

@@ -468,16 +468,28 @@ export function createApiRouter(): Router {
 
   router.post("/api/assignments", requireAuth, async (req, res) => {
     try {
-      const assignment = await storage.createAssignment(req.body);
-      
+      // Defensive handling for expectedReturnDate
+      let assignmentData = { ...req.body };
+      console.log('Assign request payload:', assignmentData);
+      if (
+        assignmentData.expectedReturnDate &&
+        typeof assignmentData.expectedReturnDate === "string"
+      ) {
+        // Try to parse date string
+        const parsedDate = new Date(assignmentData.expectedReturnDate);
+        assignmentData.expectedReturnDate = isNaN(parsedDate.getTime()) ? null : parsedDate;
+      }
+
+      const assignment = await storage.createAssignment(assignmentData);
+
       // Update asset status to assigned
-      await storage.updateAsset(req.body.assetId, { status: "assigned" });
+      await storage.updateAsset(assignmentData.assetId, { status: "assigned" });
 
       // Create audit entry
-      const asset = await storage.getAsset(req.body.assetId);
-      const user = await storage.getUser(req.body.userId);
+      const asset = await storage.getAsset(assignmentData.assetId);
+      const user = await storage.getUser(assignmentData.userId);
       await storage.createAuditEntry({
-        assetId: req.body.assetId,
+        assetId: assignmentData.assetId,
         userId: req.user!.id,
         action: "Asset assigned",
         details: {
@@ -493,7 +505,9 @@ export function createApiRouter(): Router {
 
       res.status(201).json(assignment);
     } catch (error: any) {
-      res.status(500).send(error.message);
+      console.error('Error in POST /api/assignments:', error && error.stack ? error.stack : error);
+      // Send a generic message but include minimal detail for the client
+      res.status(500).send({ message: 'Failed to create assignment', error: error?.message });
     }
   });
 
@@ -647,9 +661,7 @@ export function createApiRouter(): Router {
   // Bulk import users/employees
   router.post("/api/import/users", requireAuth, requireAdminOrManager, upload.single("file"), async (req, res) => {
     try {
-      if (!req.file) {
-        return res.status(400).send("No file uploaded");
-      }
+      if (!req.file) return res.status(400).send("No file uploaded");
 
       const fileContent = req.file.buffer.toString("utf-8");
       const parsed = Papa.parse(fileContent, { header: true, skipEmptyLines: true });
@@ -660,7 +672,7 @@ export function createApiRouter(): Router {
       for (const row of parsed.data) {
         try {
           const data: any = row;
-          
+
           // Validate required fields
           if (!data.fullName || !data.email || !data.username || !data.password || !data.role) {
             failed++;

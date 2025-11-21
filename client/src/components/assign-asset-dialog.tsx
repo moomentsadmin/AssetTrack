@@ -49,9 +49,20 @@ export function AssignAssetDialog({
 
   const mutation = useMutation({
     mutationFn: async (data: FormData) => {
+      let formattedDate = null;
+      if (data.expectedReturnDate) {
+        // If date is in DD-MM-YYYY format, convert to YYYY-MM-DD
+        const dateStr = data.expectedReturnDate;
+        if (/^\d{2}-\d{2}-\d{4}$/.test(dateStr)) {
+          const [day, month, year] = dateStr.split("-");
+          formattedDate = `${year}-${month}-${day}`;
+        } else {
+          formattedDate = dateStr;
+        }
+      }
       const payload = {
         ...data,
-        expectedReturnDate: data.expectedReturnDate ? new Date(data.expectedReturnDate).toISOString() : null,
+        expectedReturnDate: formattedDate ? new Date(formattedDate).toISOString() : null,
       };
       const res = await apiRequest("POST", "/api/assignments", payload);
       return res.json();

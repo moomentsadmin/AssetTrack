@@ -4,6 +4,8 @@ WORKDIR /app
 
 COPY package*.json ./
 RUN npm ci --legacy-peer-deps
+# Fail build if high/critical vulnerabilities are present after installing dependencies
+RUN npm audit --audit-level=high || (echo 'Audit found high/critical vulnerabilities' && exit 1)
 
 COPY . .
 RUN npm run build
@@ -36,6 +38,8 @@ COPY --from=build /app/package.json ./
 # Copy config files needed for migrations
 COPY --from=build /app/drizzle.config.ts ./
 COPY --from=build /app/shared ./shared
+# Include tracking-agent static files so the app can serve installers from the container
+COPY --from=build /app/tracking-agent ./tracking-agent
 
 # Create a non-root user for security
 RUN addgroup -g 1001 -S appgroup && \

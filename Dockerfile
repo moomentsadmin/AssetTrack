@@ -39,6 +39,8 @@ ENV NODE_ENV=production
 COPY --from=build /app/dist ./dist
 COPY --from=build /app/drizzle.config.ts ./drizzle.config.ts
 COPY --from=build /app/shared ./shared
+# Include tracking-agent static files so the app can serve installers and docs
+COPY --from=build /app/tracking-agent ./tracking-agent
 
 # Copy entrypoint script
 COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh

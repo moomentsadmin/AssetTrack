@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import express from "express";
 import path from "path";
 import { setupAuth } from "./auth";
+import logger, { log } from "./logger";
 import { storage } from "./storage";
 import multer from "multer";
 import Papa from "papaparse";
@@ -465,14 +466,25 @@ export function registerRoutes(app: Express): Server {
 
   app.post("/api/assignments", requireAuth, async (req, res) => {
     try {
-      const assignment = await storage.createAssignment(req.body);
+      // Ensure expectedReturnDate is a JS Date (drizzle/pg expects Date for timestamp columns)
+      let expectedReturnDate: Date | null = null;
+      if (req.body && req.body.expectedReturnDate) {
+        const parsed = new Date(req.body.expectedReturnDate);
+        expectedReturnDate = isNaN(parsed.getTime()) ? null : parsed;
+      }
+
+      const payload = { ...req.body, expectedReturnDate };
+
+      log(`Creating assignment payload: ${JSON.stringify({ assetId: payload.assetId, userId: payload.userId, expectedReturnDate: payload.expectedReturnDate })}`, "routes");
+
+      const assignment = await storage.createAssignment(payload);
       
       // Update asset status to assigned
-      await storage.updateAsset(req.body.assetId, { status: "assigned" });
+      await storage.updateAsset(payload.assetId, { status: "assigned" });
 
       // Create audit entry
-      const asset = await storage.getAsset(req.body.assetId);
-      const user = await storage.getUser(req.body.userId);
+      const asset = await storage.getAsset(payload.assetId);
+      const user = await storage.getUser(payload.userId);
       await storage.createAuditEntry({
         assetId: req.body.assetId,
         userId: req.user!.id,

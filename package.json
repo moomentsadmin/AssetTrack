@@ -85,6 +85,8 @@
     "ws": "^8.18.0",
     "zod": "^3.24.2",
     "zod-validation-error": "^3.4.0"
+    ,
+    "pino": "^8.13.0"
   },
   "devDependencies": {
     "@replit/vite-plugin-cartographer": "^0.3.1",
@@ -110,6 +112,8 @@
     "tsx": "^4.20.5",
     "typescript": "5.6.3",
     "vite": "^5.4.20"
+    ,
+    "pino-pretty": "^11.1.0"
   },
   "optionalDependencies": {
     "bufferutil": "^4.0.8"

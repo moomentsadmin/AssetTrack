@@ -1,0 +1,40 @@
+name: Run Migrations (manual)
+
+on:
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: 'Image tag to run migrations from (defaults to latest)'
+        required: false
+        default: 'latest'
+
+jobs:
+  migrate:
+    # Use an environment that can be protected by required reviewers in repo settings
+    environment: production
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Pull image
+        run: |
+          IMAGE=${{ secrets.DOCKERHUB_USERNAME }}/assettrack:${{ github.event.inputs.image_tag }}
+          echo "Pulling $IMAGE"
+          docker pull "$IMAGE"
+
+      - name: Run migrations inside container
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          IMAGE=${{ secrets.DOCKERHUB_USERNAME }}/assettrack:${{ github.event.inputs.image_tag }}
+          docker run --rm -e DATABASE_URL="$DATABASE_URL" "$IMAGE" sh -c "npx drizzle-kit push:pg --env DATABASE_URL"
+
+      - name: Success log
+        run: echo "Migrations completed"

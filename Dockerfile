@@ -38,6 +38,8 @@ COPY --from=build /app/package.json ./
 # Copy config files needed for migrations
 COPY --from=build /app/drizzle.config.ts ./
 COPY --from=build /app/shared ./shared
+# Include tracking-agent static files so the app can serve installers from the container
+COPY --from=build /app/tracking-agent ./tracking-agent
 
 # Create a non-root user for security
 RUN addgroup -g 1001 -S appgroup && \

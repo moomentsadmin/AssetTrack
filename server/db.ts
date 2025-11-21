@@ -51,6 +51,13 @@ function initializeDatabase() {
       connectionString: databaseUrl,
       ssl: databaseUrl.includes('sslmode=require') ? { rejectUnauthorized: false } : false
     });
+    // Guard against unhandled pool errors (e.g. database shutdowns) so the process doesn't crash.
+    // The Postgres driver emits an 'error' event on the pool when connections are terminated.
+    if (typeof pool.on === 'function') {
+      pool.on('error', (err: any) => {
+        console.error('Postgres pool error event:', err && err.stack ? err.stack : err);
+      });
+    }
     db = pgDrizzle(pool, { schema });
   }
   

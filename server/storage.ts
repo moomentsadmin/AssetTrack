@@ -282,8 +282,30 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createAssignment(insertAssignment: InsertAssetAssignment): Promise<AssetAssignment> {
-    const [assignment] = await db.insert(assetAssignments).values(insertAssignment).returning();
-    return assignment;
+    console.log("Received expectedReturnDate:", insertAssignment.expectedReturnDate);
+
+    const sanitizedAssignment = {
+      ...insertAssignment,
+      // Drizzle/node-postgres expects a JavaScript Date for timestamp columns.
+      // Don't convert to an ISO string — pass a Date object or null.
+      expectedReturnDate:
+        insertAssignment.expectedReturnDate &&
+        (typeof insertAssignment.expectedReturnDate === 'string' || insertAssignment.expectedReturnDate instanceof Date) &&
+        !isNaN(new Date(insertAssignment.expectedReturnDate).getTime())
+          ? new Date(insertAssignment.expectedReturnDate)
+          : null,
+    };
+
+    console.log("Sanitized expectedReturnDate:", sanitizedAssignment.expectedReturnDate);
+
+    try {
+      const [assignment] = await db.insert(assetAssignments).values(sanitizedAssignment).returning();
+      return assignment;
+    } catch (err: any) {
+      console.error('DB insert error for createAssignment. Payload:', sanitizedAssignment);
+      console.error('DB insert error stack:', err && err.stack ? err.stack : err);
+      throw err;
+    }
   }
 
   async returnAsset(assignmentId: string): Promise<AssetAssignment | undefined> {

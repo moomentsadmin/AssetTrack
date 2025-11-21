@@ -149,7 +149,8 @@ export default function DeviceTrackingPage() {
         <div className="flex gap-2">
           <Button
             variant="outline"
-            onClick={() => window.open('/tracking-agent/DOWNLOAD-INSTRUCTIONS.md', '_blank')}
+            // Open the tracking-agent index UI (serves installers and instructions)
+            onClick={() => window.open('/tracking-agent/', '_blank')}
             data-testid="button-download-agent"
           >
             <Download className="mr-2 h-4 w-4" />

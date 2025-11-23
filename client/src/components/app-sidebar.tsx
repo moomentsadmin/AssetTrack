@@ -91,12 +91,7 @@ export function AppSidebar() {
       url: "/asset-types",
       testId: "nav-asset-types",
     },
-    {
-      title: "Device Tracking",
-      icon: Radio,
-      url: "/device-tracking",
-      testId: "nav-device-tracking",
-    },
+    // Device Tracking removed
     {
       title: "User Management",
       icon: UserCog,

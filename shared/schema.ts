@@ -146,38 +146,10 @@ export const systemSettings = pgTable("system_settings", {
 });
 
 // Device Tracking table - stores current status of tracked devices
-export const deviceTracking = pgTable("device_tracking", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  assetId: varchar("asset_id").notNull().references(() => assets.id, { onDelete: "cascade" }).unique(),
-  trackingToken: text("tracking_token").notNull().unique(),
-  isActive: boolean("is_active").notNull().default(true),
-  latitude: decimal("latitude", { precision: 10, scale: 7 }),
-  longitude: decimal("longitude", { precision: 10, scale: 7 }),
-  ipAddress: text("ip_address"),
-  hostname: text("hostname"),
-  cpuUsage: decimal("cpu_usage", { precision: 5, scale: 2 }),
-  memoryUsage: decimal("memory_usage", { precision: 5, scale: 2 }),
-  memoryTotal: decimal("memory_total", { precision: 10, scale: 2 }),
-  diskUsage: decimal("disk_usage", { precision: 5, scale: 2 }),
-  diskTotal: decimal("disk_total", { precision: 10, scale: 2 }),
-  osInfo: text("os_info"),
-  lastHeartbeat: timestamp("last_heartbeat").notNull().defaultNow(),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
-});
-
-// Device Tracking History table - stores historical tracking data
-export const deviceTrackingHistory = pgTable("device_tracking_history", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  deviceTrackingId: varchar("device_tracking_id").notNull().references(() => deviceTracking.id, { onDelete: "cascade" }),
-  latitude: decimal("latitude", { precision: 10, scale: 7 }),
-  longitude: decimal("longitude", { precision: 10, scale: 7 }),
-  ipAddress: text("ip_address"),
-  cpuUsage: decimal("cpu_usage", { precision: 5, scale: 2 }),
-  memoryUsage: decimal("memory_usage", { precision: 5, scale: 2 }),
-  diskUsage: decimal("disk_usage", { precision: 5, scale: 2 }),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+// Device tracking tables have been removed from the core schema in this branch
+// to eliminate the device-tracking feature from the application. If you need
+// device tracking in a future release reintroduce the tables and related
+// relations in the schema and migration scripts.
 
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
@@ -215,10 +187,6 @@ export const assetsRelations = relations(assets, ({ one, many }) => ({
   assignments: many(assetAssignments),
   notes: many(assetNotes),
   auditTrail: many(auditTrail),
-  deviceTracking: one(deviceTracking, {
-    fields: [assets.id],
-    references: [deviceTracking.assetId],
-  }),
 }));
 
 export const customFieldDefinitionsRelations = relations(customFieldDefinitions, ({ one }) => ({
@@ -388,9 +356,4 @@ export type EmailSettings = typeof emailSettings.$inferSelect;
 
 export type InsertSystemSettings = z.infer<typeof insertSystemSettingsSchema>;
 export type SystemSettings = typeof systemSettings.$inferSelect;
-
-export type InsertDeviceTracking = z.infer<typeof insertDeviceTrackingSchema>;
-export type DeviceTracking = typeof deviceTracking.$inferSelect;
-
-export type InsertDeviceTrackingHistory = z.infer<typeof insertDeviceTrackingHistorySchema>;
-export type DeviceTrackingHistory = typeof deviceTrackingHistory.$inferSelect;
+// Device tracking types removed

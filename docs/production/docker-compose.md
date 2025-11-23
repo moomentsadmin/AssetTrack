@@ -26,20 +26,23 @@ docker compose up -d
 docker compose logs -f
 ```
 
-3) Run migrations using the container image
+3) Migrations
 
-Option A: run `drizzle-kit` from the host (requires node/drizzle-kit installed):
+There are two supported approaches for migrations:
+
+- Manual (recommended): Run migrations from CI or a maintenance host using the built image or `npx drizzle-kit` locally. Examples:
 
 ```bash
 export DATABASE_URL="postgres://..."
 npx drizzle-kit push:pg --env DATABASE_URL
-```
 
-Option B: run migrations from the running image (safer when using the built image):
-
-```bash
+# Or using the built image
 docker compose run --rm app npx drizzle-kit push:pg --env DATABASE_URL
 ```
+
+- Automatic (optional): The container entrypoint can run migrations at startup when the `ENABLE_AUTO_MIGRATIONS` environment variable is set to `true`. This is disabled by default and not recommended for multi-replica/rolling deployments.
+
+Set `ENABLE_AUTO_MIGRATIONS=true` in your `.env.production` to enable entrypoint migrations. Prefer manual migrations for production to keep control over schema changes.
 
 4) Healthchecks & scaling
 
@@ -50,3 +53,8 @@ docker compose run --rm app npx drizzle-kit push:pg --env DATABASE_URL
 
 - Use GitHub Actions (added) to build and push Docker Hub images. Add `DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN` secrets.
 - Keep `.env.production` out of git. Prefer a secret manager or environment variables in your host/CI.
+
+Device tracking note
+- The project includes a small device tracking feature and companion `tracking-agent` installers. This is optional and disabled by default.
+- To enable server-side tracking, set `ENABLE_DEVICE_TRACKING=true` in your `.env.production`. When disabled the `/tracking-agent/*` static routes and all `/api/device-tracking` endpoints will not be registered.
+-- For stricter production images you may remove the `tracking-agent` folder from the build process; the production `Dockerfile` in this branch does not include the `tracking-agent` assets by default. Keep the feature disabled by default unless you have a clear use case and policies for data retention and access control.

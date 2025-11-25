@@ -4,7 +4,7 @@
 Removes the entire device-tracking feature (schema, server routes, storage methods, client page, Docker image assets) and introduces production hardening: structured logging, conditional migrations via `ENABLE_AUTO_MIGRATIONS`, security scanning, and CI/CD workflows. Also updates docs to reflect feature removal and new operational guidance.
 
 ## Key Changes
-- Removed: tracking-agent folder, related docs, device-tracking schema tables & types, routes, storage functions, client sidebar/page.
+- Removed: tracking-agent folder, related docs, device-tracking schema tables & types, routes, storage functions, client sidebar/page, env flag `ENABLE_DEVICE_TRACKING`.
 - Added: Pino logger integration for structured logs.
 - Docker: Image no longer bundles tracking-agent; entrypoint respects `ENABLE_AUTO_MIGRATIONS`.
 - CI: Build & scan workflows (Trivy), manual migrations workflow.
@@ -31,7 +31,7 @@ Execute via approved workflow only after data retention sign-off.
 
 ## Operational Flags
 - `ENABLE_AUTO_MIGRATIONS`: default false; prevents unintended schema changes on startup.
-- `ENABLE_DEVICE_TRACKING`: now deprecated/unused (feature removed); can be deleted from env examples in a future clean-up.
+- `ENABLE_DEVICE_TRACKING`: deprecated and removed from env examples.
 
 ## Testing
 - Build succeeded with reproducible `npm ci` after lockfile sync.
@@ -40,7 +40,7 @@ Execute via approved workflow only after data retention sign-off.
 
 ## Follow-Ups
 1. Add migration file to drop obsolete tables (post retention decision).
-2. Optionally remove `ENABLE_DEVICE_TRACKING` from example envs.
+2. Drop legacy device tracking tables (after retention review).
 3. Consider switching to a distroless base image to further reduce MEDIUM/LOW noise.
 4. Review structured log fields for alignment with observability platform.
 

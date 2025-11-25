@@ -54,7 +54,7 @@ Set `ENABLE_AUTO_MIGRATIONS=true` in your `.env.production` to enable entrypoint
 - Use GitHub Actions (added) to build and push Docker Hub images. Add `DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN` secrets.
 - Keep `.env.production` out of git. Prefer a secret manager or environment variables in your host/CI.
 
-Device tracking note
-- The project includes a small device tracking feature and companion `tracking-agent` installers. This is optional and disabled by default.
-- To enable server-side tracking, set `ENABLE_DEVICE_TRACKING=true` in your `.env.production`. When disabled the `/tracking-agent/*` static routes and all `/api/device-tracking` endpoints will not be registered.
--- For stricter production images you may remove the `tracking-agent` folder from the build process; the production `Dockerfile` in this branch does not include the `tracking-agent` assets by default. Keep the feature disabled by default unless you have a clear use case and policies for data retention and access control.
+Device tracking removal
+- The previous optional device tracking feature (and `tracking-agent` installers) has been removed.
+- The environment flag `ENABLE_DEVICE_TRACKING` is deprecated and no longer present in `.env.production.example`.
+- Existing production databases should manually drop legacy device tracking tables once data retention requirements are satisfied.

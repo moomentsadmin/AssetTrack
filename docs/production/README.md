@@ -13,18 +13,9 @@ Before you deploy:
 - Provision secrets (SMTP, session secret, Docker/registry credentials).
 - Ensure migrations are applied (see migration commands in each guide).
 
-Device tracking feature:
-- **Flag**: `ENABLE_DEVICE_TRACKING` (see `.env.production.example`).
-- **Default**: `false` — device tracking is disabled by default to avoid
-	accidental exposure or additional runtime/DB load.
-- **When to enable**: set to `true` only if you intend to run the companion
-	device agent and accept the privacy, networking, and storage implications.
-- **Recommendation**: keep device tracking off for most production deployments
-	unless your team has reviewed the architecture and retention policy.
-
-Note: the production `Dockerfile` in this branch does not include `tracking-agent`
-assets by default. If you need installers available from the image, add them to
-your private image build process and set `ENABLE_DEVICE_TRACKING=true` only for
-environments that require it.
+Device tracking removal:
+- The prior optional device tracking subsystem and `tracking-agent` assets have been fully removed from the application and Docker image.
+- The `ENABLE_DEVICE_TRACKING` flag is deprecated and no longer used.
+- If your database still contains legacy device tracking tables, plan a controlled drop after confirming retention / compliance requirements.
 
 If you have questions about a specific provider, open an issue or ask for clarification.

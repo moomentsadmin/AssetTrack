@@ -46,18 +46,9 @@ export function registerRoutes(app: Express): Server {
     res.status(200).json({ status: "healthy", timestamp: new Date().toISOString() });
   });
 
-  // Serve tracking agent files and documentation
-  // Device tracking feature can be disabled via environment variable to
-  // prevent accidental exposure or resource usage in production.
-  const enableDeviceTracking = String(process.env.ENABLE_DEVICE_TRACKING || "false").toLowerCase() === "true";
-
-  if (enableDeviceTracking) {
-    const trackingAgentPath = path.join(process.cwd(), "tracking-agent");
-    app.use("/tracking-agent", express.static(trackingAgentPath));
-    log("Device tracking endpoints enabled", "routes");
-  } else {
-    log("Device tracking disabled via ENABLE_DEVICE_TRACKING", "routes");
-  }
+  // Device tracking feature fully removed. Static assets and related
+  // endpoints have been deprecated and eliminated from the codebase.
+  // ENV flag ENABLE_DEVICE_TRACKING is no longer used.
 
   // Users routes
   app.get("/api/users", requireAuth, async (req, res) => {

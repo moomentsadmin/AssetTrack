@@ -4,6 +4,8 @@ services:
     image: traefik:v3.2
     container_name: asset-traefik
     restart: unless-stopped
+    environment:
+      - DOCKER_API_VERSION=1.44
     command:
       # API and Dashboard
       - "--api.dashboard=true"
@@ -13,6 +15,10 @@ services:
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
       - "--providers.docker.network=asset-network"
+      - "--providers.docker.endpoint=unix:///var/run/docker.sock"
+      
+      # Set Docker API version to match daemon (1.44+)
+      - "--providers.docker.useBindPortIP=false"
       
       # Entrypoints (Ports)
       - "--entrypoints.web.address=:80"

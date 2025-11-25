@@ -124,6 +124,9 @@ services:
       # Enable Traefik
       - "traefik.enable=true"
       
+      # Specify which Docker network Traefik should use (with project prefix)
+      - "traefik.docker.network=assettrack_asset-network"
+      
       # Main Application Router
       # Uses ${DOMAIN} from .env file for SSL certificate generation
       # Certificates are automatically obtained for both ${DOMAIN} and www.${DOMAIN}

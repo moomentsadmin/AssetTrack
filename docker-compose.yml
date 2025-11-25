@@ -48,8 +48,11 @@ services:
       - ./logs:/app/logs
     networks:
       - asset-network
+    # Entrypoint controls optional automatic migrations via ENABLE_AUTO_MIGRATIONS.
+    # Use `ENABLE_AUTO_MIGRATIONS=true` to let the container run migrations at startup,
+    # or run migrations manually via CI / `docker compose run --rm app npx drizzle-kit push:pg`.
     command: >
-      sh -c "npm run db:push && npm start"
+      sh -c "npm start"
 
 volumes:
   postgres_data:

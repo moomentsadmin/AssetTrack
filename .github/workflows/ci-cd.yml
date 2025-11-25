@@ -1,0 +1,107 @@
+name: CI/CD
+
+on:
+  push:
+    branches:
+      - main
+      - chore/upgrade-vite-esbuild
+      - release/**
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Run tests (if any)
+        run: echo "No tests configured"
+
+  scan-image:
+    needs: build-and-publish
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build image for scan
+        run: |
+          docker build -t assettrack:scan .
+
+      - name: Run Trivy image scan (JSON)
+        run: |
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:0.34.0 image --format json --output /tmp/trivy-report.json assettrack:scan
+
+      - name: Install jq for report parsing
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq
+
+      - name: Upload Trivy report
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-report
+          path: /tmp/trivy-report.json
+
+      - name: Fail on HIGH or CRITICAL vulnerabilities
+        run: |
+          echo "Parsing /tmp/trivy-report.json"
+          count=$(jq '[.Results[].Vulnerabilities[]? | select(.Severity=="HIGH" or .Severity=="CRITICAL")] | length' /tmp/trivy-report.json)
+          echo "High+ vulnerabilities found: $count"
+          if [ "$count" -ne "0" ]; then
+            echo "Failing due to HIGH/CRITICAL vulnerabilities"
+            cat /tmp/trivy-report.json
+            exit 1
+          fi
+
+  publish-docker:
+    needs: scan-image
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/release/') || startsWith(github.ref, 'refs/tags/')
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push image
+        uses: docker/build-push-action@v4
+        with:
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/assettrack:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/assettrack:${{ github.sha }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/assettrack:${{ github.ref_name }}
+            ghcr.io/${{ github.repository_owner }}/assettrack:latest
+            ghcr.io/${{ github.repository_owner }}/assettrack:${{ github.sha }}
+            ghcr.io/${{ github.repository_owner }}/assettrack:${{ github.ref_name }}
+          labels: |
+            org.opencontainers.image.source=${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # Migrations are now executed via a manual workflow (`.github/workflows/run-migrations.yml`) to require
+  # explicit approval and avoid accidental schema changes during automated runs.

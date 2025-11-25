@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import express from "express";
 import path from "path";
 import { setupAuth } from "./auth";
+import logger, { log } from "./logger";
 import { storage } from "./storage";
 import multer from "multer";
 import Papa from "papaparse";
@@ -45,9 +46,9 @@ export function registerRoutes(app: Express): Server {
     res.status(200).json({ status: "healthy", timestamp: new Date().toISOString() });
   });
 
-  // Serve tracking agent files and documentation
-  const trackingAgentPath = path.join(process.cwd(), "tracking-agent");
-  app.use("/tracking-agent", express.static(trackingAgentPath));
+  // Device tracking feature fully removed. Static assets and related
+  // endpoints have been deprecated and eliminated from the codebase.
+  // ENV flag ENABLE_DEVICE_TRACKING is no longer used.
 
   // Users routes
   app.get("/api/users", requireAuth, async (req, res) => {
@@ -465,14 +466,25 @@ export function registerRoutes(app: Express): Server {
 
   app.post("/api/assignments", requireAuth, async (req, res) => {
     try {
-      const assignment = await storage.createAssignment(req.body);
+      // Ensure expectedReturnDate is a JS Date (drizzle/pg expects Date for timestamp columns)
+      let expectedReturnDate: Date | null = null;
+      if (req.body && req.body.expectedReturnDate) {
+        const parsed = new Date(req.body.expectedReturnDate);
+        expectedReturnDate = isNaN(parsed.getTime()) ? null : parsed;
+      }
+
+      const payload = { ...req.body, expectedReturnDate };
+
+      log(`Creating assignment payload: ${JSON.stringify({ assetId: payload.assetId, userId: payload.userId, expectedReturnDate: payload.expectedReturnDate })}`, "routes");
+
+      const assignment = await storage.createAssignment(payload);
       
       // Update asset status to assigned
-      await storage.updateAsset(req.body.assetId, { status: "assigned" });
+      await storage.updateAsset(payload.assetId, { status: "assigned" });
 
       // Create audit entry
-      const asset = await storage.getAsset(req.body.assetId);
-      const user = await storage.getUser(req.body.userId);
+      const asset = await storage.getAsset(payload.assetId);
+      const user = await storage.getUser(payload.userId);
       await storage.createAuditEntry({
         assetId: req.body.assetId,
         userId: req.user!.id,
@@ -759,158 +771,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Device Tracking routes
-  app.get("/api/device-tracking", requireAuth, requireAdminOrManager, async (req, res) => {
-    try {
-      const trackingData = await storage.getAllDeviceTracking();
-      res.json(trackingData);
-    } catch (error: any) {
-      res.status(500).send(error.message);
-    }
-  });
-
-  app.get("/api/device-tracking/:id", requireAuth, requireAdminOrManager, async (req, res) => {
-    try {
-      const tracking = await storage.getDeviceTracking(req.params.id);
-      if (!tracking) return res.status(404).send("Device tracking not found");
-      res.json(tracking);
-    } catch (error: any) {
-      res.status(500).send(error.message);
-    }
-  });
-
-  app.get("/api/device-tracking/:id/history", requireAuth, requireAdminOrManager, async (req, res) => {
-    try {
-      const history = await storage.getDeviceTrackingHistory(req.params.id);
-      res.json(history);
-    } catch (error: any) {
-      res.status(500).send(error.message);
-    }
-  });
-
-  app.post("/api/device-tracking", requireAuth, requireAdminOrManager, async (req, res) => {
-    try {
-      const { assetId } = req.body;
-      if (!assetId) {
-        return res.status(400).send("Asset ID is required");
-      }
-
-      // Check if asset exists
-      const asset = await storage.getAsset(assetId);
-      if (!asset) {
-        return res.status(404).send("Asset not found");
-      }
-
-      // Check if already tracked
-      const existing = await storage.getDeviceTrackingByAssetId(assetId);
-      if (existing) {
-        return res.status(400).send("Asset is already being tracked");
-      }
-
-      // Generate unique tracking token
-      const crypto = await import('crypto');
-      const trackingToken = crypto.randomBytes(32).toString('hex');
-
-      const tracking = await storage.createDeviceTracking({
-        assetId,
-        trackingToken,
-        isActive: true,
-      });
-
-      // Create audit entry
-      await storage.createAuditEntry({
-        assetId,
-        userId: req.user!.id,
-        action: "Device tracking enabled",
-        details: { trackingId: tracking.id },
-      });
-
-      res.status(201).json(tracking);
-    } catch (error: any) {
-      res.status(500).send(error.message);
-    }
-  });
-
-  // Heartbeat endpoint - receives tracking data from device agent
-  app.post("/api/device-tracking/heartbeat", async (req, res) => {
-    try {
-      const { token, latitude, longitude, ipAddress, hostname, cpuUsage, memoryUsage, memoryTotal, diskUsage, diskTotal, osInfo } = req.body;
-
-      if (!token) {
-        return res.status(400).send("Tracking token is required");
-      }
-
-      // Find device by token
-      const tracking = await storage.getDeviceTrackingByToken(token);
-      if (!tracking) {
-        return res.status(404).send("Invalid tracking token");
-      }
-
-      if (!tracking.isActive) {
-        return res.status(403).send("Device tracking is disabled");
-      }
-
-      // Update tracking data
-      await storage.updateDeviceTracking(tracking.id, {
-        latitude,
-        longitude,
-        ipAddress,
-        hostname,
-        cpuUsage,
-        memoryUsage,
-        memoryTotal,
-        diskUsage,
-        diskTotal,
-        osInfo,
-      });
-
-      // Save to history
-      await storage.createDeviceTrackingHistory({
-        deviceTrackingId: tracking.id,
-        latitude,
-        longitude,
-        ipAddress,
-        cpuUsage,
-        memoryUsage,
-        diskUsage,
-      });
-
-      res.json({ success: true, message: "Heartbeat received" });
-    } catch (error: any) {
-      res.status(500).send(error.message);
-    }
-  });
-
-  app.patch("/api/device-tracking/:id", requireAuth, requireAdminOrManager, async (req, res) => {
-    try {
-      const tracking = await storage.updateDeviceTracking(req.params.id, req.body);
-      if (!tracking) return res.status(404).send("Device tracking not found");
-      res.json(tracking);
-    } catch (error: any) {
-      res.status(500).send(error.message);
-    }
-  });
-
-  app.delete("/api/device-tracking/:id", requireAuth, requireAdminOrManager, async (req, res) => {
-    try {
-      const tracking = await storage.getDeviceTracking(req.params.id);
-      if (!tracking) return res.status(404).send("Device tracking not found");
-
-      await storage.deleteDeviceTracking(req.params.id);
-
-      // Create audit entry
-      await storage.createAuditEntry({
-        assetId: tracking.assetId,
-        userId: req.user!.id,
-        action: "Device tracking disabled",
-        details: { trackingId: req.params.id },
-      });
-
-      res.status(204).send();
-    } catch (error: any) {
-      res.status(500).send(error.message);
-    }
-  });
+  // Device-tracking endpoints removed in this branch. See docs/ for details.
 
   const httpServer = createServer(app);
 

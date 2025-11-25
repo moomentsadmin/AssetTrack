@@ -39,6 +39,10 @@ ENV NODE_ENV=production
 COPY --from=build /app/dist ./dist
 COPY --from=build /app/drizzle.config.ts ./drizzle.config.ts
 COPY --from=build /app/shared ./shared
+# NOTE: tracking-agent assets are intentionally NOT copied into the production
+# image by default. Device tracking is optional and disabled by default. If you
+# need to include installers in an image for your deployment, add a COPY step
+# during your internal image build process.
 
 # Copy entrypoint script
 COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh

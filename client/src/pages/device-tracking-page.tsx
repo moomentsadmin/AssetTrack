@@ -43,8 +43,29 @@ export default function DeviceTrackingPage() {
   const [showToken, setShowToken] = useState(false);
   const [selectedAssetId, setSelectedAssetId] = useState<string>("");
 
+  const [deviceTrackingEnabled, setDeviceTrackingEnabled] = useState<boolean | null>(null);
   const { data: trackingData = [], isLoading } = useQuery<DeviceTracking[]>({
-    queryKey: ["/api/device-tracking"],
+          queryKey: ["/api/device-tracking", { enabled: deviceTrackingEnabled }],
+    queryFn: async () => {
+      try {
+        const res = await apiRequest("GET", "/api/device-tracking");
+        if (!res.ok) {
+          // If server responds 404, treat as disabled feature
+          if (res.status === 404 || res.status === 403) {
+            setDeviceTrackingEnabled(false);
+            return [] as DeviceTracking[];
+          }
+          const text = await res.text();
+          throw new Error(text || `HTTP ${res.status}`);
+        }
+        setDeviceTrackingEnabled(true);
+        return (await res.json()) as DeviceTracking[];
+      } catch (err) {
+        // Network errors or unexpected failures
+        setDeviceTrackingEnabled((prev) => (prev === null ? null : prev));
+        throw err;
+      }
+    },
     refetchInterval: 30000, // Refresh every 30 seconds
   });
 
@@ -147,21 +168,27 @@ export default function DeviceTrackingPage() {
           </p>
         </div>
         <div className="flex gap-2">
-          <Button
-            variant="outline"
-            onClick={() => window.open('/tracking-agent/DOWNLOAD-INSTRUCTIONS.md', '_blank')}
-            data-testid="button-download-agent"
-          >
-            <Download className="mr-2 h-4 w-4" />
-            Download Agent
-          </Button>
-          <Button
-            onClick={() => setDialogState({ type: "enable" })}
-            data-testid="button-enable-tracking"
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Enable Tracking
-          </Button>
+          {deviceTrackingEnabled === false ? (
+            <div className="text-sm text-muted-foreground py-2">Device tracking is disabled by the server administrator.</div>
+          ) : (
+            <>
+              <Button
+                variant="outline"
+                onClick={() => window.open('/tracking-agent/', '_blank')}
+                data-testid="button-download-agent"
+              >
+                <Download className="mr-2 h-4 w-4" />
+                Download Agent
+              </Button>
+              <Button
+                onClick={() => setDialogState({ type: "enable" })}
+                data-testid="button-enable-tracking"
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                Enable Tracking
+              </Button>
+            </>
+          )}
         </div>
       </div>
 

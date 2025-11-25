@@ -80,6 +80,13 @@ A comprehensive IT asset management system for tracking hardware, software, lice
 
 ## 📋 Prerequisites
 
+**Manual Migrations Badge**
+
+![Run Migrations](https://img.shields.io/badge/Actions-Run%20Migrations-blue)
+
+To run database migrations in production, use the manual GitHub Action `Run Migrations (manual)` in the Actions tab. This workflow pulls a built Docker image and runs migrations inside it; it's configured to use the `production` environment so admins can require approvals before the migrations run. See `docs/production/manual-migrations.md` for details.
+
+
 - **Node.js** 20.x or higher
 - **PostgreSQL** 15 or higher
 - **npm** package manager

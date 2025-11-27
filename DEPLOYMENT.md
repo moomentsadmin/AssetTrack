@@ -447,6 +447,70 @@ docker compose -f docker compose.external-db.yml exec app npm run db:push
 
 ---
 
+## Production with Traefik (Docker Compose)
+
+This repo includes production-ready Compose files with Traefik for HTTPS and automatic certificates:
+
+- `docker-compose.production.yml`: Traefik + App, optional internal Postgres (profiles)
+- `docker-compose.ssl.yml`: Traefik + App + internal Postgres (SSL with domain)
+- `docker-compose.ssl-external-db.yml`: Traefik + App with external/managed Postgres
+
+Required `.env` keys:
+
+```
+DOMAIN=assets.yourdomain.com
+LETSENCRYPT_EMAIL=ops@yourdomain.com
+# Basic auth for Traefik dashboard (optional). Generate: `htpasswd -nB admin`
+TRAEFIK_DASHBOARD_AUTH=admin:$2y$05$....
+
+# If using internal DB (ssl.yml):
+PGUSER=asset_user
+PGPASSWORD=strong_password
+PGDATABASE=asset_management
+SESSION_SECRET=<min_32_random_chars>
+
+# If using external DB (ssl-external-db.yml):
+DATABASE_URL=postgresql://user:pass@host:5432/dbname?sslmode=require
+SESSION_SECRET=<min_32_random_chars>
+```
+
+Bring-up (internal DB):
+
+```bash
+# Ensure DNS A record points DOMAIN -> server IP first
+docker compose -f docker-compose.ssl.yml up -d --build
+# Initialize schema is auto-run via "npm run db:push" in app container
+```
+
+Bring-up (external DB):
+
+```bash
+docker compose -f docker-compose.ssl-external-db.yml up -d --build
+# If needed: docker compose -f docker-compose.ssl-external-db.yml exec app npm run db:push
+```
+
+Notes:
+- Cookies: In production the app sets `secure: true` and `sameSite: 'none'`. Terminate TLS at Traefik and ensure it forwards `X-Forwarded-Proto` (already configured).
+- Health: App exposes `/health`. Traefik labels include healthchecks where applicable.
+- Data: Internal Postgres data persists in the `postgres_data` volume. Logs are written to `./logs` on the host.
+- Dashboard: Optional at `https://traefik.${DOMAIN}`. Protect with `TRAEFIK_DASHBOARD_AUTH`.
+
+Common operations:
+
+```bash
+# Check containers
+docker compose -f docker-compose.ssl.yml ps
+
+# Tail app logs
+docker compose -f docker-compose.ssl.yml logs -f app
+
+# Rebuild app after code changes
+docker compose -f docker-compose.ssl.yml up -d --build app
+
+# Restart only app
+docker compose -f docker-compose.ssl.yml restart app
+```
+
 ## AWS Deployment
 
 ### Option 1: AWS EC2 + RDS PostgreSQL

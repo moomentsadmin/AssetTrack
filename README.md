@@ -87,7 +87,32 @@ A comprehensive IT asset management system for tracking hardware, software, lice
 
 ## 🚀 Quick Start
 
-### Development (Replit or Local)
+### Development (Local with Docker)
+
+**Important:** The database MUST be running before starting the application server.
+
+#### Quick Start (Automated)
+
+**Windows PowerShell:**
+```powershell
+.\start-dev.ps1
+```
+
+**Windows Command Prompt:**
+```cmd
+start-dev.bat
+```
+
+These scripts will automatically:
+1. Check if Docker is running
+2. Verify .env configuration exists
+3. Install dependencies if needed
+4. Start the PostgreSQL database
+5. Wait for database to be healthy
+6. Run migrations if needed
+7. Start the development server
+
+#### Manual Start
 
 ```bash
 # Clone repository
@@ -101,13 +126,47 @@ npm install
 cp .env.example .env
 # Edit .env with your database credentials
 
-# Run database migrations
+# Start PostgreSQL database (Docker)
+docker compose up -d db
+
+# Wait for database to be healthy (5-10 seconds)
+docker ps --filter "name=asset-db"
+
+# Run database migrations (first time only)
 npm run db:push
 
 # Start development server
 npm run dev
 
 # Access application at http://localhost:5000
+```
+
+**🚨 Troubleshooting 502 Bad Gateway Error:**
+If you encounter a 502 error when logging in:
+1. Ensure PostgreSQL is running: `docker ps --filter "name=asset-db"`
+2. Check .env file exists and has DATABASE_URL configured
+3. Verify server logs for connection errors
+
+See [BUGFIX-502-LOGIN.md](BUGFIX-502-LOGIN.md) for detailed troubleshooting.
+
+### Development (Replit - No Docker)
+
+On Replit, use the managed Neon database:
+
+```bash
+# Install dependencies
+npm install
+
+# Database is auto-provisioned by Replit
+# No docker or manual database setup needed
+
+# Run database migrations
+npm run db:push
+
+# Start development server
+npm run dev
+
+# Access via Replit's web preview
 ```
 
 ### Production Deployment

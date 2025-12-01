@@ -6,7 +6,7 @@ import { setupAuth } from "./auth";
 import { storage } from "./storage";
 import multer from "multer";
 import Papa from "papaparse";
-import bcrypt from "bcrypt";
+import { hashPassword } from "./auth";
 import { sendAssignmentNotification } from "./email";
 import { insertUserSchema } from "@shared/schema";
 
@@ -67,8 +67,8 @@ export function registerRoutes(app: Express): Server {
       const validatedData = insertUserSchema.parse(req.body);
       const { password, ...userData } = validatedData;
       
-      // Hash password before storing
-      const hashedPassword = await bcrypt.hash(password, 10);
+      // Hash password before storing (scrypt)
+      const hashedPassword = await hashPassword(password);
       const user = await storage.createUser({ ...userData, password: hashedPassword });
       
       // Don't send password back
@@ -115,7 +115,7 @@ export function registerRoutes(app: Express): Server {
       
       // If password is being updated, hash it and add to update data
       if (password) {
-        const hashedPassword = await bcrypt.hash(password, 10);
+        const hashedPassword = await hashPassword(password);
         const finalUpdateData = { ...updateData, password: hashedPassword };
         const user = await storage.updateUser(req.params.id, finalUpdateData);
         if (!user) return res.status(404).send("User not found");

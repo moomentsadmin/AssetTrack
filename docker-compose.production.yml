@@ -23,7 +23,6 @@ services:
       # Docker Provider
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
-      - "--providers.docker.network=asset-network"
       - "--providers.docker.watch=true"
       
       # Entrypoints

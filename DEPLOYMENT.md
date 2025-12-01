@@ -495,6 +495,19 @@ Notes:
 - Data: Internal Postgres data persists in the `postgres_data` volume. Logs are written to `./logs` on the host.
 - Dashboard: Optional at `https://traefik.${DOMAIN}`. Protect with `TRAEFIK_DASHBOARD_AUTH`.
 
+### Post-deploy Health Check (Windows)
+- Use the provided script to validate HTTPS and key endpoints:
+  - `powershell -File scripts/health-check.ps1 -Domain $env:DOMAIN`
+  - Optional path: `powershell -File scripts/health-check.ps1 -Domain $env:DOMAIN -Path "/api/health"`
+
+### Notes on Docker Networks
+- Compose prefixes network names (e.g., `assettrack_asset-network`). Traefik now auto-selects the correct prefixed network. No `--providers.docker.network` override needed.
+- App labels continue specifying `traefik.docker.network=assettrack_asset-network`.
+
+### Session Stability Behind Traefik
+- Server sets `trust proxy` and enables `session.proxy` in production; cookies use `secure: true`, `sameSite: none`, and `domain` from `DOMAIN`.
+- If logging in via both `DOMAIN` and `www.DOMAIN`, ensure both hosts are routed and share cookie domain.
+
 Common operations:
 
 ```bash

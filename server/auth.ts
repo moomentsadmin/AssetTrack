@@ -61,11 +61,23 @@ export function setupAuth(app: Express) {
   passport.use(
     new LocalStrategy(async (username, password, done) => {
       const user = await storage.getUserByUsername(username);
-      if (!user || !(await comparePasswords(password, user.password))) {
+      if (!user) {
         return done(null, false);
-      } else {
-        return done(null, user);
       }
+      // Defensive: Only accept scrypt hashes (format: hex.hex)
+      if (!user.password || !/^[a-f0-9]+\.[a-f0-9]+$/.test(user.password)) {
+        // Not a scrypt hash, treat as invalid
+        return done(null, false);
+      }
+      try {
+        if (!(await comparePasswords(password, user.password))) {
+          return done(null, false);
+        }
+      } catch (err) {
+        // Defensive: if hash is malformed, treat as invalid
+        return done(null, false);
+      }
+      return done(null, user);
     }),
   );
 

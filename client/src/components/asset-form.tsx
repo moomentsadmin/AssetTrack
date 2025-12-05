@@ -16,6 +16,7 @@ import { Loader2 } from "lucide-react";
 const formSchema = insertAssetSchema.extend({
   purchaseDate: z.string().optional(),
   warrantyExpiry: z.string().optional(),
+  laptopAssignedDate: z.string().optional(),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -57,6 +58,24 @@ export function AssetForm({ asset, onSuccess }: { asset?: Asset; onSuccess: () =
       departmentId: asset?.departmentId || "",
       depreciationMethod: asset?.depreciationMethod || null,
       depreciationRate: asset?.depreciationRate || "",
+      assetTag: asset?.assetTag || "",
+      priority: asset?.priority || "",
+      employeeId: asset?.employeeId || "",
+      companyClient: asset?.companyClient || "",
+      mobileNumber: asset?.mobileNumber || "",
+      internalMailId: asset?.internalMailId || "",
+      clientMailId: asset?.clientMailId || "",
+      expressServiceCode: asset?.expressServiceCode || "",
+      adapterSn: asset?.adapterSn || "",
+      processor: asset?.processor || "",
+      ram: asset?.ram || "",
+      storage: asset?.storage || "",
+      laptopAssignedDate: asset?.laptopAssignedDate ? new Date(asset.laptopAssignedDate).toISOString().split('T')[0] : "",
+      license: asset?.license || "",
+      acknowledgementForm: asset?.acknowledgementForm || "",
+      oldLaptop: asset?.oldLaptop || "",
+      supplierName: asset?.supplierName || "",
+      invoiceNo: asset?.invoiceNo || "",
     },
   });
 
@@ -66,6 +85,7 @@ export function AssetForm({ asset, onSuccess }: { asset?: Asset; onSuccess: () =
         ...data,
         purchaseDate: data.purchaseDate ? new Date(data.purchaseDate).toISOString() : null,
         warrantyExpiry: data.warrantyExpiry ? new Date(data.warrantyExpiry).toISOString() : null,
+        laptopAssignedDate: data.laptopAssignedDate ? new Date(data.laptopAssignedDate).toISOString() : null,
         locationId: data.locationId || null,
         departmentId: data.departmentId || null,
         depreciationMethod: data.depreciationMethod || null,
@@ -344,6 +364,280 @@ export function AssetForm({ asset, onSuccess }: { asset?: Asset; onSuccess: () =
             </FormItem>
           )}
         />
+
+        <div className="border-t pt-4">
+          <h3 className="font-semibold mb-4">Additional Asset Information</h3>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="assetTag"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Asset Tag</FormLabel>
+                  <FormControl>
+                    <Input {...field} value={field.value || ""} placeholder="e.g., AT-001" data-testid="input-asset-tag" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="priority"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Priority</FormLabel>
+                  <FormControl>
+                    <Input {...field} value={field.value || ""} placeholder="e.g., High, Medium, Low" data-testid="input-priority" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="employeeId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Employee ID</FormLabel>
+                  <FormControl>
+                    <Input {...field} value={field.value || ""} data-testid="input-employee-id" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="companyClient"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Company/Client</FormLabel>
+                  <FormControl>
+                    <Input {...field} value={field.value || ""} data-testid="input-company-client" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="mobileNumber"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Mobile Number</FormLabel>
+                  <FormControl>
+                    <Input {...field} value={field.value || ""} type="tel" data-testid="input-mobile-number" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="internalMailId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Internal Mail ID</FormLabel>
+                  <FormControl>
+                    <Input {...field} value={field.value || ""} type="email" data-testid="input-internal-mail-id" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="clientMailId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Client Mail ID</FormLabel>
+                  <FormControl>
+                    <Input {...field} value={field.value || ""} type="email" data-testid="input-client-mail-id" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="expressServiceCode"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Express Service Code</FormLabel>
+                  <FormControl>
+                    <Input {...field} value={field.value || ""} data-testid="input-express-service-code" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="adapterSn"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Adapter SN</FormLabel>
+                  <FormControl>
+                    <Input {...field} value={field.value || ""} data-testid="input-adapter-sn" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="processor"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Processor</FormLabel>
+                  <FormControl>
+                    <Input {...field} value={field.value || ""} data-testid="input-processor" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="ram"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>RAM</FormLabel>
+                  <FormControl>
+                    <Input {...field} value={field.value || ""} placeholder="e.g., 16GB" data-testid="input-ram" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="storage"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Storage</FormLabel>
+                  <FormControl>
+                    <Input {...field} value={field.value || ""} placeholder="e.g., 512GB SSD" data-testid="input-storage" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="laptopAssignedDate"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Laptop Assigned Date</FormLabel>
+                  <FormControl>
+                    <Input type="date" {...field} value={field.value || ""} data-testid="input-laptop-assigned-date" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="license"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>License</FormLabel>
+                  <FormControl>
+                    <Input {...field} value={field.value || ""} data-testid="input-license" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="acknowledgementForm"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Acknowledgement Form</FormLabel>
+                  <FormControl>
+                    <Input {...field} value={field.value || ""} data-testid="input-acknowledgement-form" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="oldLaptop"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Old Laptop</FormLabel>
+                  <FormControl>
+                    <Input {...field} value={field.value || ""} data-testid="input-old-laptop" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="supplierName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Supplier Name</FormLabel>
+                  <FormControl>
+                    <Input {...field} value={field.value || ""} data-testid="input-supplier-name" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="invoiceNo"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Invoice No</FormLabel>
+                  <FormControl>
+                    <Input {...field} value={field.value || ""} data-testid="input-invoice-no" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        </div>
 
         {assetTypeCustomFields.length > 0 && (
           <div className="pt-4 border-t">

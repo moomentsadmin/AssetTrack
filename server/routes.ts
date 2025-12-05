@@ -175,11 +175,12 @@ export function registerRoutes(app: Express): Server {
   app.post("/api/assets", requireAuth, async (req, res) => {
     try {
       // Convert date strings to Date objects, excluding them from the spread
-      const { purchaseDate, warrantyExpiry, ...rest } = req.body;
+      const { purchaseDate, warrantyExpiry, laptopAssignedDate, ...rest } = req.body;
       const assetData = {
         ...rest,
         purchaseDate: purchaseDate ? new Date(purchaseDate) : null,
         warrantyExpiry: warrantyExpiry ? new Date(warrantyExpiry) : null,
+        laptopAssignedDate: laptopAssignedDate ? new Date(laptopAssignedDate) : null,
       };
 
       const asset = await storage.createAsset(assetData);
@@ -201,7 +202,7 @@ export function registerRoutes(app: Express): Server {
   app.patch("/api/assets/:id", requireAuth, async (req, res) => {
     try {
       // Convert date strings to Date objects, excluding them from the spread
-      const { purchaseDate, warrantyExpiry, ...rest } = req.body;
+      const { purchaseDate, warrantyExpiry, laptopAssignedDate, ...rest } = req.body;
       const updateData: any = { ...rest };
       
       if (purchaseDate !== undefined) {
@@ -209,6 +210,9 @@ export function registerRoutes(app: Express): Server {
       }
       if (warrantyExpiry !== undefined) {
         updateData.warrantyExpiry = warrantyExpiry ? new Date(warrantyExpiry) : null;
+      }
+      if (laptopAssignedDate !== undefined) {
+        updateData.laptopAssignedDate = laptopAssignedDate ? new Date(laptopAssignedDate) : null;
       }
 
       const asset = await storage.updateAsset(req.params.id, updateData);

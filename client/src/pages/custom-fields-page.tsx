@@ -3,7 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { Plus, Loader2, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { CustomFieldDefinition } from "@shared/schema";
+import { CustomFieldDefinition, AssetType } from "@shared/schema";
 import { Badge } from "@/components/ui/badge";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -27,10 +27,14 @@ export default function CustomFieldsPage() {
     queryKey: ["/api/custom-fields"],
   });
 
+  const { data: assetTypes = [] } = useQuery<AssetType[]>({
+    queryKey: ["/api/asset-types"],
+  });
+
   const form = useForm<FormData>({
     resolver: zodResolver(insertCustomFieldDefinitionSchema),
     defaultValues: {
-      assetType: "hardware",
+      assetTypeId: "",
       fieldName: "",
       fieldType: "text",
       fieldOptions: null,
@@ -84,8 +88,8 @@ export default function CustomFieldsPage() {
   }
 
   const groupedFields = fields.reduce((acc, field) => {
-    if (!acc[field.assetType]) acc[field.assetType] = [];
-    acc[field.assetType].push(field);
+    if (!acc[field.assetTypeId]) acc[field.assetTypeId] = [];
+    acc[field.assetTypeId].push(field);
     return acc;
   }, {} as Record<string, CustomFieldDefinition[]>);
 
@@ -112,11 +116,13 @@ export default function CustomFieldsPage() {
         </Card>
       ) : (
         <div className="space-y-6">
-          {Object.entries(groupedFields).map(([assetType, typeFields]) => (
-            <Card key={assetType} className="p-6">
-              <h3 className="font-semibold text-lg mb-4 capitalize">
-                {assetType.replace("_", " ")} Fields
-              </h3>
+          {Object.entries(groupedFields).map(([assetTypeId, typeFields]) => {
+            const assetType = assetTypes.find((t) => t.id === assetTypeId);
+            return (
+              <Card key={assetTypeId} className="p-6">
+                <h3 className="font-semibold text-lg mb-4 capitalize">
+                  {(assetType?.name || "Unknown").replace("_", " ")} Fields
+                </h3>
               <div className="space-y-3">
                 {typeFields.map((field) => (
                   <div
@@ -151,8 +157,9 @@ export default function CustomFieldsPage() {
                   </div>
                 ))}
               </div>
-            </Card>
-          ))}
+              </Card>
+            );
+          })}
         </div>
       )}
 
@@ -168,23 +175,22 @@ export default function CustomFieldsPage() {
             <form onSubmit={form.handleSubmit((data) => mutation.mutate(data))} className="space-y-4">
               <FormField
                 control={form.control}
-                name="assetType"
+                name="assetTypeId"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Asset Type</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger data-testid="select-field-asset-type">
-                          <SelectValue />
+                          <SelectValue placeholder="Select asset type" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="hardware">Hardware</SelectItem>
-                        <SelectItem value="software">Software</SelectItem>
-                        <SelectItem value="license">License</SelectItem>
-                        <SelectItem value="accessory">Accessory</SelectItem>
-                        <SelectItem value="office_equipment">Office Equipment</SelectItem>
-                        <SelectItem value="vehicle">Vehicle</SelectItem>
+                        {assetTypes.map((type) => (
+                          <SelectItem key={type.id} value={type.id}>
+                            {type.name}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                     <FormMessage />

@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import express from "express";
 import path from "path";
-import { setupAuth } from "./auth";
+import { setupAuth, hashPassword } from "./auth";
 import { storage } from "./storage";
 import multer from "multer";
 import Papa from "papaparse";
@@ -660,24 +660,39 @@ export function registerRoutes(app: Express): Server {
 
       for (const row of parsed.data) {
         try {
-          const data: any = row;
-          
+          // Normalize keys to camelCase and trim values
+          const raw: any = row;
+          const data: any = {};
+          Object.keys(raw).forEach((k) => {
+            const key = k.trim();
+            const lower = key.toLowerCase();
+            const camel = lower.replace(/[_\s]+([a-z])/g, (_, c) => c.toUpperCase());
+            const val = typeof raw[k] === "string" ? raw[k].trim() : raw[k];
+            data[camel] = val;
+          });
+
+          const fullName = data.fullName;
+          const email = data.email;
+          const username = data.username;
+          const password = data.password;
+          const role = data.role || "employee";
+
           // Validate required fields
-          if (!data.fullName || !data.email || !data.username || !data.password || !data.role) {
+          if (!fullName || !email || !username || !password) {
             failed++;
             continue;
           }
 
           // Hash password
-          const hashedPassword = await bcrypt.hash(data.password, 10);
+          const hashedPassword = await hashPassword(password);
 
           // Create user
           await storage.createUser({
-            fullName: data.fullName,
-            email: data.email,
-            username: data.username,
+            fullName,
+            email,
+            username,
             password: hashedPassword,
-            role: data.role,
+            role,
             department: data.department || null,
             isContractor: data.isContractor === "true" || data.isContractor === true,
           });

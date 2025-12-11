@@ -10,8 +10,9 @@ echo "Waiting for database..."
 sleep 5
 
 # Run database migrations (allow failure)
-echo "Running database migrations..."
-npx drizzle-kit push 2>&1 || echo "Migration skipped (may already be up-to-date)"
+echo "Running database migrations (non-interactive)..."
+# Force apply schema changes; if drizzle detects extra tables (e.g., session table), it may remove them.
+npx drizzle-kit push --force 2>&1 || echo "Migration skipped (may already be up-to-date)"
 
 echo ""
 echo "Starting application server..."

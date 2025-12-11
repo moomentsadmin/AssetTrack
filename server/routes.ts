@@ -719,7 +719,8 @@ export function registerRoutes(app: Express): Server {
           const data: any = row;
           
           // Validate required fields
-          if (!data.name || !data.assetType) {
+          const assetTypeId = data.assetTypeId || data.assetType || data.asset_type_id;
+          if (!data.name || !assetTypeId) {
             failed++;
             continue;
           }
@@ -727,7 +728,7 @@ export function registerRoutes(app: Express): Server {
           // Create asset
           await storage.createAsset({
             name: data.name,
-            assetType: data.assetType,
+            assetTypeId,
             status: data.status || "available",
             serialNumber: data.serialNumber || null,
             model: data.model || null,
@@ -741,6 +742,24 @@ export function registerRoutes(app: Express): Server {
             customFields: null,
             depreciationMethod: data.depreciationMethod || null,
             depreciationRate: data.depreciationRate || null,
+            assetTag: data.assetTag || null,
+            priority: data.priority || null,
+            employeeId: data.employeeId || null,
+            companyClient: data.companyClient || null,
+            mobileNumber: data.mobileNumber || null,
+            internalMailId: data.internalMailId || null,
+            clientMailId: data.clientMailId || null,
+            expressServiceCode: data.expressServiceCode || null,
+            adapterSn: data.adapterSn || null,
+            processor: data.processor || null,
+            ram: data.ram || null,
+            storage: data.storage || null,
+            laptopAssignedDate: data.laptopAssignedDate ? new Date(data.laptopAssignedDate) : null,
+            license: data.license || null,
+            acknowledgementForm: data.acknowledgementForm || null,
+            oldLaptop: data.oldLaptop || null,
+            supplierName: data.supplierName || null,
+            invoiceNo: data.invoiceNo || null,
           });
 
           success++;

@@ -40,10 +40,6 @@ COPY --from=build /app/dist ./dist
 COPY --from=build /app/drizzle.config.ts ./drizzle.config.ts
 COPY --from=build /app/shared ./shared
 
-# Copy entrypoint script
-COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
-RUN chmod +x /usr/local/bin/entrypoint.sh
-
 # Create non-root user
 RUN addgroup -g 1001 -S nodejs && \
     adduser -S nodejs -u 1001
@@ -59,6 +55,5 @@ EXPOSE 5000
 
 # Healthcheck is defined in docker-compose.yml for better control
 
-# Start the application via entrypoint
-ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
-CMD ["node", "dist/index.js"]
+# Start the application - run migrations directly with --force flag
+CMD sh -c "npx drizzle-kit push --force --config drizzle.config.ts 2>&1 || true ; node dist/index.js"

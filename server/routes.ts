@@ -6,7 +6,6 @@ import { setupAuth, hashPassword } from "./auth";
 import { storage } from "./storage";
 import multer from "multer";
 import Papa from "papaparse";
-import { hashPassword } from "./auth";
 import { sendAssignmentNotification } from "./email";
 import { insertUserSchema } from "@shared/schema";
 
@@ -174,10 +173,49 @@ export function registerRoutes(app: Express): Server {
 
   app.post("/api/assets", requireAuth, async (req, res) => {
     try {
-      // Convert date strings to Date objects, excluding them from the spread
-      const { purchaseDate, warrantyExpiry, laptopAssignedDate, ...rest } = req.body;
-      const assetData = {
+      // Convert date strings to Date objects and resolve names to IDs for related fields
+      const { purchaseDate, warrantyExpiry, laptopAssignedDate, ...rest } = req.body as any;
+
+      // Resolve Asset Type ID
+      let assetTypeId: string | undefined = rest.assetTypeId;
+      if (!assetTypeId && rest.assetType) {
+        const type = await storage.getAssetTypeByName(String(rest.assetType));
+        assetTypeId = type?.id;
+      }
+      if (!assetTypeId) {
+        return res.status(400).send("Asset type is required (by ID or name)");
+      }
+
+      // Resolve Location ID (required)
+      let locationId: string | undefined = rest.locationId;
+      if (!locationId && rest.location) {
+        const loc = await storage.getLocationByName(String(rest.location));
+        locationId = loc?.id;
+      }
+      if (!locationId && rest.locationName) {
+        const loc = await storage.getLocationByName(String(rest.locationName));
+        locationId = loc?.id;
+      }
+      if (!locationId) {
+        return res.status(400).send("Location is required (by ID or name)");
+      }
+
+      // Resolve Department ID (optional)
+      let departmentId: string | null | undefined = rest.departmentId ?? null;
+      if (!departmentId && rest.department) {
+        const dept = await storage.getDepartmentByName(String(rest.department));
+        departmentId = dept?.id || null;
+      }
+      if (!departmentId && rest.departmentName) {
+        const dept = await storage.getDepartmentByName(String(rest.departmentName));
+        departmentId = dept?.id || null;
+      }
+
+      const assetData: any = {
         ...rest,
+        assetTypeId,
+        locationId,
+        departmentId,
         purchaseDate: purchaseDate ? new Date(purchaseDate) : null,
         warrantyExpiry: warrantyExpiry ? new Date(warrantyExpiry) : null,
         laptopAssignedDate: laptopAssignedDate ? new Date(laptopAssignedDate) : null,
@@ -190,7 +228,7 @@ export function registerRoutes(app: Express): Server {
         assetId: asset.id,
         userId: req.user!.id,
         action: "Asset created",
-        details: { assetName: asset.name, assetType: asset.assetType },
+        details: { assetName: asset.name, assetTypeId: asset.assetTypeId },
       });
 
       res.status(201).json(asset);
@@ -731,11 +769,64 @@ export function registerRoutes(app: Express): Server {
 
       for (const row of parsed.data) {
         try {
-          const data: any = row;
-          
+          // Normalize keys to camelCase and trim values
+          const raw: any = row as any;
+          const data: any = {};
+          Object.keys(raw).forEach((k) => {
+            const key = String(k).trim();
+            const lower = key.toLowerCase();
+            const camel = lower.replace(/[_\s]+([a-z])/g, (_, c) => c.toUpperCase());
+            const val = typeof raw[k] === "string" ? String(raw[k]).trim() : raw[k];
+            data[camel] = val;
+          });
+
+          // Resolve or create asset type
+          let assetTypeId: string | undefined = data.assetTypeId;
+          if (!assetTypeId && data.assetType) {
+            let type = await storage.getAssetTypeByName(String(data.assetType));
+            if (!type && String(data.assetType).trim()) {
+              // Create missing asset type with provided name
+              type = await storage.createAssetType({ name: String(data.assetType).trim(), description: null as any });
+            }
+            assetTypeId = type?.id;
+          }
+
+          // Resolve or create location (required)
+          let locationId: string | undefined = data.locationId;
+          if (!locationId && data.location) {
+            let loc = await storage.getLocationByName(String(data.location));
+            if (!loc && String(data.location).trim()) {
+              loc = await storage.createLocation({ name: String(data.location).trim(), description: null as any, currency: "USD" });
+            }
+            locationId = loc?.id;
+          }
+          if (!locationId && data.locationName) {
+            let loc = await storage.getLocationByName(String(data.locationName));
+            if (!loc && String(data.locationName).trim()) {
+              loc = await storage.createLocation({ name: String(data.locationName).trim(), description: null as any, currency: "USD" });
+            }
+            locationId = loc?.id;
+          }
+
+          // Resolve or create department (optional)
+          let departmentId: string | null | undefined = data.departmentId ?? null;
+          if (!departmentId && data.department) {
+            let dept = await storage.getDepartmentByName(String(data.department));
+            if (!dept && String(data.department).trim()) {
+              dept = await storage.createDepartment({ name: String(data.department).trim(), description: null as any });
+            }
+            departmentId = dept?.id || null;
+          }
+          if (!departmentId && data.departmentName) {
+            let dept = await storage.getDepartmentByName(String(data.departmentName));
+            if (!dept && String(data.departmentName).trim()) {
+              dept = await storage.createDepartment({ name: String(data.departmentName).trim(), description: null as any });
+            }
+            departmentId = dept?.id || null;
+          }
+
           // Validate required fields
-          const assetTypeId = data.assetTypeId || data.assetType || data.asset_type_id;
-          if (!data.name || !assetTypeId) {
+          if (!data.name || !assetTypeId || !locationId) {
             failed++;
             continue;
           }
@@ -752,8 +843,8 @@ export function registerRoutes(app: Express): Server {
             purchaseCost: data.purchaseCost || null,
             warrantyExpiry: data.warrantyExpiry ? new Date(data.warrantyExpiry) : null,
             condition: data.condition || null,
-            locationId: data.locationId || null,
-            departmentId: data.departmentId || null,
+            locationId,
+            departmentId,
             customFields: null,
             depreciationMethod: data.depreciationMethod || null,
             depreciationRate: data.depreciationRate || null,
@@ -775,7 +866,7 @@ export function registerRoutes(app: Express): Server {
             oldLaptop: data.oldLaptop || null,
             supplierName: data.supplierName || null,
             invoiceNo: data.invoiceNo || null,
-          });
+          } as any);
 
           success++;
         } catch (error: any) {

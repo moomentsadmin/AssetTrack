@@ -180,6 +180,12 @@ export class DatabaseStorage implements IStorage {
     return dept || undefined;
   }
 
+  async getDepartmentByName(name: string): Promise<Department | undefined> {
+    const all = await db.select().from(departments);
+    const target = name.trim().toLowerCase();
+    return all.find((d) => (d.name || "").trim().toLowerCase() === target) || undefined;
+  }
+
   async createDepartment(insertDept: InsertDepartment): Promise<Department> {
     const [dept] = await db.insert(departments).values(insertDept).returning();
     return dept;
@@ -208,6 +214,12 @@ export class DatabaseStorage implements IStorage {
     return location || undefined;
   }
 
+  async getLocationByName(name: string): Promise<Location | undefined> {
+    const all = await db.select().from(locations);
+    const target = name.trim().toLowerCase();
+    return all.find((l) => (l.name || "").trim().toLowerCase() === target) || undefined;
+  }
+
   async createLocation(insertLocation: InsertLocation): Promise<Location> {
     const [location] = await db.insert(locations).values(insertLocation).returning();
     return location;
@@ -234,6 +246,12 @@ export class DatabaseStorage implements IStorage {
   async getAssetType(id: string): Promise<AssetType | undefined> {
     const [assetType] = await db.select().from(assetTypes).where(eq(assetTypes.id, id));
     return assetType || undefined;
+  }
+
+  async getAssetTypeByName(name: string): Promise<AssetType | undefined> {
+    const all = await db.select().from(assetTypes);
+    const target = name.trim().toLowerCase();
+    return all.find((t) => (t.name || "").trim().toLowerCase() === target) || undefined;
   }
 
   async createAssetType(insertAssetType: InsertAssetType): Promise<AssetType> {

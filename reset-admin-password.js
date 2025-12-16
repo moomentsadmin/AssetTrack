@@ -1,5 +1,6 @@
 // Reset Admin Password Script
-import bcrypt from 'bcrypt';
+import { scrypt, randomBytes, timingSafeEqual } from 'crypto';
+import { promisify } from 'util';
 import { db } from './server/db.js';
 import { users } from './shared/schema.js';
 import { eq } from 'drizzle-orm';
@@ -18,8 +19,11 @@ async function resetPassword() {
   try {
     console.log(`🔐 Resetting password for user: ${username}`);
     
-    // Hash the new password
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    // Hash the new password with scrypt (same as app)
+    const salt = randomBytes(16).toString('hex');
+    const scryptAsync = promisify(scrypt);
+    const buf = await scryptAsync(newPassword, salt, 64);
+    const hashedPassword = `${buf.toString('hex')}.${salt}`;
     
     // Update the password
     const result = await db
@@ -30,10 +34,21 @@ async function resetPassword() {
     
     if (result.length === 0) {
       console.error(`❌ User "${username}" not found`);
-      console.log('\nAvailable users:');
-      const allUsers = await db.select({ username: users.username, role: users.role }).from(users);
-      allUsers.forEach(u => console.log(`  - ${u.username} (${u.role})`));
-      process.exit(1);
+      console.log('\nCreating admin user...');
+      const [created] = await db
+        .insert(users)
+        .values({
+          username,
+          fullName: 'Admin User',
+          email: `${username}@example.com`,
+          role: 'admin',
+          department: null,
+          isContractor: false,
+          password: hashedPassword,
+        })
+        .returning({ id: users.id, username: users.username });
+      console.log(`✅ Created admin user: ${created.username}`);
+      process.exit(0);
     }
     
     console.log(`✅ Password reset successfully for: ${result[0].username}`);

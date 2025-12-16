@@ -69,8 +69,8 @@ export async function setupVite(app: Express, server: Server) {
 
 export function serveStatic(app: Express) {
   // In production, the dist/public directory contains the built frontend
-  // import.meta.dirname is the compiled server directory (dist/), so go up one level to reach dist/public
-  const distPath = path.resolve(import.meta.dirname, "..", "public");
+  // import.meta.dirname is the compiled server directory (dist/), so resolve to dist/public
+  const distPath = path.resolve(import.meta.dirname, "public");
 
   if (!fs.existsSync(distPath)) {
     throw new Error(

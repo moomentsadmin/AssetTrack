@@ -32,6 +32,9 @@ export async function comparePasswords(supplied: string, stored: string) {
 export function setupAuth(app: Express) {
   const isProduction = process.env.NODE_ENV === 'production';
   const domain = (process.env.DOMAIN || '').trim();
+  const cookieSecureEnv = (process.env.COOKIE_SECURE || '').toLowerCase();
+  const cookieSecure = cookieSecureEnv === 'true' ? true : cookieSecureEnv === 'false' ? false : isProduction;
+  const sameSite: 'lax' | 'none' = cookieSecure ? 'none' : 'lax';
   
   const sessionSettings: session.SessionOptions = {
     secret: process.env.SESSION_SECRET!,
@@ -41,8 +44,8 @@ export function setupAuth(app: Express) {
     proxy: isProduction,
     cookie: {
       httpOnly: true,
-      secure: isProduction,
-      sameSite: isProduction ? 'none' : 'lax',
+      secure: cookieSecure,
+      sameSite,
       domain: isProduction && domain ? domain : undefined,
       // Optional: scope cookie to root
       path: '/',

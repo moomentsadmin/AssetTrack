@@ -29,3 +29,9 @@ cleanup-docs.sh
 
 # Attached assets (contains sensitive data - never commit!)
 attached_assets/
+
+# Test artifacts and temporary files (never commit!)
+payload_*.json
+*cookies.txt
+test_*.csv
+scripts/gen_hash.*

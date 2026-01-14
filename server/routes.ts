@@ -2,7 +2,6 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import express from "express";
 import path from "path";
-import { log } from "./vite";
 import { setupAuth, hashPassword } from "./auth";
 import { storage } from "./storage";
 import multer from "multer";
@@ -158,7 +157,6 @@ export function registerRoutes(app: Express): Server {
       const assets = await storage.getAllAssets();
       res.json(assets);
     } catch (error: any) {
-      log(`Error GET /api/assets: ${error.stack || error.message}`);
       res.status(500).send(error.message);
     }
   });
@@ -169,7 +167,6 @@ export function registerRoutes(app: Express): Server {
       if (!asset) return res.status(404).send("Asset not found");
       res.json(asset);
     } catch (error: any) {
-      log(`Error GET /api/assets/:id (${req.params.id}): ${error.stack || error.message}`);
       res.status(500).send(error.message);
     }
   });
@@ -275,7 +272,6 @@ export function registerRoutes(app: Express): Server {
         assetData[key] === undefined && delete assetData[key]
       );
 
-      log(`Creating asset with data: ${JSON.stringify(assetData)}`);
       const asset = await storage.createAsset(assetData);
       
       // Create audit entry

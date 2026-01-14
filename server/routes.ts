@@ -2,6 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import express from "express";
 import path from "path";
+import { log } from "./vite";
 import { setupAuth, hashPassword } from "./auth";
 import { storage } from "./storage";
 import multer from "multer";
@@ -157,6 +158,7 @@ export function registerRoutes(app: Express): Server {
       const assets = await storage.getAllAssets();
       res.json(assets);
     } catch (error: any) {
+      log(`Error GET /api/assets: ${error.stack || error.message}`);
       res.status(500).send(error.message);
     }
   });
@@ -167,14 +169,33 @@ export function registerRoutes(app: Express): Server {
       if (!asset) return res.status(404).send("Asset not found");
       res.json(asset);
     } catch (error: any) {
+      log(`Error GET /api/assets/:id (${req.params.id}): ${error.stack || error.message}`);
       res.status(500).send(error.message);
     }
   });
 
   app.post("/api/assets", requireAuth, async (req, res) => {
     try {
-      // Convert date strings to Date objects and resolve names to IDs for related fields
-      const { purchaseDate, warrantyExpiry, laptopAssignedDate, ...rest } = req.body as any;
+      // Extract and parse dates from body
+      const { purchaseDate: purchaseDateStr, warrantyExpiry: warrantyExpiryStr, laptopAssignedDate: laptopAssignedDateStr, ...rest } = req.body as any;
+
+      // Parse date strings to Date objects
+      let purchaseDate: Date | undefined;
+      let warrantyExpiry: Date | undefined;
+      let laptopAssignedDate: Date | undefined;
+      
+      if (purchaseDateStr) {
+        const parsed = new Date(purchaseDateStr);
+        purchaseDate = isNaN(parsed.getTime()) ? undefined : parsed;
+      }
+      if (warrantyExpiryStr) {
+        const parsed = new Date(warrantyExpiryStr);
+        warrantyExpiry = isNaN(parsed.getTime()) ? undefined : parsed;
+      }
+      if (laptopAssignedDateStr) {
+        const parsed = new Date(laptopAssignedDateStr);
+        laptopAssignedDate = isNaN(parsed.getTime()) ? undefined : parsed;
+      }
 
       // Resolve Asset Type ID
       let assetTypeId: string | undefined = rest.assetTypeId;
@@ -211,16 +232,50 @@ export function registerRoutes(app: Express): Server {
         departmentId = dept?.id || null;
       }
 
+      // Build assetData with only valid schema fields, converting empty strings to undefined
       const assetData: any = {
-        ...rest,
+        name: rest.name,
         assetTypeId,
         locationId,
-        departmentId,
-        purchaseDate: purchaseDate ? new Date(purchaseDate) : null,
-        warrantyExpiry: warrantyExpiry ? new Date(warrantyExpiry) : null,
-        laptopAssignedDate: laptopAssignedDate ? new Date(laptopAssignedDate) : null,
+        status: rest.status || "available",
+        serialNumber: rest.serialNumber || undefined,
+        model: rest.model || undefined,
+        manufacturer: rest.manufacturer || undefined,
+        purchaseDate: purchaseDate,
+        purchaseCost: rest.purchaseCost ? parseFloat(rest.purchaseCost) : undefined,
+        warrantyExpiry: warrantyExpiry,
+        condition: rest.condition || undefined,
+        photoUrl: rest.photoUrl || undefined,
+        departmentId: departmentId || undefined,
+        customFields: rest.customFields || undefined,
+        depreciationMethod: rest.depreciationMethod || undefined,
+        depreciationRate: rest.depreciationRate ? parseFloat(rest.depreciationRate) : undefined,
+        assetTag: rest.assetTag || undefined,
+        priority: rest.priority || undefined,
+        employeeId: rest.employeeId || undefined,
+        companyClient: rest.companyClient || undefined,
+        mobileNumber: rest.mobileNumber || undefined,
+        internalMailId: rest.internalMailId || undefined,
+        clientMailId: rest.clientMailId || undefined,
+        expressServiceCode: rest.expressServiceCode || undefined,
+        adapterSn: rest.adapterSn || undefined,
+        processor: rest.processor || undefined,
+        ram: rest.ram || undefined,
+        storage: rest.storage || undefined,
+        laptopAssignedDate: laptopAssignedDate,
+        license: rest.license || undefined,
+        acknowledgementForm: rest.acknowledgementForm || undefined,
+        oldLaptop: rest.oldLaptop || undefined,
+        supplierName: rest.supplierName || undefined,
+        invoiceNo: rest.invoiceNo || undefined,
       };
+      
+      // Remove undefined values to let Drizzle handle defaults properly
+      Object.keys(assetData).forEach(key => 
+        assetData[key] === undefined && delete assetData[key]
+      );
 
+      log(`Creating asset with data: ${JSON.stringify(assetData)}`);
       const asset = await storage.createAsset(assetData);
       
       // Create audit entry
@@ -233,24 +288,41 @@ export function registerRoutes(app: Express): Server {
 
       res.status(201).json(asset);
     } catch (error: any) {
+      log(`Error POST /api/assets: ${error.stack || error.message}`);
       res.status(500).send(error.message);
     }
   });
 
   app.patch("/api/assets/:id", requireAuth, async (req, res) => {
     try {
-      // Convert date strings to Date objects, excluding them from the spread
-      const { purchaseDate, warrantyExpiry, laptopAssignedDate, ...rest } = req.body;
+      // Extract and parse date strings to Date objects
+      const { purchaseDate: purchaseDateStr, warrantyExpiry: warrantyExpiryStr, laptopAssignedDate: laptopAssignedDateStr, ...rest } = req.body;
       const updateData: any = { ...rest };
       
-      if (purchaseDate !== undefined) {
-        updateData.purchaseDate = purchaseDate ? new Date(purchaseDate) : null;
+      // Parse and add dates if provided
+      if (purchaseDateStr !== undefined) {
+        if (purchaseDateStr) {
+          const parsed = new Date(purchaseDateStr);
+          updateData.purchaseDate = isNaN(parsed.getTime()) ? undefined : parsed;
+        } else {
+          updateData.purchaseDate = null;
+        }
       }
-      if (warrantyExpiry !== undefined) {
-        updateData.warrantyExpiry = warrantyExpiry ? new Date(warrantyExpiry) : null;
+      if (warrantyExpiryStr !== undefined) {
+        if (warrantyExpiryStr) {
+          const parsed = new Date(warrantyExpiryStr);
+          updateData.warrantyExpiry = isNaN(parsed.getTime()) ? undefined : parsed;
+        } else {
+          updateData.warrantyExpiry = null;
+        }
       }
-      if (laptopAssignedDate !== undefined) {
-        updateData.laptopAssignedDate = laptopAssignedDate ? new Date(laptopAssignedDate) : null;
+      if (laptopAssignedDateStr !== undefined) {
+        if (laptopAssignedDateStr) {
+          const parsed = new Date(laptopAssignedDateStr);
+          updateData.laptopAssignedDate = isNaN(parsed.getTime()) ? undefined : parsed;
+        } else {
+          updateData.laptopAssignedDate = null;
+        }
       }
 
       const asset = await storage.updateAsset(req.params.id, updateData);
@@ -266,6 +338,7 @@ export function registerRoutes(app: Express): Server {
 
       res.json(asset);
     } catch (error: any) {
+      log(`Error PATCH /api/assets/:id (${req.params.id}): ${error.stack || error.message}`);
       res.status(500).send(error.message);
     }
   });
@@ -287,6 +360,7 @@ export function registerRoutes(app: Express): Server {
 
       res.sendStatus(204);
     } catch (error: any) {
+      log(`Error DELETE /api/assets/:id (${req.params.id}): ${error.stack || error.message}`);
       res.status(500).send(error.message);
     }
   });

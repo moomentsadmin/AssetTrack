@@ -115,7 +115,7 @@ export default function LocationsPage() {
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {locations.map((location) => {
-          const locationAssets = assets.filter((a) => a.locationId === location.id);
+          const locationAssets = assets?.filter((a) => a.locationId === location.id) || [];
           const totalValue = locationAssets.reduce((sum, a) => sum + Number(a.currentValue || a.purchaseCost || 0), 0);
 
           return (
@@ -159,7 +159,7 @@ export default function LocationsPage() {
                 </div>
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">Total Assets:</span>
-                  <span className="font-medium">{locationAssets.length}</span>
+                  <span className="font-medium">{locationAssets?.length || 0}</span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">Total Value:</span>
@@ -171,7 +171,7 @@ export default function LocationsPage() {
         })}
       </div>
 
-      {locations.length === 0 && (
+      {locations?.length === 0 && (
         <Card className="p-12">
           <p className="text-center text-muted-foreground">No locations found. Create your first location.</p>
         </Card>

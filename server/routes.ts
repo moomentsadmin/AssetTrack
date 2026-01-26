@@ -8,6 +8,7 @@ import multer from "multer";
 import Papa from "papaparse";
 import { sendAssignmentNotification } from "./email";
 import { insertUserSchema } from "@shared/schema";
+import { log } from "./vite";
 
 const upload = multer({ storage: multer.memoryStorage() });
 
@@ -44,6 +45,12 @@ export function registerRoutes(app: Express): Server {
     res.status(200).json({ status: "healthy", timestamp: new Date().toISOString() });
   });
 
+  // Test endpoint for debugging
+  app.get("/api/test", (req, res) => {
+    console.log("Test endpoint called");
+    res.json({ message: "Test endpoint working", timestamp: new Date().toISOString() });
+  });
+
   // Serve tracking agent files and documentation
   const trackingAgentPath = path.join(process.cwd(), "tracking-agent");
   app.use("/tracking-agent", express.static(trackingAgentPath));
@@ -55,6 +62,16 @@ export function registerRoutes(app: Express): Server {
       // Remove passwords from response
       const sanitizedUsers = users.map(({ password, ...user }) => user);
       res.json(sanitizedUsers);
+    } catch (error: any) {
+      res.status(500).send(error.message);
+    }
+  });
+
+  app.get("/api/user", requireAuth, async (req, res) => {
+    try {
+      // Return the current authenticated user
+      const { password, ...userWithoutPassword } = req.user!;
+      res.json(userWithoutPassword);
     } catch (error: any) {
       res.status(500).send(error.message);
     }
@@ -173,8 +190,26 @@ export function registerRoutes(app: Express): Server {
 
   app.post("/api/assets", requireAuth, async (req, res) => {
     try {
-      // Convert date strings to Date objects and resolve names to IDs for related fields
-      const { purchaseDate, warrantyExpiry, laptopAssignedDate, ...rest } = req.body as any;
+      // Extract and parse dates from body
+      const { purchaseDate: purchaseDateStr, warrantyExpiry: warrantyExpiryStr, laptopAssignedDate: laptopAssignedDateStr, ...rest } = req.body as any;
+
+      // Parse date strings to Date objects
+      let purchaseDate: Date | undefined;
+      let warrantyExpiry: Date | undefined;
+      let laptopAssignedDate: Date | undefined;
+      
+      if (purchaseDateStr) {
+        const parsed = new Date(purchaseDateStr);
+        purchaseDate = isNaN(parsed.getTime()) ? undefined : parsed;
+      }
+      if (warrantyExpiryStr) {
+        const parsed = new Date(warrantyExpiryStr);
+        warrantyExpiry = isNaN(parsed.getTime()) ? undefined : parsed;
+      }
+      if (laptopAssignedDateStr) {
+        const parsed = new Date(laptopAssignedDateStr);
+        laptopAssignedDate = isNaN(parsed.getTime()) ? undefined : parsed;
+      }
 
       // Resolve Asset Type ID
       let assetTypeId: string | undefined = rest.assetTypeId;
@@ -211,15 +246,48 @@ export function registerRoutes(app: Express): Server {
         departmentId = dept?.id || null;
       }
 
+      // Build assetData with only valid schema fields, converting empty strings to undefined
       const assetData: any = {
-        ...rest,
+        name: rest.name,
         assetTypeId,
         locationId,
-        departmentId,
-        purchaseDate: purchaseDate ? new Date(purchaseDate) : null,
-        warrantyExpiry: warrantyExpiry ? new Date(warrantyExpiry) : null,
-        laptopAssignedDate: laptopAssignedDate ? new Date(laptopAssignedDate) : null,
+        status: rest.status || "available",
+        serialNumber: rest.serialNumber || undefined,
+        model: rest.model || undefined,
+        manufacturer: rest.manufacturer || undefined,
+        purchaseDate: purchaseDate,
+        purchaseCost: rest.purchaseCost ? parseFloat(rest.purchaseCost) : undefined,
+        warrantyExpiry: warrantyExpiry,
+        condition: rest.condition || undefined,
+        photoUrl: rest.photoUrl || undefined,
+        departmentId: departmentId || undefined,
+        customFields: rest.customFields || undefined,
+        depreciationMethod: rest.depreciationMethod || undefined,
+        depreciationRate: rest.depreciationRate ? parseFloat(rest.depreciationRate) : undefined,
+        assetTag: rest.assetTag || undefined,
+        priority: rest.priority || undefined,
+        employeeId: rest.employeeId || undefined,
+        companyClient: rest.companyClient || undefined,
+        mobileNumber: rest.mobileNumber || undefined,
+        internalMailId: rest.internalMailId || undefined,
+        clientMailId: rest.clientMailId || undefined,
+        expressServiceCode: rest.expressServiceCode || undefined,
+        adapterSn: rest.adapterSn || undefined,
+        processor: rest.processor || undefined,
+        ram: rest.ram || undefined,
+        storage: rest.storage || undefined,
+        laptopAssignedDate: laptopAssignedDate,
+        license: rest.license || undefined,
+        acknowledgementForm: rest.acknowledgementForm || undefined,
+        oldLaptop: rest.oldLaptop || undefined,
+        supplierName: rest.supplierName || undefined,
+        invoiceNo: rest.invoiceNo || undefined,
       };
+      
+      // Remove undefined values to let Drizzle handle defaults properly
+      Object.keys(assetData).forEach(key => 
+        assetData[key] === undefined && delete assetData[key]
+      );
 
       const asset = await storage.createAsset(assetData);
       
@@ -233,24 +301,41 @@ export function registerRoutes(app: Express): Server {
 
       res.status(201).json(asset);
     } catch (error: any) {
+      log(`Error POST /api/assets: ${error.stack || error.message}`);
       res.status(500).send(error.message);
     }
   });
 
   app.patch("/api/assets/:id", requireAuth, async (req, res) => {
     try {
-      // Convert date strings to Date objects, excluding them from the spread
-      const { purchaseDate, warrantyExpiry, laptopAssignedDate, ...rest } = req.body;
+      // Extract and parse date strings to Date objects
+      const { purchaseDate: purchaseDateStr, warrantyExpiry: warrantyExpiryStr, laptopAssignedDate: laptopAssignedDateStr, ...rest } = req.body;
       const updateData: any = { ...rest };
       
-      if (purchaseDate !== undefined) {
-        updateData.purchaseDate = purchaseDate ? new Date(purchaseDate) : null;
+      // Parse and add dates if provided
+      if (purchaseDateStr !== undefined) {
+        if (purchaseDateStr) {
+          const parsed = new Date(purchaseDateStr);
+          updateData.purchaseDate = isNaN(parsed.getTime()) ? undefined : parsed;
+        } else {
+          updateData.purchaseDate = null;
+        }
       }
-      if (warrantyExpiry !== undefined) {
-        updateData.warrantyExpiry = warrantyExpiry ? new Date(warrantyExpiry) : null;
+      if (warrantyExpiryStr !== undefined) {
+        if (warrantyExpiryStr) {
+          const parsed = new Date(warrantyExpiryStr);
+          updateData.warrantyExpiry = isNaN(parsed.getTime()) ? undefined : parsed;
+        } else {
+          updateData.warrantyExpiry = null;
+        }
       }
-      if (laptopAssignedDate !== undefined) {
-        updateData.laptopAssignedDate = laptopAssignedDate ? new Date(laptopAssignedDate) : null;
+      if (laptopAssignedDateStr !== undefined) {
+        if (laptopAssignedDateStr) {
+          const parsed = new Date(laptopAssignedDateStr);
+          updateData.laptopAssignedDate = isNaN(parsed.getTime()) ? undefined : parsed;
+        } else {
+          updateData.laptopAssignedDate = null;
+        }
       }
 
       const asset = await storage.updateAsset(req.params.id, updateData);
@@ -266,6 +351,7 @@ export function registerRoutes(app: Express): Server {
 
       res.json(asset);
     } catch (error: any) {
+      log(`Error PATCH /api/assets/:id (${req.params.id}): ${error.stack || error.message}`);
       res.status(500).send(error.message);
     }
   });
@@ -287,6 +373,7 @@ export function registerRoutes(app: Express): Server {
 
       res.sendStatus(204);
     } catch (error: any) {
+      log(`Error DELETE /api/assets/:id (${req.params.id}): ${error.stack || error.message}`);
       res.status(500).send(error.message);
     }
   });
@@ -690,13 +777,35 @@ export function registerRoutes(app: Express): Server {
         return res.status(400).send("No file uploaded");
       }
 
+      if (!req.file.buffer) {
+        return res.status(400).send("File buffer is empty");
+      }
+
       const fileContent = req.file.buffer.toString("utf-8");
       const parsed = Papa.parse(fileContent, { header: true, skipEmptyLines: true });
+
+      if (!parsed || typeof parsed !== 'object') {
+        return res.status(400).json({
+          success: 0,
+          failed: 0,
+          errors: ["Invalid CSV file format"]
+        });
+      }
+
+      if (parsed.errors && Array.isArray(parsed.errors) && parsed.errors.length > 0) {
+        console.log("CSV parsing errors:", parsed.errors);
+        return res.status(400).json({
+          success: 0,
+          failed: 0,
+          errors: parsed.errors.map((err: any) => `CSV parsing error: ${err.message || 'Unknown error'}`)
+        });
+      }
 
       let success = 0;
       let failed = 0;
 
-      for (const row of parsed.data) {
+      const dataRows = Array.isArray(parsed.data) ? parsed.data : [];
+      for (const row of dataRows) {
         try {
           // Normalize keys to camelCase and trim values
           const raw: any = row;
@@ -757,17 +866,49 @@ export function registerRoutes(app: Express): Server {
 
   app.post("/api/import/assets", requireAuth, requireAdminOrManager, upload.single("file"), async (req, res) => {
     try {
+      console.log("Import request received, file:", req.file?.originalname);
       if (!req.file) {
+        console.log("No file uploaded");
         return res.status(400).send("No file uploaded");
       }
 
+      if (!req.file.buffer) {
+        console.log("File buffer is empty");
+        return res.status(400).send("File buffer is empty");
+      }
+
       const fileContent = req.file.buffer.toString("utf-8");
+      console.log("File content length:", fileContent.length);
       const parsed = Papa.parse(fileContent, { header: true, skipEmptyLines: true });
+      console.log("Parsed data rows:", parsed.data?.length || 0);
+
+      if (!parsed || typeof parsed !== 'object') {
+        console.log("Papa.parse returned invalid result");
+        return res.status(400).json({
+          success: 0,
+          failed: 0,
+          errors: ["Invalid CSV file format"]
+        });
+      }
+
+      if (parsed.errors && Array.isArray(parsed.errors) && parsed.errors.length > 0) {
+        console.log("CSV parsing errors:", parsed.errors);
+        return res.status(400).json({
+          success: 0,
+          failed: 0,
+          errors: parsed.errors.map((err: any) => `CSV parsing error: ${err.message || 'Unknown error'}`)
+        });
+      }
 
       let success = 0;
       let failed = 0;
+      const errors: string[] = [];
 
-      for (const row of parsed.data) {
+      const dataRows = Array.isArray(parsed.data) ? parsed.data : [];
+      console.log("Processing", dataRows.length, "data rows");
+
+      for (let index = 0; index < dataRows.length; index++) {
+        const row = dataRows[index];
         try {
           // Normalize keys to camelCase and trim values
           const raw: any = row as any;
@@ -779,6 +920,35 @@ export function registerRoutes(app: Express): Server {
             const val = typeof raw[k] === "string" ? String(raw[k]).trim() : raw[k];
             data[camel] = val;
           });
+
+          // Parse dates from DD-MM-YYYY format to YYYY-MM-DD
+          if (data.purchaseDate && typeof data.purchaseDate === 'string') {
+            const dateMatch = data.purchaseDate.match(/^(\d{1,2})-(\d{1,2})-(\d{4})$/);
+            if (dateMatch) {
+              const [, day, month, year] = dateMatch;
+              data.purchaseDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+              console.log(`Parsed purchaseDate: ${data.purchaseDate}`);
+            }
+          }
+          if (data.warrantyExpiry && typeof data.warrantyExpiry === 'string') {
+            const dateMatch = data.warrantyExpiry.match(/^(\d{1,2})-(\d{1,2})-(\d{4})$/);
+            if (dateMatch) {
+              const [, day, month, year] = dateMatch;
+              data.warrantyExpiry = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+              console.log(`Parsed warrantyExpiry: ${data.warrantyExpiry}`);
+            }
+          }
+
+          // Parse purchase cost - remove quotes and commas
+          if (data.purchaseCost && typeof data.purchaseCost === 'string') {
+            // Remove quotes and commas, then parse as float
+            const cleanCost = data.purchaseCost.replace(/["',]/g, '');
+            const parsedCost = parseFloat(cleanCost);
+            if (!isNaN(parsedCost)) {
+              data.purchaseCost = parsedCost;
+              console.log(`Parsed purchaseCost: ${data.purchaseCost}`);
+            }
+          }
 
           // Resolve or create asset type
           let assetTypeId: string | undefined = data.assetTypeId;
@@ -827,11 +997,17 @@ export function registerRoutes(app: Express): Server {
 
           // Validate required fields
           if (!data.name || !assetTypeId || !locationId) {
+            const missingFields = [];
+            if (!data.name) missingFields.push('name');
+            if (!assetTypeId) missingFields.push('assetType');
+            if (!locationId) missingFields.push('location');
+            errors.push(`Row ${index + 2}: Missing required fields: ${missingFields.join(', ')}`);
             failed++;
             continue;
           }
 
           // Create asset
+          console.log(`Creating asset: ${data.name}, type: ${assetTypeId}, location: ${locationId}`);
           await storage.createAsset({
             name: data.name,
             assetTypeId,
@@ -869,7 +1045,9 @@ export function registerRoutes(app: Express): Server {
           } as any);
 
           success++;
+          console.log(`Asset created successfully: ${data.name}`);
         } catch (error: any) {
+          errors.push(`Row ${index + 2}: ${error.message || 'Unknown error'}`);
           failed++;
         }
       }
@@ -882,9 +1060,11 @@ export function registerRoutes(app: Express): Server {
         details: { success, failed, fileName: req.file.originalname },
       });
 
-      res.json({ success, failed });
+      console.log("Import completed:", { success, failed, errors: errors.length });
+      res.json({ success, failed, errors: errors || [] });
     } catch (error: any) {
-      res.status(500).send(error.message);
+      console.error("Import error:", error);
+      res.status(500).json({ success: 0, failed: 0, errors: [error.message || "Unknown import error"] });
     }
   });
 

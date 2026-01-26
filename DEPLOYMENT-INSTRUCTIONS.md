@@ -254,6 +254,9 @@ BACKUP_DIR="/backups/assettrack"
 mkdir -p $BACKUP_DIR
 
 # Backup database
+# NOTE: ensure the DB user and DB name here match your `.env`/compose
+# settings (e.g. PGUSER / PGDATABASE). The compose file sets these via
+# environment variables; update the script if you changed them.
 docker compose exec -T db pg_dump -U asset_user asset_management | \
   gzip > "$BACKUP_DIR/backup-$(date +%Y%m%d_%H%M%S).sql.gz"
 

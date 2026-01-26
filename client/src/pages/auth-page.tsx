@@ -48,9 +48,16 @@ export default function AuthPage() {
     const checkSetup = async () => {
       try {
         const res = await fetch("/api/setup/status");
+        if (!res.ok) {
+          console.error("Setup status check failed:", res.status);
+          setSetupRequired(false);
+          return;
+        }
         const data = await res.json();
-        setSetupRequired(!data.setupCompleted);
+        console.log("Setup status response:", data);
+        setSetupRequired(!data?.setupCompleted);
       } catch (error) {
+        console.error("Error checking setup status:", error);
         setSetupRequired(false);
       } finally {
         setIsCheckingSetup(false);
@@ -267,6 +274,7 @@ export default function AuthPage() {
     );
   }
 
+  try {
   return (
     <div className="min-h-screen flex flex-col">
       {headerText && (
@@ -395,4 +403,20 @@ export default function AuthPage() {
       )}
     </div>
   );
+  } catch (error) {
+    console.error("AuthPage render error:", error);
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <h1 className="text-2xl font-bold">Auth Page Error</h1>
+          <p className="text-red-500">
+            Error rendering page: {error instanceof Error ? error.message : 'Unknown error'}
+          </p>
+          <pre className="text-xs bg-gray-100 p-2 rounded max-w-md">
+            {error instanceof Error ? error.stack : JSON.stringify(error)}
+          </pre>
+        </div>
+      </div>
+    );
+  }
 }

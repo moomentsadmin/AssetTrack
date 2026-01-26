@@ -110,7 +110,7 @@ export default function DepartmentsPage() {
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {departments.map((dept) => {
-          const deptAssets = assets.filter((a) => a.departmentId === dept.id);
+          const deptAssets = assets?.filter((a) => a.departmentId === dept.id) || [];
           const totalValue = deptAssets.reduce((sum, a) => sum + Number(a.currentValue || a.purchaseCost || 0), 0);
 
           return (
@@ -147,7 +147,7 @@ export default function DepartmentsPage() {
               <div className="pt-4 border-t space-y-2">
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">Total Assets:</span>
-                  <span className="font-medium">{deptAssets.length}</span>
+                  <span className="font-medium">{deptAssets?.length || 0}</span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">Total Value:</span>
@@ -159,7 +159,7 @@ export default function DepartmentsPage() {
         })}
       </div>
 
-      {departments.length === 0 && (
+      {departments?.length === 0 && (
         <Card className="p-12">
           <p className="text-center text-muted-foreground">No departments found. Create your first department.</p>
         </Card>

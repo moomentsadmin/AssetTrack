@@ -34,8 +34,8 @@ export default function DashboardPage() {
 
   // Filter assets by location if a location is selected
   const filteredAssets = selectedLocationId === "all" 
-    ? assets 
-    : assets.filter((a) => a.locationId === selectedLocationId);
+    ? (assets || []) 
+    : (assets || []).filter((a) => a.locationId === selectedLocationId);
 
   const availableAssets = filteredAssets.filter((a) => a.status === "available").length;
   const assignedAssets = filteredAssets.filter((a) => a.status === "assigned").length;
@@ -53,7 +53,7 @@ export default function DashboardPage() {
     return sum + Number(asset.currentValue || asset.purchaseCost || 0);
   }, 0);
 
-  const recentAssignments = assignments
+  const recentAssignments = (assignments || [])
     .filter(a => !a.returnedAt)
     .sort((a, b) => new Date(b.assignedAt).getTime() - new Date(a.assignedAt).getTime())
     .slice(0, 5);

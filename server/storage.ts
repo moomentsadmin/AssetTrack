@@ -15,7 +15,7 @@ import {
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc } from "drizzle-orm";
-import session from "express-session";
+import session, { SessionStore } from "express-session";
 import connectPg from "connect-pg-simple";
 import { pool } from "./db";
 
@@ -96,11 +96,11 @@ export interface IStorage {
   getDeviceTrackingHistory(deviceTrackingId: string): Promise<DeviceTrackingHistory[]>;
   createDeviceTrackingHistory(history: InsertDeviceTrackingHistory): Promise<DeviceTrackingHistory>;
 
-  sessionStore: session.SessionStore;
+  sessionStore: SessionStore;
 }
 
 export class DatabaseStorage implements IStorage {
-  sessionStore: session.SessionStore;
+  sessionStore: SessionStore;
 
   constructor() {
     this.sessionStore = new PostgresSessionStore({ pool, createTableIfMissing: true });
@@ -183,7 +183,7 @@ export class DatabaseStorage implements IStorage {
   async getDepartmentByName(name: string): Promise<Department | undefined> {
     const all = await db.select().from(departments);
     const target = name.trim().toLowerCase();
-    return all.find((d) => (d.name || "").trim().toLowerCase() === target) || undefined;
+    return all.find((d: Department) => (d.name || "").trim().toLowerCase() === target) || undefined;
   }
 
   async createDepartment(insertDept: InsertDepartment): Promise<Department> {
@@ -217,7 +217,7 @@ export class DatabaseStorage implements IStorage {
   async getLocationByName(name: string): Promise<Location | undefined> {
     const all = await db.select().from(locations);
     const target = name.trim().toLowerCase();
-    return all.find((l) => (l.name || "").trim().toLowerCase() === target) || undefined;
+    return all.find((l: Location) => (l.name || "").trim().toLowerCase() === target) || undefined;
   }
 
   async createLocation(insertLocation: InsertLocation): Promise<Location> {
@@ -251,7 +251,7 @@ export class DatabaseStorage implements IStorage {
   async getAssetTypeByName(name: string): Promise<AssetType | undefined> {
     const all = await db.select().from(assetTypes);
     const target = name.trim().toLowerCase();
-    return all.find((t) => (t.name || "").trim().toLowerCase() === target) || undefined;
+    return all.find((t: AssetType) => (t.name || "").trim().toLowerCase() === target) || undefined;
   }
 
   async createAssetType(insertAssetType: InsertAssetType): Promise<AssetType> {

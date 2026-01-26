@@ -50,6 +50,17 @@ services:
     command: >
       sh -c "npm start"
 
+  # MailHog for capturing outbound emails in testing
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: asset-mailhog
+    restart: unless-stopped
+    ports:
+      - "1025:1025"   # SMTP
+      - "8025:8025"   # Web UI
+    networks:
+      - asset-network
+
 volumes:
   postgres_data:
     driver: local

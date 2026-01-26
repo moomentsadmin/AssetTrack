@@ -35,16 +35,16 @@ export default function SystemHealthPage() {
     );
   }
 
-  const totalAssetValue = assets.reduce((sum, asset) => {
+  const totalAssetValue = assets?.reduce((sum, asset) => {
     return sum + Number(asset.currentValue || asset.purchaseCost || 0);
-  }, 0);
+  }, 0) || 0;
 
-  const assetsByStatus = assets.reduce((acc, asset) => {
+  const assetsByStatus = assets?.reduce((acc, asset) => {
     acc[asset.status] = (acc[asset.status] || 0) + 1;
     return acc;
-  }, {} as Record<string, number>);
+  }, {} as Record<string, number>) || {};
 
-  const recentAuditEntries = auditTrail.slice(0, 10);
+  const recentAuditEntries = auditTrail?.slice(0, 10) || [];
 
   return (
     <div className="space-y-6">
@@ -101,9 +101,9 @@ export default function SystemHealthPage() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{users.length}</div>
+            <div className="text-2xl font-bold">{users?.length || 0}</div>
             <p className="text-xs text-muted-foreground mt-1">
-              {users.filter(u => u.role === "admin").length} admins, {users.filter(u => u.role === "manager").length} managers
+              {users?.filter(u => u.role === "admin").length || 0} admins, {users?.filter(u => u.role === "manager").length || 0} managers
             </p>
           </CardContent>
         </Card>
@@ -114,7 +114,7 @@ export default function SystemHealthPage() {
             <Package className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{assets.length}</div>
+            <div className="text-2xl font-bold">{assets?.length || 0}</div>
             <p className="text-xs text-muted-foreground mt-1">
               ${totalAssetValue.toLocaleString()} total value
             </p>
@@ -136,7 +136,7 @@ export default function SystemHealthPage() {
                   <div className="h-2 w-20 bg-muted rounded-full overflow-hidden">
                     <div
                       className="h-full bg-primary"
-                      style={{ width: `${(count / assets.length) * 100}%` }}
+                      style={{ width: `${assets?.length > 0 ? (count / assets.length) * 100 : 0}%` }}
                     />
                   </div>
                   <span className="text-sm font-medium w-8 text-right">{count}</span>
@@ -157,21 +157,21 @@ export default function SystemHealthPage() {
                 <Building2 className="h-4 w-4 text-muted-foreground" />
                 <span className="text-sm">Departments</span>
               </div>
-              <span className="text-sm font-medium">{departments.length}</span>
+              <span className="text-sm font-medium">{departments?.length || 0}</span>
             </div>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <MapPin className="h-4 w-4 text-muted-foreground" />
                 <span className="text-sm">Locations</span>
               </div>
-              <span className="text-sm font-medium">{locations.length}</span>
+              <span className="text-sm font-medium">{locations?.length || 0}</span>
             </div>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Activity className="h-4 w-4 text-muted-foreground" />
                 <span className="text-sm">Audit Entries</span>
               </div>
-              <span className="text-sm font-medium">{auditTrail.length}</span>
+              <span className="text-sm font-medium">{auditTrail?.length || 0}</span>
             </div>
           </CardContent>
         </Card>

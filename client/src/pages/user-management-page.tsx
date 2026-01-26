@@ -146,10 +146,10 @@ export default function UserManagementPage() {
   });
 
   const filteredUsers = users.filter((user) =>
-    user.fullName.toLowerCase().includes(search.toLowerCase()) ||
-    user.email.toLowerCase().includes(search.toLowerCase()) ||
-    user.username.toLowerCase().includes(search.toLowerCase()) ||
-    user.department?.toLowerCase().includes(search.toLowerCase())
+    (user.fullName?.toLowerCase() || "").includes(search.toLowerCase()) ||
+    (user.email?.toLowerCase() || "").includes(search.toLowerCase()) ||
+    (user.username?.toLowerCase() || "").includes(search.toLowerCase()) ||
+    (user.department?.toLowerCase() || "").includes(search.toLowerCase())
   );
 
   const handleEdit = (user: User) => {
@@ -274,13 +274,13 @@ export default function UserManagementPage() {
               >
                 <div className="flex items-center gap-4">
                   <div className="p-2 bg-primary/10 rounded-lg">
-                    {getRoleIcon(user.role)}
+                    {getRoleIcon(user.role || "employee")}
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
-                      <p className="font-medium" data-testid={`user-name-${user.id}`}>{user.fullName}</p>
-                      <Badge variant={getRoleBadgeVariant(user.role)} className="text-xs">
-                        {user.role}
+                      <p className="font-medium" data-testid={`user-name-${user.id}`}>{user.fullName || "Unknown"}</p>
+                      <Badge variant={getRoleBadgeVariant(user.role || "employee")} className="text-xs">
+                        {user.role || "employee"}
                       </Badge>
                       {user.isContractor && (
                         <Badge variant="outline" className="text-xs">
@@ -289,9 +289,9 @@ export default function UserManagementPage() {
                       )}
                     </div>
                     <div className="flex items-center gap-3 text-sm text-muted-foreground mt-1">
-                      <span data-testid={`user-email-${user.id}`}>{user.email}</span>
+                      <span data-testid={`user-email-${user.id}`}>{user.email || "No email"}</span>
                       <span>•</span>
-                      <span>@{user.username}</span>
+                      <span>@{user.username || "unknown"}</span>
                       {user.department && (
                         <>
                           <span>•</span>

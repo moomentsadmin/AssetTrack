@@ -8,6 +8,7 @@ import { AuthProvider, useAuth } from "@/hooks/use-auth";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { ProtectedRoute } from "@/lib/protected-route";
+import { ErrorBoundary } from "@/components/error-boundary";
 import { AppSidebar } from "@/components/app-sidebar";
 import NotFound from "@/pages/not-found";
 import AuthPage from "@/pages/auth-page";
@@ -54,15 +55,28 @@ function Router() {
 }
 
 function AppLayout() {
-  const { user } = useAuth();
+  const { user, isLoading, error } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-2 text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !user) {
+    console.log("Auth error or no user, showing auth page");
+    return <AuthPage />;
+  }
+
   const style = {
     "--sidebar-width": "16rem",
     "--sidebar-width-icon": "3rem",
   };
-
-  if (!user) {
-    return <Router />;
-  }
 
   return (
     <SidebarProvider style={style as React.CSSProperties}>
@@ -84,15 +98,17 @@ function AppLayout() {
 
 export default function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider defaultTheme="dark">
-        <TooltipProvider>
-          <AuthProvider>
-            <AppLayout />
-            <Toaster />
-          </AuthProvider>
-        </TooltipProvider>
-      </ThemeProvider>
-    </QueryClientProvider>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider defaultTheme="dark">
+          <TooltipProvider>
+            <AuthProvider>
+              <AppLayout />
+              <Toaster />
+            </AuthProvider>
+          </TooltipProvider>
+        </ThemeProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 }

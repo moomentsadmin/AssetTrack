@@ -8,6 +8,7 @@ import multer from "multer";
 import Papa from "papaparse";
 import { sendAssignmentNotification } from "./email";
 import { insertUserSchema } from "@shared/schema";
+import { log } from "./vite";
 
 const upload = multer({ storage: multer.memoryStorage() });
 
@@ -44,6 +45,12 @@ export function registerRoutes(app: Express): Server {
     res.status(200).json({ status: "healthy", timestamp: new Date().toISOString() });
   });
 
+  // Test endpoint for debugging
+  app.get("/api/test", (req, res) => {
+    console.log("Test endpoint called");
+    res.json({ message: "Test endpoint working", timestamp: new Date().toISOString() });
+  });
+
   // Serve tracking agent files and documentation
   const trackingAgentPath = path.join(process.cwd(), "tracking-agent");
   app.use("/tracking-agent", express.static(trackingAgentPath));
@@ -55,6 +62,16 @@ export function registerRoutes(app: Express): Server {
       // Remove passwords from response
       const sanitizedUsers = users.map(({ password, ...user }) => user);
       res.json(sanitizedUsers);
+    } catch (error: any) {
+      res.status(500).send(error.message);
+    }
+  });
+
+  app.get("/api/user", requireAuth, async (req, res) => {
+    try {
+      // Return the current authenticated user
+      const { password, ...userWithoutPassword } = req.user!;
+      res.json(userWithoutPassword);
     } catch (error: any) {
       res.status(500).send(error.message);
     }
@@ -760,13 +777,35 @@ export function registerRoutes(app: Express): Server {
         return res.status(400).send("No file uploaded");
       }
 
+      if (!req.file.buffer) {
+        return res.status(400).send("File buffer is empty");
+      }
+
       const fileContent = req.file.buffer.toString("utf-8");
       const parsed = Papa.parse(fileContent, { header: true, skipEmptyLines: true });
+
+      if (!parsed || typeof parsed !== 'object') {
+        return res.status(400).json({
+          success: 0,
+          failed: 0,
+          errors: ["Invalid CSV file format"]
+        });
+      }
+
+      if (parsed.errors && Array.isArray(parsed.errors) && parsed.errors.length > 0) {
+        console.log("CSV parsing errors:", parsed.errors);
+        return res.status(400).json({
+          success: 0,
+          failed: 0,
+          errors: parsed.errors.map((err: any) => `CSV parsing error: ${err.message || 'Unknown error'}`)
+        });
+      }
 
       let success = 0;
       let failed = 0;
 
-      for (const row of parsed.data) {
+      const dataRows = Array.isArray(parsed.data) ? parsed.data : [];
+      for (const row of dataRows) {
         try {
           // Normalize keys to camelCase and trim values
           const raw: any = row;
@@ -827,17 +866,49 @@ export function registerRoutes(app: Express): Server {
 
   app.post("/api/import/assets", requireAuth, requireAdminOrManager, upload.single("file"), async (req, res) => {
     try {
+      console.log("Import request received, file:", req.file?.originalname);
       if (!req.file) {
+        console.log("No file uploaded");
         return res.status(400).send("No file uploaded");
       }
 
+      if (!req.file.buffer) {
+        console.log("File buffer is empty");
+        return res.status(400).send("File buffer is empty");
+      }
+
       const fileContent = req.file.buffer.toString("utf-8");
+      console.log("File content length:", fileContent.length);
       const parsed = Papa.parse(fileContent, { header: true, skipEmptyLines: true });
+      console.log("Parsed data rows:", parsed.data?.length || 0);
+
+      if (!parsed || typeof parsed !== 'object') {
+        console.log("Papa.parse returned invalid result");
+        return res.status(400).json({
+          success: 0,
+          failed: 0,
+          errors: ["Invalid CSV file format"]
+        });
+      }
+
+      if (parsed.errors && Array.isArray(parsed.errors) && parsed.errors.length > 0) {
+        console.log("CSV parsing errors:", parsed.errors);
+        return res.status(400).json({
+          success: 0,
+          failed: 0,
+          errors: parsed.errors.map((err: any) => `CSV parsing error: ${err.message || 'Unknown error'}`)
+        });
+      }
 
       let success = 0;
       let failed = 0;
+      const errors: string[] = [];
 
-      for (const row of parsed.data) {
+      const dataRows = Array.isArray(parsed.data) ? parsed.data : [];
+      console.log("Processing", dataRows.length, "data rows");
+
+      for (let index = 0; index < dataRows.length; index++) {
+        const row = dataRows[index];
         try {
           // Normalize keys to camelCase and trim values
           const raw: any = row as any;
@@ -849,6 +920,35 @@ export function registerRoutes(app: Express): Server {
             const val = typeof raw[k] === "string" ? String(raw[k]).trim() : raw[k];
             data[camel] = val;
           });
+
+          // Parse dates from DD-MM-YYYY format to YYYY-MM-DD
+          if (data.purchaseDate && typeof data.purchaseDate === 'string') {
+            const dateMatch = data.purchaseDate.match(/^(\d{1,2})-(\d{1,2})-(\d{4})$/);
+            if (dateMatch) {
+              const [, day, month, year] = dateMatch;
+              data.purchaseDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+              console.log(`Parsed purchaseDate: ${data.purchaseDate}`);
+            }
+          }
+          if (data.warrantyExpiry && typeof data.warrantyExpiry === 'string') {
+            const dateMatch = data.warrantyExpiry.match(/^(\d{1,2})-(\d{1,2})-(\d{4})$/);
+            if (dateMatch) {
+              const [, day, month, year] = dateMatch;
+              data.warrantyExpiry = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+              console.log(`Parsed warrantyExpiry: ${data.warrantyExpiry}`);
+            }
+          }
+
+          // Parse purchase cost - remove quotes and commas
+          if (data.purchaseCost && typeof data.purchaseCost === 'string') {
+            // Remove quotes and commas, then parse as float
+            const cleanCost = data.purchaseCost.replace(/["',]/g, '');
+            const parsedCost = parseFloat(cleanCost);
+            if (!isNaN(parsedCost)) {
+              data.purchaseCost = parsedCost;
+              console.log(`Parsed purchaseCost: ${data.purchaseCost}`);
+            }
+          }
 
           // Resolve or create asset type
           let assetTypeId: string | undefined = data.assetTypeId;
@@ -897,11 +997,17 @@ export function registerRoutes(app: Express): Server {
 
           // Validate required fields
           if (!data.name || !assetTypeId || !locationId) {
+            const missingFields = [];
+            if (!data.name) missingFields.push('name');
+            if (!assetTypeId) missingFields.push('assetType');
+            if (!locationId) missingFields.push('location');
+            errors.push(`Row ${index + 2}: Missing required fields: ${missingFields.join(', ')}`);
             failed++;
             continue;
           }
 
           // Create asset
+          console.log(`Creating asset: ${data.name}, type: ${assetTypeId}, location: ${locationId}`);
           await storage.createAsset({
             name: data.name,
             assetTypeId,
@@ -939,7 +1045,9 @@ export function registerRoutes(app: Express): Server {
           } as any);
 
           success++;
+          console.log(`Asset created successfully: ${data.name}`);
         } catch (error: any) {
+          errors.push(`Row ${index + 2}: ${error.message || 'Unknown error'}`);
           failed++;
         }
       }
@@ -952,9 +1060,11 @@ export function registerRoutes(app: Express): Server {
         details: { success, failed, fileName: req.file.originalname },
       });
 
-      res.json({ success, failed });
+      console.log("Import completed:", { success, failed, errors: errors.length });
+      res.json({ success, failed, errors: errors || [] });
     } catch (error: any) {
-      res.status(500).send(error.message);
+      console.error("Import error:", error);
+      res.status(500).json({ success: 0, failed: 0, errors: [error.message || "Unknown import error"] });
     }
   });
 

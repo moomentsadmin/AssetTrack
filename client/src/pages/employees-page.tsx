@@ -91,9 +91,11 @@ export default function EmployeesPage() {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+      const success = typeof data?.success === 'number' ? data.success : 0;
+      const failed = typeof data?.failed === 'number' ? data.failed : 0;
       toast({ 
         title: "Bulk upload completed", 
-        description: `${data.success} employees added, ${data.failed} failed` 
+        description: `${success} employees added, ${failed} failed` 
       });
       setIsBulkUploadOpen(false);
       setUploadFile(null);
@@ -110,9 +112,9 @@ export default function EmployeesPage() {
   const canManageEmployees = currentUser?.role === "admin" || currentUser?.role === "manager";
 
   const filteredUsers = users.filter((user) =>
-    user.fullName.toLowerCase().includes(search.toLowerCase()) ||
-    user.email.toLowerCase().includes(search.toLowerCase()) ||
-    user.department?.toLowerCase().includes(search.toLowerCase())
+    (user.fullName?.toLowerCase() || "").includes(search.toLowerCase()) ||
+    (user.email?.toLowerCase() || "").includes(search.toLowerCase()) ||
+    (user.department?.toLowerCase() || "").includes(search.toLowerCase())
   );
 
   if (usersLoading) {
@@ -171,24 +173,24 @@ Jane Smith,jane@example.com,janesmith,password456,manager,HR,false`;
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {filteredUsers.map((user) => {
-          const userAssignments = assignments.filter(
+          const userAssignments = assignments?.filter(
             (a) => a.userId === user.id && !a.returnedAt
-          );
+          ) || [];
           const assignedAssets = userAssignments.map((a) =>
-            assets.find((asset) => asset.id === a.assetId)
-          ).filter(Boolean);
+            assets?.find((asset) => asset.id === a.assetId)
+          ).filter(Boolean) || [];
 
           return (
             <Card key={user.id} className="p-6" data-testid={`card-employee-${user.id}`}>
               <div className="flex items-start gap-4">
                 <Avatar className="h-12 w-12">
                   <AvatarFallback className="bg-primary/10 text-primary">
-                    {user.fullName.split(" ").map(n => n[0]).join("").toUpperCase()}
+                    {(user.fullName || "U").split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2) || "U"}
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
-                    <h3 className="font-semibold truncate">{user.fullName}</h3>
+                    <h3 className="font-semibold truncate">{user.fullName || "Unknown"}</h3>
                     {user.isContractor && (
                       <Badge variant="secondary" className="text-xs">Contractor</Badge>
                     )}
@@ -196,7 +198,7 @@ Jane Smith,jane@example.com,janesmith,password456,manager,HR,false`;
                   <div className="space-y-1">
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <Mail className="h-3 w-3" />
-                      <span className="truncate">{user.email}</span>
+                      <span className="truncate">{user.email || "No email"}</span>
                     </div>
                     {user.department && (
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -210,22 +212,22 @@ Jane Smith,jane@example.com,janesmith,password456,manager,HR,false`;
                       <div className="flex items-center gap-2 text-sm">
                         <Package className="h-4 w-4 text-muted-foreground" />
                         <span className="text-muted-foreground">Assets:</span>
-                        <span className="font-medium">{assignedAssets.length}</span>
+                        <span className="font-medium">{assignedAssets?.length || 0}</span>
                       </div>
                       <Badge variant="outline" className="capitalize">
-                        {user.role}
+                        {user.role || "employee"}
                       </Badge>
                     </div>
-                    {assignedAssets.length > 0 && (
+                    {assignedAssets?.length > 0 && (
                       <div className="mt-2 space-y-1">
                         {assignedAssets.slice(0, 3).map((asset) => (
                           <p key={asset?.id} className="text-xs text-muted-foreground truncate">
                             • {asset?.name}
                           </p>
                         ))}
-                        {assignedAssets.length > 3 && (
+                        {assignedAssets?.length > 3 && (
                           <p className="text-xs text-muted-foreground">
-                            +{assignedAssets.length - 3} more
+                            +{assignedAssets?.length - 3} more
                           </p>
                         )}
                       </div>
@@ -238,7 +240,7 @@ Jane Smith,jane@example.com,janesmith,password456,manager,HR,false`;
         })}
       </div>
 
-      {filteredUsers.length === 0 && (
+      {filteredUsers?.length === 0 && (
         <Card className="p-12">
           <p className="text-center text-muted-foreground">No employees found</p>
         </Card>
